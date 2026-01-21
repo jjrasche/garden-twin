@@ -1,9 +1,6 @@
 import React, { useEffect } from 'react';
 import { useGardenStore } from '../../store/gardenStore';
-import { ZoomControls } from './ZoomControls';
-import { ZoneView as GardenView } from './ZoneView';
-import { CellView } from './CellView';
-import { SubcellView } from './SubcellView';
+import { CanvasGarden } from './CanvasGarden';
 import type { Garden, Plan } from '@core/types';
 import simpleGardenData from '@core/data/sampleGardens/simple-garden.json';
 
@@ -26,8 +23,6 @@ export function GridLayout() {
 
   return (
     <div className="relative w-full h-full bg-gray-900">
-      <ZoomControls />
-
       {!garden ? (
         <div className="flex items-center justify-center h-full text-gray-400">
           <div className="text-center">
@@ -49,9 +44,7 @@ export function GridLayout() {
         </div>
       ) : (
         <div className="w-full h-full">
-          {zoomLevel === 'garden' && <GardenView />}
-          {zoomLevel === 'cell' && <CellView />}
-          {zoomLevel === 'subcell' && <SubcellView />}
+          <CanvasGarden />
         </div>
       )}
     </div>
