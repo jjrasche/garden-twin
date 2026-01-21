@@ -2,10 +2,9 @@ import React from 'react';
 import { useGardenStore, type ZoomLevel } from '../../store/gardenStore';
 
 const ZOOM_LEVELS: { value: ZoomLevel; label: string }[] = [
-  { value: 'zone', label: 'Zones' },
-  { value: 'zone-count', label: 'Zone Details' },
-  { value: 'cell', label: 'Cells' },
-  { value: 'subcell', label: 'Subcells' },
+  { value: 'garden', label: 'Garden' },
+  { value: 'cell', label: 'Cells (1×1 ft)' },
+  { value: 'subcell', label: 'Subcells (3×3 in)' },
 ];
 
 export function ZoomControls() {

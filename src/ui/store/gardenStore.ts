@@ -4,7 +4,7 @@ import type { Garden, PlantSpecies, Projection, Plan, HarvestWeek, YieldProjecti
 import { YieldCalculator } from '@core/calculators/YieldCalculator';
 import { LaborCalculator } from '@core/calculators/LaborCalculator';
 
-export type ZoomLevel = 'zone' | 'zone-count' | 'cell' | 'subcell';
+export type ZoomLevel = 'garden' | 'cell' | 'subcell';
 
 interface ViewportState {
   offsetX: number;
@@ -124,12 +124,31 @@ function getWeekStart(weekNum: number, year: number): string {
   return weekStart.toISOString().split('T')[0]!;
 }
 
+/**
+ * Calculate initial zoom level based on garden size and viewport
+ */
+function calculateInitialZoom(garden: Garden | null): ZoomLevel {
+  if (!garden) return 'garden';
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const minCellSizePx = 10; // Minimum comfortable cell size
+
+  // Can all 1×1 ft cells fit on screen?
+  const cellsWouldFit =
+    garden.grid.width_ft * minCellSizePx <= viewportWidth &&
+    garden.grid.length_ft * minCellSizePx <= viewportHeight;
+
+  // If cells fit, skip garden view and start at cell level
+  return cellsWouldFit ? 'cell' : 'garden';
+}
+
 const initialState = {
   garden: null,
   plan: null,
   speciesMap: new Map<string, PlantSpecies>(),
   projection: null,
-  zoomLevel: 'zone' as ZoomLevel,
+  zoomLevel: 'garden' as ZoomLevel,
   viewport: {
     offsetX: 0,
     offsetY: 0,
@@ -143,7 +162,10 @@ export const useGardenStore = create<GardenState>()(
       ...initialState,
 
       setGarden: (garden) => {
-        set({ garden });
+        set({
+          garden,
+          zoomLevel: calculateInitialZoom(garden),
+        });
         // Regenerate projection when garden changes
         get().regenerateProjection();
       },

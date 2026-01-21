@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { useGardenStore } from '../../store/gardenStore';
 import { ZoomControls } from './ZoomControls';
-import { ZoneView } from './ZoneView';
-import { ZoneCountView } from './ZoneCountView';
+import { ZoneView as GardenView } from './ZoneView';
 import { CellView } from './CellView';
 import { SubcellView } from './SubcellView';
 import type { Garden, Plan } from '@core/types';
@@ -50,8 +49,7 @@ export function GridLayout() {
         </div>
       ) : (
         <div className="w-full h-full">
-          {zoomLevel === 'zone' && <ZoneView />}
-          {zoomLevel === 'zone-count' && <ZoneCountView />}
+          {zoomLevel === 'garden' && <GardenView />}
           {zoomLevel === 'cell' && <CellView />}
           {zoomLevel === 'subcell' && <SubcellView />}
         </div>
