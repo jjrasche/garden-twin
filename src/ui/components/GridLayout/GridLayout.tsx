@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGardenStore } from '../../store/gardenStore';
 import { ZoomControls } from './ZoomControls';
 import { ZoneView } from './ZoneView';
@@ -13,6 +13,12 @@ export function GridLayout() {
   const garden = useGardenStore((state) => state.garden);
   const setGarden = useGardenStore((state) => state.setGarden);
   const setPlan = useGardenStore((state) => state.setPlan);
+
+  // Load simple garden on mount
+  useEffect(() => {
+    setGarden(simpleGardenData.garden as Garden);
+    setPlan(simpleGardenData.plan as Plan);
+  }, [setGarden, setPlan]);
 
   const handleLoadSampleData = () => {
     setGarden(simpleGardenData.garden as Garden);
