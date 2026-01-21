@@ -5,7 +5,8 @@ import { ZoneView } from './ZoneView';
 import { ZoneCountView } from './ZoneCountView';
 import { CellView } from './CellView';
 import { SubcellView } from './SubcellView';
-import { createTestPlan } from '@core/data/sampleGardens/testGarden';
+import type { Garden, Plan } from '@core/types';
+import simpleGardenData from '@core/data/sampleGardens/simple-garden.json';
 
 export function GridLayout() {
   const zoomLevel = useGardenStore((state) => state.zoomLevel);
@@ -14,11 +15,8 @@ export function GridLayout() {
   const setPlan = useGardenStore((state) => state.setPlan);
 
   const handleLoadSampleData = () => {
-    const { garden: testGarden, plan: testPlan } = createTestPlan();
-
-    // Set garden and plan - projection will be automatically calculated
-    setGarden(testGarden);
-    setPlan(testPlan);
+    setGarden(simpleGardenData.garden as Garden);
+    setPlan(simpleGardenData.plan as Plan);
   };
 
   return (
@@ -37,10 +35,10 @@ export function GridLayout() {
               onClick={handleLoadSampleData}
               className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
             >
-              Load Test Garden
+              Load Simple Garden
             </button>
             <p className="text-xs text-gray-600 mt-3">
-              (4000 sq ft with 150 plants: 3 corn + 3 potato varieties)
+              (10×10 ft with 1 corn plant in center)
             </p>
           </div>
         </div>
