@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import type { Subcell, Garden } from '@core/types';
+import type { Subcell, Garden, PlantSpecies } from '@core/types';
 import { worldToScreen, PIXELS_PER_INCH, type Viewport } from '../utils/canvasTransforms';
 import { drawPlantIcon, getPlantColor } from '../utils/plantIcons';
 
@@ -25,12 +25,14 @@ interface RenderStats {
  * @param viewport - Current viewport state
  * @param visibleSubcells - Culled subcells (only visible ones)
  * @param garden - Garden data (for grid bounds)
+ * @param speciesMap - Plant species data (for spacing/sizing)
  */
 export function useRenderLoop(
   canvasRef: React.RefObject<HTMLCanvasElement>,
   viewport: Viewport,
   visibleSubcells: Subcell[],
-  garden: Garden | null
+  garden: Garden | null,
+  speciesMap: Map<string, PlantSpecies>
 ) {
   const frameRef = useRef<number>(0);
   const fpsRef = useRef<number>(60);
@@ -73,7 +75,7 @@ export function useRenderLoop(
       drawSubcellLayer(ctx, viewport, visibleSubcells);
 
       // Layer 3: Plants
-      drawPlantLayer(ctx, viewport, visibleSubcells);
+      drawPlantLayer(ctx, viewport, visibleSubcells, speciesMap);
 
       // Layer 4: Debug info
       drawDebugLayer(ctx, {
@@ -92,7 +94,7 @@ export function useRenderLoop(
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [canvasRef, viewport, visibleSubcells, garden]);
+  }, [canvasRef, viewport, visibleSubcells, garden, speciesMap]);
 }
 
 /**
@@ -257,23 +259,37 @@ function drawZoneGrid(
 }
 
 /**
- * Draw plant layer (emoji icons or colored dots)
+ * Draw plant layer (emoji icons with spacing circles)
+ *
+ * Plant footprint is calculated from species spacing requirements (plants_per_sq_ft).
+ * Formula: footprint = 12 / sqrt(plants_per_sq_ft) inches
+ * Example: Corn at 1 plant/sq ft → 12×12 inch footprint
+ *
+ * Icon stays at fixed readable size, circle shows actual plant spacing.
  *
  * Level of detail:
- * - Scale ≥2.0: Show emoji icons (large enough to see)
- * - Scale <2.0: Show colored dots (icons too small)
+ * - Scale ≥0.5: Show emoji icons with footprint circles
+ * - Scale <0.5: Show colored dots (icons too small to see)
  */
 function drawPlantLayer(
   ctx: CanvasRenderingContext2D,
   viewport: Viewport,
-  visibleSubcells: Subcell[]
+  visibleSubcells: Subcell[],
+  speciesMap: Map<string, PlantSpecies>
 ) {
   visibleSubcells.forEach((subcell) => {
     if (!subcell.plant) return; // Skip empty subcells
 
     const speciesId = subcell.plant.species_id;
+    const species = speciesMap.get(speciesId);
 
-    // Calculate center of subcell
+    // Calculate plant footprint from spacing requirements
+    // Formula: footprint = 12 / sqrt(plants_per_sq_ft)
+    // Example: 1 plant/sq ft → 12 inches, 4 plants/sq ft → 6 inches
+    const plantsPerSqFt = species?.plants_per_sq_ft || 1;
+    const plantFootprintInches = 12 / Math.sqrt(plantsPerSqFt);
+
+    // Calculate center of subcell (icon stays centered in its subcell)
     const centerPos = worldToScreen(
       {
         x_in: subcell.position.x_in + SUBCELL_SIZE_IN / 2,
@@ -282,12 +298,22 @@ function drawPlantLayer(
       viewport
     );
 
-    if (viewport.scale >= 2.0) {
-      // Show emoji icon (large enough to see)
-      const iconSize = Math.floor(SUBCELL_SIZE_IN * PIXELS_PER_INCH * viewport.scale * 0.8);
+    if (viewport.scale >= 0.5) {
+      // Draw footprint circle (shows actual plant spacing)
+      const footprintRadiusPx = (plantFootprintInches / 2) * PIXELS_PER_INCH * viewport.scale;
+      ctx.strokeStyle = getPlantColor(speciesId);
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.4; // Semi-transparent
+      ctx.beginPath();
+      ctx.arc(centerPos.x, centerPos.y, footprintRadiusPx, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1.0; // Reset alpha
+
+      // Draw emoji icon at fixed readable size
+      const iconSize = 20; // Fixed size for readability
       drawPlantIcon(ctx, speciesId, centerPos, iconSize);
     } else {
-      // Show colored dot (icon too small)
+      // Show colored dot (icon too small to see)
       const dotRadius = Math.max(2, SUBCELL_SIZE_IN * PIXELS_PER_INCH * viewport.scale * 0.3);
       ctx.fillStyle = getPlantColor(speciesId);
       ctx.beginPath();

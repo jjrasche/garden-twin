@@ -23,6 +23,7 @@ export function CanvasGarden() {
   const garden = useGardenStore((state) => state.garden);
   const viewport = useGardenStore((state) => state.viewport);
   const setViewport = useGardenStore((state) => state.setViewport);
+  const speciesMap = useGardenStore((state) => state.speciesMap);
 
   // Culling - filter to visible subcells only
   const { visibleSubcells, culledCount } = useCanvasCulling(
@@ -36,7 +37,7 @@ export function CanvasGarden() {
   useCanvasControls(canvasRef, viewport, setViewport);
 
   // Render loop - 60fps Canvas rendering
-  useRenderLoop(canvasRef, viewport, visibleSubcells, garden);
+  useRenderLoop(canvasRef, viewport, visibleSubcells, garden, speciesMap);
 
   // Window resize handler
   useEffect(() => {

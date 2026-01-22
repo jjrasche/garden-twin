@@ -36539,6 +36539,12 @@
             "organic_matter_pct": 3.5
           },
           "type": "planting"
+        },
+        "plant": {
+          "individual_id": "plant_60_54",
+          "species_id": "corn_wapsie_valley",
+          "planted_date": "2025-05-15",
+          "expected_yield_lbs": 0.25
         }
       },
       {
@@ -40489,6 +40495,12 @@
             "organic_matter_pct": 3.5
           },
           "type": "planting"
+        },
+        "plant": {
+          "individual_id": "plant_54_60",
+          "species_id": "corn_wapsie_valley",
+          "planted_date": "2025-05-15",
+          "expected_yield_lbs": 0.25
         }
       },
       {
@@ -40595,6 +40607,12 @@
             "organic_matter_pct": 3.5
           },
           "type": "planting"
+        },
+        "plant": {
+          "individual_id": "plant_66_60",
+          "species_id": "tomato_better_boy",
+          "planted_date": "2025-05-15",
+          "expected_yield_lbs": 0.25
         }
       },
       {
@@ -44551,6 +44569,12 @@
             "organic_matter_pct": 3.5
           },
           "type": "planting"
+        },
+        "plant": {
+          "individual_id": "plant_60_66",
+          "species_id": "potato_russet",
+          "planted_date": "2025-05-15",
+          "expected_yield_lbs": 0.25
         }
       },
       {
