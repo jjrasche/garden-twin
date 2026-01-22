@@ -300,10 +300,12 @@ function drawPlantLayer(
 
     if (viewport.scale >= 0.5) {
       // Draw footprint circle (shows actual plant spacing)
+      // Circle diameter = plantFootprintInches, so radius = plantFootprintInches / 2
       const footprintRadiusPx = (plantFootprintInches / 2) * PIXELS_PER_INCH * viewport.scale;
+
       ctx.strokeStyle = getPlantColor(speciesId);
-      ctx.lineWidth = 1.5;
-      ctx.globalAlpha = 0.4; // Semi-transparent
+      ctx.lineWidth = Math.max(1, viewport.scale * 0.5); // Scale line width with zoom
+      ctx.globalAlpha = 0.5; // Semi-transparent
       ctx.beginPath();
       ctx.arc(centerPos.x, centerPos.y, footprintRadiusPx, 0, Math.PI * 2);
       ctx.stroke();

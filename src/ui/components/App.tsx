@@ -6,7 +6,7 @@ import { HarvestTimeline } from './Timelines/HarvestTimeline';
 import { GridLayout } from './GridLayout/GridLayout';
 import { StatsPanel } from './Stats/StatsPanel';
 import { useGardenStore } from '../store/gardenStore';
-import { CORN_WAPSIE_VALLEY } from '@core/data/plantSpecies';
+import { CORN_WAPSIE_VALLEY, TOMATO_BETTER_BOY } from '@core/data/plantSpecies';
 import { CORN_GOLDEN_BANTAM } from '../../../research/golden-bantam-corn/config';
 import { CORN_STOWELLS_EVERGREEN } from '../../../research/stowells-evergreen-corn/config';
 import { POTATO_RUSSET_BURBANK } from '../../../research/russet-burbank-potato/config';
@@ -22,6 +22,7 @@ export function App() {
       CORN_GOLDEN_BANTAM,
       CORN_STOWELLS_EVERGREEN,
       CORN_WAPSIE_VALLEY,
+      TOMATO_BETTER_BOY,
       POTATO_RED_NORLAND,
       POTATO_YUKON_GOLD,
       POTATO_RUSSET_BURBANK,
