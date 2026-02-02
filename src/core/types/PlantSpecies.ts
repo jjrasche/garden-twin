@@ -1,17 +1,7 @@
 import { z } from 'zod';
 
-/**
- * Labor task definition
- */
-export const TaskSchema = z.object({
-  name: z.string(),                       // e.g., "planting", "watering", "harvest"
-  timing_days: z.array(z.number().int().min(0)), // Days from planting date [0, 7, 14, ...]
-  hours_per_plant: z.number().min(0).optional(),  // Labor hours per plant
-  hours_per_sq_ft: z.number().min(0).optional(),  // Labor hours per square foot
-  processing_hours_per_lb: z.number().min(0).optional(), // Post-harvest processing
-});
-
-export type Task = z.infer<typeof TaskSchema>;
+// Labor task templates have been replaced by data-driven Rules.
+// See src/core/types/Rules.ts for the new task generation system.
 
 /**
  * Nutritional content per pound of harvest
@@ -121,8 +111,8 @@ export const PlantSpeciesSchema = z.object({
   // Visual representation
   icon: IconSchema,
 
-  // Labor requirements
-  tasks: z.array(TaskSchema),
+  // Labor requirements have been moved to Rules (src/core/types/Rules.ts)
+  // Task generation is now data-driven based on GardenState comparison
 
   // Costs
   seed_cost_per_plant: z.number().min(0),

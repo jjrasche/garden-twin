@@ -1,6 +1,9 @@
 // Export all core types
 export * from './types';
 
+// Export query helpers
+export * from './queries';
+
 // Export calculators
 export * from './calculators/interpolate';
 export * from './calculators/YieldCalculator';
