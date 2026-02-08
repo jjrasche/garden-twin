@@ -30,5 +30,8 @@ export * from './Robot';
 export * from './Episode';
 export * from './Observation';
 
+// Infrastructure (physical garden features)
+export * from './Infrastructure';
+
 // Rules engine
 export * from './Rules';

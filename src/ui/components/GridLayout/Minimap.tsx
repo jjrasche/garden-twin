@@ -7,14 +7,14 @@
  */
 
 import React, { useRef, useEffect, useMemo } from 'react';
-import type { Garden } from '@core/types';
+import type { GardenState } from '@core/types';
 import { getViewportBounds, PIXELS_PER_INCH, type Viewport } from '../../utils/canvasTransforms';
 
 const MINIMAP_SIZE = 200; // 200×200 px
 
 interface MinimapProps {
   viewport: Viewport;
-  garden: Garden;
+  garden: GardenState;
   onViewportChange: (viewport: Viewport) => void;
 }
 

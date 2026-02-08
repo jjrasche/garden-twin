@@ -19,7 +19,7 @@ import {
   getZoneData,
   CORN_WAPSIE_VALLEY,
   TOMATO_BETTER_BOY,
-  POTATO_RUSSET,
+  POTATO_RUSSET_BURBANK,
   PLANT_SPECIES_MAP,
 } from '../core';
 
@@ -125,7 +125,7 @@ function createSamplePlan(): Plan {
     for (let y_in = 120; y_in < 240; y_in += 12) {
       plantings.push({
         subcell_id: createSubcellId(x_in, y_in),
-        species_id: POTATO_RUSSET.id,
+        species_id: POTATO_RUSSET_BURBANK.id,
         planting_date: '2025-05-01',
       });
       potatoCount++;

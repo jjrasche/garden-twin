@@ -1,29 +1,26 @@
 import React, { useEffect } from 'react';
 import { useGardenStore } from '../../store/gardenStore';
 import { CanvasGarden } from './CanvasGarden';
-import type { Garden, Plan } from '@core/types';
-import simpleGardenData from '@core/data/sampleGardens/simple-garden.json';
+import { createSampleGardenState } from '@core/data/sampleGarden';
 
 export function GridLayout() {
-  const zoomLevel = useGardenStore((state) => state.zoomLevel);
-  const garden = useGardenStore((state) => state.garden);
-  const setGarden = useGardenStore((state) => state.setGarden);
-  const setPlan = useGardenStore((state) => state.setPlan);
+  const gardenState = useGardenStore((state) => state.gardenState);
+  const setGardenState = useGardenStore((state) => state.setGardenState);
 
-  // Load simple garden on mount
+  // Load sample garden on mount
   useEffect(() => {
-    setGarden(simpleGardenData.garden as Garden);
-    setPlan(simpleGardenData.plan as Plan);
-  }, [setGarden, setPlan]);
+    const sampleState = createSampleGardenState();
+    setGardenState(sampleState);
+  }, [setGardenState]);
 
   const handleLoadSampleData = () => {
-    setGarden(simpleGardenData.garden as Garden);
-    setPlan(simpleGardenData.plan as Plan);
+    const sampleState = createSampleGardenState();
+    setGardenState(sampleState);
   };
 
   return (
     <div className="relative w-full h-full bg-gray-900">
-      {!garden ? (
+      {!gardenState ? (
         <div className="flex items-center justify-center h-full text-gray-400">
           <div className="text-center">
             <p className="text-lg mb-4">No Garden Loaded</p>
@@ -31,14 +28,14 @@ export function GridLayout() {
               Use the config bar above to create a garden plan
             </p>
             <button
-				id="jim"
+              id="jim"
               onClick={handleLoadSampleData}
               className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
             >
-              Load Simple Garden
+              Load Sample Garden
             </button>
             <p className="text-xs text-gray-600 mt-3">
-              (10×10 ft with 1 corn plant in center)
+              (40×100 ft with lettuce, tomatoes, and Three Sisters mounds)
             </p>
           </div>
         </div>

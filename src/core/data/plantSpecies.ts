@@ -1,7 +1,35 @@
 import { PlantSpecies } from '../types';
 
+// Research variety imports
+import { CORN_GOLDEN_BANTAM } from '../../../research/golden-bantam-corn/config';
+import { CORN_STOWELLS_EVERGREEN } from '../../../research/stowells-evergreen-corn/config';
+import { CORN_DENT } from '../../../research/dent-corn/config';
+import { POTATO_RUSSET_BURBANK } from '../../../research/russet-burbank-potato/config';
+import { POTATO_RED_NORLAND } from '../../../research/red-norland-potato/config';
+import { POTATO_YUKON_GOLD } from '../../../research/yukon-gold-potato/config';
+import { LETTUCE_NEVADA } from '../../../research/nevada-lettuce/config';
+import { TOMATO_CHERRY } from '../../../research/cherry-tomato/config';
+import { TOMATO_SAN_MARZANO } from '../../../research/san-marzano-tomato/config';
+import { BEAN_POLE } from '../../../research/pole-bean/config';
+import { SQUASH_WINTER } from '../../../research/winter-squash/config';
+
+// Re-export research varieties for convenience
+export {
+  CORN_GOLDEN_BANTAM,
+  CORN_STOWELLS_EVERGREEN,
+  CORN_DENT,
+  POTATO_RUSSET_BURBANK,
+  POTATO_RED_NORLAND,
+  POTATO_YUKON_GOLD,
+  LETTUCE_NEVADA,
+  TOMATO_CHERRY,
+  TOMATO_SAN_MARZANO,
+  BEAN_POLE,
+  SQUASH_WINTER,
+};
+
 /**
- * Sample plant species data
+ * Plant species data
  *
  * Data sources:
  * - Square Foot Gardening (Mel Bartholomew)
@@ -270,143 +298,55 @@ export const TOMATO_BETTER_BOY: PlantSpecies = {
   ],
 };
 
-export const POTATO_RUSSET: PlantSpecies = {
-  id: 'potato_russet',
-  name: 'Potato (Russet)',
-
-  // Space: 1 plant per sq ft
-  plants_per_sq_ft: 1.0,
-  height_ft: 2,
-
-  // Timing: 90 days to maturity, harvest all at once
-  days_to_first_harvest: 90,
-  days_harvest_window: 7,
-
-  // Yield: ~2 lbs per plant, 95% success rate
-  baseline_lbs_per_plant: 2.0,
-  success_rate: 0.95,
-
-  modifiers: {
-    sun: {
-      4: 0.5,
-      6: 0.8,
-      8: 1.0,
-      10: 1.0,
-    },
-
-    soil: {
-      N_ppm: {
-        20: 0.7,
-        50: 1.0,
-        100: 1.1,
-        150: 1.0,
-      },
-
-      P_ppm: {
-        10: 0.6,
-        30: 1.0,
-        60: 1.2,
-      },
-
-      K_ppm: {
-        50: 0.7,
-        120: 1.0,
-        200: 1.3,  // Potatoes love potassium
-      },
-
-      // pH (potatoes prefer 5.0-6.0, slightly acidic)
-      pH: {
-        4.5: 0.8,
-        5.5: 1.0,
-        6.5: 0.9,
-        7.0: 0.7,
-      },
-
-      compaction_psi: {
-        0: 1.0,
-        200: 0.7,  // Potatoes need loose soil
-        400: 0.4,
-      },
-    },
-
-    spacing_plants_per_sq_ft: {
-      0.5: 1.1,   // Wide spacing
-      1.0: 1.0,   // Optimal
-      2.0: 0.7,   // Crowded
-      4.0: 0.4,   // Too crowded
-    },
-  },
-
-  nutrition_per_lb: {
-    calories: 349,
-    protein_g: 9,
-    carbs_g: 79,
-    fat_g: 0.4,
-    fiber_g: 9,
-    vitamin_a_mcg: 0,
-    vitamin_c_mg: 88,
-    calcium_mg: 54,
-    iron_mg: 3.6,
-    potassium_mg: 1840,
-  },
-
-  icon: {
-    emoji: '🥔',
-    color: '#D4A76A',
-  },
-
-  tasks: [
-    { name: 'planting', timing_days: [0], hours_per_plant: 0.02 },
-    {
-      name: 'hilling',
-      timing_days: [21, 42],
-      hours_per_plant: 0.03,
-    },
-    {
-      name: 'watering',
-      timing_days: [7, 14, 21, 28, 35, 42, 49, 56, 63, 70, 77, 84],
-      hours_per_plant: 0.02,
-    },
-    {
-      name: 'harvest',
-      timing_days: [90],
-      hours_per_plant: 0.05,
-      processing_hours_per_lb: 0.2, // Cleaning, curing
-    },
-  ],
-
-  seed_cost_per_plant: 0.30,
-  materials_cost_per_plant: 0,
-
-  data_confidence: 'high',
-  sources: [
-    {
-      claim: 'yield',
-      citation: 'University Potato Variety Trials',
-      url: 'https://extension.org/',
-    },
-    {
-      claim: 'nutrition',
-      citation: 'USDA FoodData Central - Potato, raw',
-      url: 'https://fdc.nal.usda.gov/',
-    },
-  ],
-};
-
 /**
  * Map of all available plant species
+ * Includes core species and research varieties
  */
 export const PLANT_SPECIES_MAP = new Map<string, PlantSpecies>([
+  // Core species
   [CORN_WAPSIE_VALLEY.id, CORN_WAPSIE_VALLEY],
   [TOMATO_BETTER_BOY.id, TOMATO_BETTER_BOY],
-  [POTATO_RUSSET.id, POTATO_RUSSET],
+  // Research varieties - Corn
+  [CORN_GOLDEN_BANTAM.id, CORN_GOLDEN_BANTAM],
+  [CORN_STOWELLS_EVERGREEN.id, CORN_STOWELLS_EVERGREEN],
+  [CORN_DENT.id, CORN_DENT],
+  // Research varieties - Potato
+  [POTATO_RUSSET_BURBANK.id, POTATO_RUSSET_BURBANK],
+  [POTATO_RED_NORLAND.id, POTATO_RED_NORLAND],
+  [POTATO_YUKON_GOLD.id, POTATO_YUKON_GOLD],
+  // Research varieties - Lettuce
+  [LETTUCE_NEVADA.id, LETTUCE_NEVADA],
+  // Research varieties - Tomato
+  [TOMATO_CHERRY.id, TOMATO_CHERRY],
+  [TOMATO_SAN_MARZANO.id, TOMATO_SAN_MARZANO],
+  // Research varieties - Bean
+  [BEAN_POLE.id, BEAN_POLE],
+  // Research varieties - Squash
+  [SQUASH_WINTER.id, SQUASH_WINTER],
 ]);
 
 /**
  * Array of all plant species (for iteration)
  */
 export const ALL_PLANT_SPECIES = [
+  // Core species
   CORN_WAPSIE_VALLEY,
   TOMATO_BETTER_BOY,
-  POTATO_RUSSET,
+  // Research varieties - Corn
+  CORN_GOLDEN_BANTAM,
+  CORN_STOWELLS_EVERGREEN,
+  CORN_DENT,
+  // Research varieties - Potato
+  POTATO_RUSSET_BURBANK,
+  POTATO_RED_NORLAND,
+  POTATO_YUKON_GOLD,
+  // Research varieties - Lettuce
+  LETTUCE_NEVADA,
+  // Research varieties - Tomato
+  TOMATO_CHERRY,
+  TOMATO_SAN_MARZANO,
+  // Research varieties - Bean
+  BEAN_POLE,
+  // Research varieties - Squash
+  SQUASH_WINTER,
 ];

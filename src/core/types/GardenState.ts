@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ShadeMapSchema, SoilConditionsSchema } from './Subcell';
+import { InfrastructureFeatureSchema } from './Infrastructure';
 
 /**
  * Schema version for migration support
@@ -55,6 +56,10 @@ export const PlantInstanceSchema = z.object({
   health_score: z.number().min(0).max(1),   // 0 = dead, 1 = perfect
   fruit_count: z.number().int().min(0).optional(),
   last_observed: z.string(),                // ISO datetime
+
+  // Physical structural dependency (e.g., bean climbing corn stalk)
+  // References another PlantInstance.plant_id that this plant is attached to
+  support_plant_id: z.string().optional(),
 
   // Derived/UI helpers (computed, can be cached)
   health_status: HealthStatusSchema.optional(),
@@ -198,6 +203,9 @@ export const GardenStateSchema = z.object({
   // Normalized data - plants separate from subcells
   plants: z.array(PlantInstanceSchema),
   subcells: z.array(SubcellStateSchema),
+
+  // Physical features (mounds, channels, trellises, paths)
+  infrastructure: z.array(InfrastructureFeatureSchema).optional(),
 
   // Garden-wide conditions
   environment: EnvironmentalConditionsSchema,

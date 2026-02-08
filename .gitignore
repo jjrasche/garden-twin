@@ -35,3 +35,6 @@ coverage
 
 # VLM test artifacts
 tests/vlm-screenshots/
+
+# Claude debug tools
+.claude/debug-logs/

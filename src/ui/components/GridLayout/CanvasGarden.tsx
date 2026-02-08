@@ -10,34 +10,42 @@ import { useGardenStore } from '../../store/gardenStore';
 import { useCanvasCulling } from '../../hooks/useCanvasCulling';
 import { useRenderLoop } from '../../hooks/useRenderLoop';
 import { useCanvasControls } from '../../hooks/useCanvasControls';
+import { usePaintBrush } from '../../hooks/usePaintBrush';
 import { Minimap } from './Minimap';
+import { PaintToolbar } from './PaintToolbar';
 
 export function CanvasGarden() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const paintOverlayRef = useRef<Map<string, import('@core/types').SubcellState>>(new Map());
   const [canvasSize, setCanvasSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
   });
 
   // Store state
-  const garden = useGardenStore((state) => state.garden);
+  const gardenState = useGardenStore((state) => state.gardenState);
   const viewport = useGardenStore((state) => state.viewport);
   const setViewport = useGardenStore((state) => state.setViewport);
   const speciesMap = useGardenStore((state) => state.speciesMap);
+  const paintMode = useGardenStore((state) => state.paintMode);
+  const brushCursor = useGardenStore((state) => state.brushCursor);
 
   // Culling - filter to visible subcells only
   const { visibleSubcells, culledCount } = useCanvasCulling(
-    garden?.subcells || [],
+    gardenState?.subcells || [],
     viewport,
     canvasSize.width,
     canvasSize.height
   );
 
-  // Controls - mouse wheel zoom + click-drag pan + touch gestures
-  useCanvasControls(canvasRef, viewport, setViewport);
+  // Controls - mouse wheel zoom + click-drag pan + touch gestures (disabled when painting)
+  useCanvasControls(canvasRef, viewport, setViewport, paintMode !== 'none');
 
-  // Render loop - 60fps Canvas rendering
-  useRenderLoop(canvasRef, viewport, visibleSubcells, garden, speciesMap);
+  // Paint brush - click/drag painting on canvas (uses paintOverlayRef for zero-overhead updates)
+  usePaintBrush(canvasRef, viewport, gardenState?.subcells || [], paintOverlayRef);
+
+  // Render loop - 60fps Canvas rendering (reads from paintOverlayRef directly, no re-renders)
+  useRenderLoop(canvasRef, viewport, visibleSubcells, gardenState, speciesMap, brushCursor, paintOverlayRef);
 
   // Window resize handler
   useEffect(() => {
@@ -52,7 +60,7 @@ export function CanvasGarden() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (!garden) {
+  if (!gardenState) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
         <div className="text-center">
@@ -66,15 +74,16 @@ export function CanvasGarden() {
   }
 
   return (
-    <>
+    <div className="relative w-full h-full">
       <canvas
         ref={canvasRef}
         width={canvasSize.width}
         height={canvasSize.height}
         className="block"
-        style={{ cursor: 'grab' }}
+        style={{ cursor: paintMode !== 'none' ? 'crosshair' : 'grab' }}
       />
-      <Minimap viewport={viewport} garden={garden} onViewportChange={setViewport} />
-    </>
+      <Minimap viewport={viewport} garden={gardenState} onViewportChange={setViewport} />
+      <PaintToolbar />
+    </div>
   );
 }

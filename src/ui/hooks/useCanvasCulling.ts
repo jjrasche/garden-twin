@@ -8,11 +8,11 @@
  */
 
 import { useMemo } from 'react';
-import type { Subcell } from '@core/types';
+import type { SubcellState } from '@core/types';
 import { getViewportBounds, type Viewport } from '../utils/canvasTransforms';
 
 export interface CullingResult {
-  visibleSubcells: Subcell[];
+  visibleSubcells: SubcellState[];
   totalSubcells: number;
   culledCount: number;
   visiblePercent: number;
@@ -29,7 +29,7 @@ export interface CullingResult {
  * @returns Culling result with visible subcells and statistics
  */
 export function useCanvasCulling(
-  subcells: Subcell[],
+  subcells: SubcellState[],
   viewport: Viewport,
   canvasWidth: number,
   canvasHeight: number,

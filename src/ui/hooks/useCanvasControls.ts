@@ -21,11 +21,13 @@ interface ControlsState {
  * @param canvasRef - Reference to canvas element
  * @param viewport - Current viewport state
  * @param setViewport - Function to update viewport
+ * @param disabled - Disable panning (but not zoom) when painting
  */
 export function useCanvasControls(
   canvasRef: React.RefObject<HTMLCanvasElement>,
   viewport: Viewport,
-  setViewport: (viewport: Viewport) => void
+  setViewport: (viewport: Viewport) => void,
+  disabled: boolean = false
 ) {
   const stateRef = useRef<ControlsState>({
     isPanning: false,
@@ -78,15 +80,16 @@ export function useCanvasControls(
    */
   const handleMouseDown = useCallback((e: MouseEvent) => {
     if (e.button !== 0) return; // Only left click
+    if (disabled) return; // Skip when painting mode active
 
     stateRef.current.isPanning = true;
     stateRef.current.lastMousePos = { x: e.clientX, y: e.clientY };
 
-    // Change cursor to grabbing
-    if (canvasRef.current) {
+    // Change cursor to grabbing (only when not disabled/painting)
+    if (canvasRef.current && !disabled) {
       canvasRef.current.style.cursor = 'grabbing';
     }
-  }, [canvasRef]);
+  }, [canvasRef, disabled]);
 
   /**
    * Mouse move - pan viewport
@@ -120,11 +123,11 @@ export function useCanvasControls(
   const handleMouseUp = useCallback(() => {
     stateRef.current.isPanning = false;
 
-    // Change cursor back to grab
-    if (canvasRef.current) {
+    // Change cursor back to grab (only when not disabled/painting)
+    if (canvasRef.current && !disabled) {
       canvasRef.current.style.cursor = 'grab';
     }
-  }, [canvasRef]);
+  }, [canvasRef, disabled]);
 
   /**
    * Touch start - detect pinch gesture

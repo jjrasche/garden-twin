@@ -10,11 +10,13 @@ const PLANT_ICONS: Record<string, string> = {
   'corn_wapsie_valley': '🌽',
   'corn_golden_bantam': '🌽',
   'corn_stowells_evergreen': '🌽',
+  'corn_dent': '🌽',
 
   // Tomato varieties
   'tomato_better_boy': '🍅',
   'tomato_beefsteak': '🍅',
   'tomato_cherry': '🍅',
+  'tomato_san_marzano': '🍅',
 
   // Potato varieties
   'potato_russet_burbank': '🥔',
@@ -25,6 +27,13 @@ const PLANT_ICONS: Record<string, string> = {
   'lettuce_romaine': '🥬',
   'lettuce_butterhead': '🥬',
   'lettuce_iceberg': '🥬',
+  'lettuce_nevada': '🥬',
+
+  // Bean varieties
+  'bean_pole': '🫘',
+
+  // Squash varieties
+  'squash_winter': '🎃',
 
   // Other vegetables
   'carrot': '🥕',
@@ -46,7 +55,7 @@ const PLANT_ICONS: Record<string, string> = {
  * @returns Emoji icon character
  */
 export function getPlantIcon(speciesId: string): string {
-  return PLANT_ICONS[speciesId] || PLANT_ICONS.default;
+  return PLANT_ICONS[speciesId] || PLANT_ICONS.default || '🌱';
 }
 
 /**
@@ -89,6 +98,7 @@ export function getPlantColor(speciesId: string): string {
   if (speciesId.startsWith('onion')) return '#FDE047'; // yellow-300
   if (speciesId.startsWith('pepper')) return '#22C55E'; // green-500
   if (speciesId.startsWith('cucumber')) return '#10B981'; // green-500
+  if (speciesId.startsWith('bean')) return '#65A30D'; // lime-600
   if (speciesId.startsWith('squash')) return '#F59E0B'; // amber-500
   if (speciesId.startsWith('pumpkin')) return '#F97316'; // orange-500
 
