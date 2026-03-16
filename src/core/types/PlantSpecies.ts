@@ -58,15 +58,81 @@ export const SoilModifiersSchema = z.object({
 export type SoilModifiers = z.infer<typeof SoilModifiersSchema>;
 
 /**
+ * Bolting trigger — population survival model, not a yield scaler.
+ * When condition exceeds threshold, a fraction of plants bolt (yield = 0).
+ * Surviving plants produce at full yield. Applied as plant_count multiplier.
+ *
+ * Example: spinach at 14h photoperiod → 60% of Bloomsdale population survives.
+ */
+export const BoltTriggerSchema = z.object({
+  condition: z.enum(['photoperiod_h', 'temperature_f']),
+  // Condition value → fraction of population that SURVIVES (1.0 = no bolting, 0.0 = all bolted)
+  survival_curve: LookupTableSchema,
+});
+
+export type BoltTrigger = z.infer<typeof BoltTriggerSchema>;
+
+/**
+ * Cut-and-come-again harvest parameters.
+ *
+ * Models plants harvested by cutting foliage, which then regrows for
+ * subsequent cuts. Each cut yields a fraction of baseline_lbs_per_plant,
+ * weighted by cut_yield_curve and normalized so total = baseline.
+ *
+ * Example: lettuce with 4 cuts, curve {1:1.0, 2:0.8, 3:0.6, 4:0.4}
+ *   sum = 2.8, cut 1 gets 1.0/2.8 = 35.7% of baseline, etc.
+ *   Environmental modifiers scale each cut independently.
+ */
+export const CutAndComeAgainSchema = z.object({
+  max_cuts: z.number().int().min(1),
+  regrowth_days: z.number().int().min(1),
+  // Cut number → relative yield weight. Normalized by sum to distribute baseline.
+  cut_yield_curve: LookupTableSchema,
+});
+
+export type CutAndComeAgain = z.infer<typeof CutAndComeAgainSchema>;
+
+/**
  * All yield modifiers for a species
  */
 export const ModifiersSchema = z.object({
   sun: LookupTableSchema,                    // Sun hours → multiplier
   soil: SoilModifiersSchema,                 // Soil conditions → multipliers
   spacing_plants_per_sq_ft: LookupTableSchema, // Plant density → multiplier
+  // Water stress — soil moisture as % of field capacity (FC) → yield multiplier.
+  // FC = max water soil holds after gravity drainage. 0% = oven-dry, ~20-25% = permanent
+  // wilting point (PWP), 100% = field capacity, >100% = waterlogged (pore space filling).
+  // Optimal range varies by species (FAO depletion fraction p): corn ~50-90%, lettuce ~75-95%.
+  // Source: FAO Irrigation & Drainage Papers 33 (Doorenbos & Kassam 1979) and 56 (Allen 1998).
+  soil_moisture_pct_fc: LookupTableSchema.optional(),
+  // Seasonal modifiers — applied per-week against local environment data
+  temperature_f: LookupTableSchema.optional(),      // Avg daily high °F → multiplier
+  soil_temperature_f: LookupTableSchema.optional(),  // Soil temp °F → multiplier (potato tuberization)
+  photoperiod_h: LookupTableSchema.optional(),       // Day length hours → yield multiplier (continuous)
+  // Bolting — threshold event that kills fraction of population (not a yield scaler)
+  bolt_trigger: BoltTriggerSchema.optional(),
 });
 
 export type Modifiers = z.infer<typeof ModifiersSchema>;
+
+/**
+ * GDD-based phenology — replaces calendar days_to_first_harvest.
+ *
+ * GDD (Growing Degree Days) = max(0, (high + low) / 2 - base_temp_f).
+ * Stage transitions occur when accumulated GDD crosses thresholds.
+ * A tomato matures after ~1200 GDD base 50°F, not "82 days."
+ */
+export const PhenologySchema = z.object({
+  base_temp_f: z.number(),
+  gdd_stages: z.object({
+    vegetative: z.number(),
+    flowering: z.number(),
+    fruiting: z.number(),
+    mature: z.number(),
+  }),
+});
+
+export type Phenology = z.infer<typeof PhenologySchema>;
 
 /**
  * Data source citation
@@ -78,6 +144,84 @@ export const SourceSchema = z.object({
 });
 
 export type Source = z.infer<typeof SourceSchema>;
+
+/**
+ * Spacing requirements for layout optimization
+ */
+export const SpacingSchema = z.object({
+  in_row_in: z.number().min(1),         // Inches between plants within a row
+  between_row_in: z.number().min(1),    // Inches between rows
+  equidistant_in: z.number().min(1).optional(), // Equidistant grid spacing (corn, etc.)
+});
+
+export type Spacing = z.infer<typeof SpacingSchema>;
+
+/**
+ * Companion planting relationship between two species
+ */
+export const CompanionEffectSchema = z.object({
+  target_species_id: z.string(),        // The other species in this relationship
+  effect: z.enum(['beneficial', 'antagonistic']),
+  mechanism: z.string(),                // Why (e.g., "shared blight", "repels aphids")
+  min_distance_in: z.number().min(0).optional(), // Minimum separation for antagonistic
+  max_distance_in: z.number().min(0).optional(), // Maximum distance for beneficial effect
+});
+
+export type CompanionEffect = z.infer<typeof CompanionEffectSchema>;
+
+/**
+ * Pest control properties for companion plants (marigold, nasturtium, etc.)
+ */
+export const PestControlSchema = z.object({
+  repels: z.array(z.string()),                  // Pests repelled (e.g., "nematodes", "aphids")
+  attracts_beneficial: z.array(z.string()),     // Beneficial insects attracted
+  effective_radius_in: z.number().min(0),       // How far the effect extends from plant center
+  is_trap_crop: z.boolean(),                    // Draws pests to itself (nasturtium)
+  trap_distance_in: z.number().min(0).optional(), // Optimal distance from protected crop
+});
+
+export type PestControl = z.infer<typeof PestControlSchema>;
+
+/**
+ * Layout profile — all attributes needed for spatial optimization
+ *
+ * Captures spacing, light, temperature, companion, and containment
+ * constraints that the layout optimizer uses to place plants.
+ */
+export const LayoutProfileSchema = z.object({
+  // Spacing
+  spacing: SpacingSchema,
+
+  // Light
+  shade_tolerance: z.enum(['full_sun', 'partial_shade', 'shade_preferred']),
+
+  // Physical dimensions
+  spread_in: z.number().min(1),                 // Canopy/foliage width at maturity
+  root_depth: z.enum(['shallow', 'medium', 'deep']),
+
+  // Temperature
+  frost_tolerance: z.enum(['very_hardy', 'semi_hardy', 'tender']),
+  kill_temp_f: z.number(),                      // Air temp (°F) that kills the plant
+  min_soil_temp_f: z.number(),                  // Minimum soil temp for planting/germination
+
+  // Planting
+  planting_method: z.enum(['direct_sow', 'transplant', 'tuber', 'rhizome']),
+
+  // Role in the garden
+  role: z.enum(['food_crop', 'pest_control', 'herb', 'cover_crop']),
+
+  // Companion planting relationships
+  companions: z.array(CompanionEffectSchema).optional(),
+
+  // Pest control properties (for companion/pest-control plants)
+  pest_control: PestControlSchema.optional(),
+
+  // Containment (invasive species like mint, catnip)
+  needs_containment: z.boolean(),
+  spread_mechanism: z.enum(['none', 'rhizomes', 'self_seeding', 'both']).optional(),
+});
+
+export type LayoutProfile = z.infer<typeof LayoutProfileSchema>;
 
 /**
  * Plant species definition
@@ -96,11 +240,26 @@ export const PlantSpeciesSchema = z.object({
 
   // Timing (days from planting)
   days_to_first_harvest: z.number().int().min(0),
-  days_harvest_window: z.number().int().min(0), // How many days harvest lasts
 
-  // Yield model
-  baseline_lbs_per_plant: z.number().min(0),  // Yield under optimal conditions
-  success_rate: z.number().min(0).max(1),     // Probability plant survives to harvest
+  // Harvest model
+  // 'cut_and_come_again': discrete cuts with regrowth (lettuce, spinach, kale)
+  // 'continuous': ongoing fruit production, weekly conditions scale yield (tomato)
+  // 'bulk_harvest': all yield at one point, growth conditions determine total (potato, corn)
+  harvest_type: z.enum(['cut_and_come_again', 'continuous', 'bulk_harvest']).optional(),
+
+  // Yield model — baseline = theoretical optimum under ideal conditions.
+  // Modifiers reduce to real-world values. Do not bake conservatism into baseline.
+  baseline_lbs_per_plant: z.number().min(0),
+
+  // Survival decomposition: tracks seed→plant and plant→harvest independently.
+  // germination_rate: fraction of seeds/tubers that emerge (1.0 for transplants).
+  // establishment_rate: fraction of emerged plants that survive to harvest.
+  // Combined: survivalRate(species) = germination_rate × establishment_rate
+  germination_rate: z.number().min(0).max(1),
+  establishment_rate: z.number().min(0).max(1),
+
+  // Cut-and-come-again parameters (required when harvest_type === 'cut_and_come_again')
+  cut_and_come_again: CutAndComeAgainSchema.optional(),
 
   // Yield modifiers (interpolated lookup tables)
   modifiers: ModifiersSchema,
@@ -111,8 +270,11 @@ export const PlantSpeciesSchema = z.object({
   // Visual representation
   icon: IconSchema,
 
-  // Labor requirements have been moved to Rules (src/core/types/Rules.ts)
-  // Task generation is now data-driven based on GardenState comparison
+  // GDD-based phenology (optional — being added in Phase 1)
+  phenology: PhenologySchema.optional(),
+
+  // Layout optimization profile (optional — not all legacy species have this yet)
+  layout: LayoutProfileSchema.optional(),
 
   // Costs
   seed_cost_per_plant: z.number().min(0),
@@ -124,3 +286,8 @@ export const PlantSpeciesSchema = z.object({
 });
 
 export type PlantSpecies = z.infer<typeof PlantSpeciesSchema>;
+
+/** Combined survival fraction: germination × establishment. */
+export function survivalRate(species: PlantSpecies): number {
+  return species.germination_rate * species.establishment_rate;
+}

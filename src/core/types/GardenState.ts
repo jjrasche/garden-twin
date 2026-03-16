@@ -53,7 +53,6 @@ export const PlantInstanceSchema = z.object({
   // Observed state (from sensors/observations)
   current_stage: GrowthStageSchema,
   height_cm: z.number().min(0),
-  health_score: z.number().min(0).max(1),   // 0 = dead, 1 = perfect
   fruit_count: z.number().int().min(0).optional(),
   last_observed: z.string(),                // ISO datetime
 
@@ -283,9 +282,9 @@ export function getVarianceFromExpected(
  * Calculate summary stats from plants
  */
 export function calculateSummary(plants: PlantInstance[], pendingTasks: number = 0): GardenStateSummary {
-  const healthy = plants.filter(p => p.health_status === 'healthy' || p.health_score >= 0.8).length;
-  const attention = plants.filter(p => p.health_status === 'attention_needed' || (p.health_score >= 0.5 && p.health_score < 0.8)).length;
-  const critical = plants.filter(p => p.health_status === 'critical' || p.health_score < 0.5).length;
+  const healthy = plants.filter(p => p.health_status === 'healthy').length;
+  const attention = plants.filter(p => p.health_status === 'attention_needed').length;
+  const critical = plants.filter(p => p.health_status === 'critical').length;
 
   return {
     total_plants: plants.length,

@@ -260,7 +260,7 @@ export function getZoneStats(
   const subcells = getSubcellsInZone(state, zone_x, zone_y);
 
   const healthy = plants.filter(p =>
-    p.health_status === 'healthy' || p.health_score >= 0.8
+    p.health_status === 'healthy'
   ).length;
 
   const empty = subcells.filter(s =>
@@ -330,8 +330,8 @@ export function compareStates(
       if (beforePlant.height_cm !== afterPlant.height_cm) {
         changes.height_cm = afterPlant.height_cm;
       }
-      if (beforePlant.health_score !== afterPlant.health_score) {
-        changes.health_score = afterPlant.health_score;
+      if (beforePlant.health_status !== afterPlant.health_status) {
+        changes.health_status = afterPlant.health_status;
       }
       if (beforePlant.current_stage !== afterPlant.current_stage) {
         changes.current_stage = afterPlant.current_stage;
@@ -369,18 +369,10 @@ export function applyObservations(
         const plant = { ...newPlants[plantIndex] };
 
         if (obs.height_cm !== undefined) plant.height_cm = obs.height_cm;
-        if (obs.health_score !== undefined) plant.health_score = obs.health_score;
         if (obs.growth_stage !== undefined) plant.current_stage = obs.growth_stage;
         if (obs.fruit_count !== undefined) plant.fruit_count = obs.fruit_count;
 
         plant.last_observed = obs.timestamp;
-
-        // Update health status based on score
-        const healthScore = plant.health_score ?? 0;
-        if (healthScore >= 0.8) plant.health_status = 'healthy';
-        else if (healthScore >= 0.5) plant.health_status = 'attention_needed';
-        else if (healthScore > 0) plant.health_status = 'critical';
-        else plant.health_status = 'dead';
 
         newPlants[plantIndex] = plant;
       }

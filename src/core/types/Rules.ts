@@ -241,7 +241,7 @@ export const DEFAULT_RULES: TaskRule[] = [
     version: 1,
     name: 'Inspect unhealthy plants',
     description: 'Generate inspection task for plants with low health score',
-    condition: 'plant.health_score < 0.5',
+    condition: 'plant.health_status === "critical"',
     task_type: 'inspect',
     priority: 7,
     target_type: 'plant',

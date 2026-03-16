@@ -13,6 +13,23 @@ import { TOMATO_SAN_MARZANO } from '../../../research/san-marzano-tomato/config'
 import { BEAN_POLE } from '../../../research/pole-bean/config';
 import { SQUASH_WINTER } from '../../../research/winter-squash/config';
 
+// Garden species (11-plant catalog with layout profiles, research-validated yields)
+import { GARDEN_SPECIES, GARDEN_SPECIES_MAP } from './gardenSpecies';
+export {
+  CORN_NOTHSTINE_DENT,
+  POTATO_KENNEBEC,
+  TOMATO_SUN_GOLD,
+  TOMATO_AMISH_PASTE,
+  LETTUCE_BSS,
+  KALE_RED_RUSSIAN,
+  SPINACH_BLOOMSDALE,
+  MARIGOLD_FRENCH,
+  NASTURTIUM,
+  CALENDULA,
+  GARDEN_SPECIES,
+  GARDEN_SPECIES_MAP,
+} from './gardenSpecies';
+
 // Re-export research varieties for convenience
 export {
   CORN_GOLDEN_BANTAM,
@@ -49,9 +66,10 @@ export const CORN_WAPSIE_VALLEY: PlantSpecies = {
   days_to_first_harvest: 89,
   days_harvest_window: 14,
 
-  // Yield: ~1/4 lb per ear, 90% success rate
+  // Yield: ~1/4 lb per ear
   baseline_lbs_per_plant: 0.25,
-  success_rate: 0.9,
+  germination_rate: 0.90,
+  establishment_rate: 0.95,
 
   // Modifiers
   modifiers: {
@@ -182,9 +200,10 @@ export const TOMATO_BETTER_BOY: PlantSpecies = {
   days_to_first_harvest: 70,
   days_harvest_window: 60,
 
-  // Yield: ~15 lbs per plant over season, 85% success rate
+  // Yield: ~15 lbs per plant over season
   baseline_lbs_per_plant: 15,
-  success_rate: 0.85,
+  germination_rate: 1.00,
+  establishment_rate: 0.85,
 
   modifiers: {
     // Sun hours
@@ -323,6 +342,8 @@ export const PLANT_SPECIES_MAP = new Map<string, PlantSpecies>([
   [BEAN_POLE.id, BEAN_POLE],
   // Research varieties - Squash
   [SQUASH_WINTER.id, SQUASH_WINTER],
+  // Garden species (15-plant catalog with layout profiles)
+  ...GARDEN_SPECIES_MAP,
 ]);
 
 /**

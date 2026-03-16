@@ -11,29 +11,49 @@ const PLANT_ICONS: Record<string, string> = {
   'corn_golden_bantam': '🌽',
   'corn_stowells_evergreen': '🌽',
   'corn_dent': '🌽',
+  'corn_nothstine_dent': '🌽',
 
   // Tomato varieties
   'tomato_better_boy': '🍅',
   'tomato_beefsteak': '🍅',
   'tomato_cherry': '🍅',
   'tomato_san_marzano': '🍅',
+  'tomato_sun_gold': '🍅',
+  'tomato_amish_paste': '🍅',
 
   // Potato varieties
   'potato_russet_burbank': '🥔',
   'potato_red_norland': '🥔',
   'potato_yukon_gold': '🥔',
+  'potato_kennebec': '🥔',
 
   // Lettuce varieties
   'lettuce_romaine': '🥬',
   'lettuce_butterhead': '🥬',
   'lettuce_iceberg': '🥬',
   'lettuce_nevada': '🥬',
+  'lettuce_bss': '🥬',
+
+  // Greens
+  'kale_red_russian': '🥬',
+  'spinach_bloomsdale': '🥬',
 
   // Bean varieties
   'bean_pole': '🫘',
 
   // Squash varieties
   'squash_winter': '🎃',
+
+  // Companion plants
+  'marigold_french': '🌼',
+  'nasturtium': '🌺',
+  'calendula': '🌼',
+  'catnip': '🌿',
+
+  // Herbs
+  'mint_spearmint': '🌿',
+  'parsley_italian': '🌿',
+  'cilantro_slow_bolt': '🌿',
 
   // Other vegetables
   'carrot': '🥕',
@@ -93,11 +113,20 @@ export function getPlantColor(speciesId: string): string {
   if (speciesId.startsWith('corn')) return '#FBBF24'; // amber-400
   if (speciesId.startsWith('tomato')) return '#EF4444'; // red-500
   if (speciesId.startsWith('potato')) return '#A78BFA'; // purple-400
-  if (speciesId.startsWith('lettuce')) return '#34D399'; // emerald-400
+  if (speciesId.startsWith('lettuce')) return '#86EFAC'; // green-300 (light green)
   if (speciesId.startsWith('carrot')) return '#FB923C'; // orange-400
   if (speciesId.startsWith('onion')) return '#FDE047'; // yellow-300
   if (speciesId.startsWith('pepper')) return '#22C55E'; // green-500
   if (speciesId.startsWith('cucumber')) return '#10B981'; // green-500
+  if (speciesId.startsWith('kale')) return '#2DD4BF'; // teal-400
+  if (speciesId.startsWith('spinach')) return '#166534'; // green-800 (dark leafy)
+  if (speciesId.startsWith('marigold')) return '#FF8C00'; // dark orange
+  if (speciesId.startsWith('nasturtium')) return '#FF6347'; // tomato-red-orange
+  if (speciesId.startsWith('calendula')) return '#FFD700'; // gold
+  if (speciesId.startsWith('catnip')) return '#6B8E23'; // olive drab
+  if (speciesId.startsWith('mint')) return '#3CB371'; // medium sea green
+  if (speciesId.startsWith('parsley')) return '#228B22'; // forest green
+  if (speciesId.startsWith('cilantro')) return '#32CD32'; // lime green
   if (speciesId.startsWith('bean')) return '#65A30D'; // lime-600
   if (speciesId.startsWith('squash')) return '#F59E0B'; // amber-500
   if (speciesId.startsWith('pumpkin')) return '#F97316'; // orange-500

@@ -73,7 +73,6 @@ export const ObservationSchema = z.object({
 
   // Plant observations (sparse - only include what was measured)
   height_cm: z.number().min(0).optional(),
-  health_score: z.number().min(0).max(1).optional(),
   growth_stage: GrowthStageSchema.optional(),
   fruit_count: z.number().int().min(0).optional(),
   leaf_count: z.number().int().min(0).optional(),
@@ -130,7 +129,6 @@ export function hasPlantData(obs: Observation): boolean {
   return !!(
     obs.plant_id &&
     (obs.height_cm !== undefined ||
-     obs.health_score !== undefined ||
      obs.growth_stage !== undefined ||
      obs.fruit_count !== undefined)
   );

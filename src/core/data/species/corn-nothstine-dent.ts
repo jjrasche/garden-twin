@@ -1,0 +1,83 @@
+import { PlantSpecies } from '../../types';
+import { SOIL_HEAVY_FEEDER } from './shared-modifiers';
+
+export const CORN_NOTHSTINE_DENT: PlantSpecies = {
+  id: 'corn_nothstine_dent',
+  name: 'Corn (Nothstine Dent)',
+
+  plants_per_sq_ft: 0.44,
+  height_ft: 7,
+
+  days_to_first_harvest: 95,
+  harvest_type: 'bulk_harvest',
+
+  // Research-validated: Nothstine produces smaller 7-8" ears, catalogs say
+  // "not high-yielding." 0.24 lbs dry grain/plant for early small-eared dent.
+  baseline_lbs_per_plant: 0.24,
+  germination_rate: 0.90,   // Large seeds; direct sow
+  establishment_rate: 0.95, // Cutworm/bird pressure on seedlings
+
+  modifiers: {
+    sun: { 4: 0.3, 6: 0.7, 8: 1.0, 10: 1.0 },
+    // C4 — thrives in heat, pollination fails >95°F (silk desiccation).
+    // Optimal 77-91°F. Below 50°F: no growth. Sources: Iowa State, Purdue Agronomy.
+    temperature_f: { 50: 0.0, 60: 0.4, 70: 0.8, 80: 1.0, 90: 0.9, 95: 0.5, 100: 0.1 },
+    // FAO p=0.55, Ky=1.25. Deep roots — widest drought tolerance of food crops.
+    // Silking is critical: 5-8% yield loss/day of severe stress. Sources: FAO 33/56, Purdue NCH-18.
+    soil_moisture_pct_fc: { 20: 0.0, 35: 0.3, 45: 0.75, 60: 0.92, 80: 1.0, 90: 1.0, 100: 0.97, 115: 0.7, 130: 0.1 },
+    soil: SOIL_HEAVY_FEEDER,
+    spacing_plants_per_sq_ft: { 0.2: 1.2, 0.44: 1.0, 0.8: 0.8, 1.5: 0.4 },
+  },
+
+  nutrition_per_lb: {
+    calories: 1650,
+    protein_g: 43,
+    carbs_g: 340,
+    fat_g: 21,
+    fiber_g: 33,
+  },
+
+  icon: { emoji: '🌽', color: '#D4A017' },
+
+  phenology: {
+    base_temp_f: 50,
+    gdd_stages: { vegetative: 435, flowering: 1020, fruiting: 1475, mature: 2100 },
+  },
+
+  layout: {
+    spacing: { in_row_in: 18, between_row_in: 18, equidistant_in: 18 },
+    shade_tolerance: 'full_sun',
+    spread_in: 22,
+    root_depth: 'deep',
+    frost_tolerance: 'tender',
+    kill_temp_f: 32,
+    min_soil_temp_f: 55,
+    planting_method: 'direct_sow',
+    role: 'food_crop',
+    needs_containment: false,
+    companions: [],
+  },
+
+  seed_cost_per_plant: 0.10,
+
+  data_confidence: 'high',
+  sources: [
+    {
+      claim: 'days to maturity, yield, spacing',
+      citation:
+        'Nothstine Dent seed catalog data — Fedco Seeds, Johnny\'s Selected Seeds',
+      url: 'https://www.fedcoseeds.com/',
+    },
+    {
+      claim: 'nutrition',
+      citation: 'USDA FoodData Central — Corn grain, yellow (dent)',
+      url: 'https://fdc.nal.usda.gov/',
+    },
+    {
+      claim: 'companion planting — earworm distance',
+      citation:
+        'University of Minnesota Extension — Corn Earworm Management',
+      url: 'https://extension.umn.edu/',
+    },
+  ],
+};

@@ -1,125 +1,304 @@
-import React from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
+  ReferenceDot,
 } from 'recharts';
-import { useGardenStore } from '../../store/gardenStore';
+import {
+  simulateSeason,
+  PRODUCTION_PLAN,
+  GREENS_TARGET_PER_WEEK,
+  WEEKLY_TARGETS,
+  CropPlanting,
+  WeeklyHarvest,
+} from '../../../core/calculators/ProductionTimeline';
+import { useWeatherSource } from '../../hooks/useWeatherSource';
 
-export function HarvestTimeline() {
-  const projection = useGardenStore((state) => state.projection);
+const GROUP_COLORS: Record<string, string> = {
+  Lettuce: '#7BC67E',
+  Spinach: '#2E8B57',
+  Kale: '#8B4513',
+  Paste: '#C0392B',
+  Cherry: '#E74C3C',
+  Potato: '#a78bfa',
+  Corn: '#fbbf24',
+};
 
-  if (!projection || projection.harvest_schedule.length === 0) {
+const DISPLAY_GROUPS = ['Lettuce', 'Spinach', 'Kale', 'Paste', 'Cherry', 'Potato', 'Corn'];
+
+function formatWeekLabel(date: Date): string {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]} ${date.getDate()}`;
+}
+
+interface ChartRow {
+  week: string;
+  Lettuce: number;
+  Spinach: number;
+  Kale: number;
+  Paste: number;
+  Cherry: number;
+  Potato: number;
+  Corn: number;
+  Greens: number;
+  Total: number;
+  sowingGroups: Set<string>;
+  // Actual overlay (undefined when no actual data provided)
+  actual_Greens?: number;
+  actual_Total?: number;
+}
+
+/** Map each week label to the set of groups sowed that week. */
+function buildSowingByWeek(plan: readonly CropPlanting[]): Map<string, Set<string>> {
+  const map = new Map<string, Set<string>>();
+  for (const p of plan) {
+    const d = new Date(p.planting_date);
+    const weekIndex = Math.floor((d.getTime() - SEASON_START.getTime()) / (7 * MS_PER_DAY));
+    const weekStart = new Date(SEASON_START.getTime() + weekIndex * 7 * MS_PER_DAY);
+    const label = formatWeekLabel(weekStart);
+    const groups = map.get(label) ?? new Set<string>();
+    groups.add(p.display_group);
+    map.set(label, groups);
+  }
+  return map;
+}
+
+function buildChartData(plan: typeof PRODUCTION_PLAN, env: import('@core/environment').EnvironmentSource, actualData?: WeeklyHarvest[]): ChartRow[] {
+  const weeks = simulateSeason(plan, env);
+  const sowingByWeek = buildSowingByWeek(plan);
+
+  const actualByWeek = new Map<string, WeeklyHarvest>();
+  if (actualData) {
+    for (const aw of actualData) {
+      actualByWeek.set(formatWeekLabel(aw.week_start), aw);
+    }
+  }
+
+  return weeks.map((w) => {
+    const greens = (w.lbs_by_group['Lettuce'] ?? 0) +
+      (w.lbs_by_group['Spinach'] ?? 0) +
+      (w.lbs_by_group['Kale'] ?? 0);
+    const label = formatWeekLabel(w.week_start);
+    const aw = actualByWeek.get(label);
+
+    const row: ChartRow = {
+      week: label,
+      Lettuce: +(w.lbs_by_group['Lettuce'] ?? 0).toFixed(1),
+      Spinach: +(w.lbs_by_group['Spinach'] ?? 0).toFixed(1),
+      Kale: +(w.lbs_by_group['Kale'] ?? 0).toFixed(1),
+      Paste: +(w.lbs_by_group['Paste'] ?? 0).toFixed(1),
+      Cherry: +(w.lbs_by_group['Cherry'] ?? 0).toFixed(1),
+      Potato: +(w.lbs_by_group['Potato'] ?? 0).toFixed(1),
+      Corn: +(w.lbs_by_group['Corn'] ?? 0).toFixed(1),
+      Greens: +greens.toFixed(1),
+      Total: +w.total_lbs.toFixed(1),
+      sowingGroups: sowingByWeek.get(label) ?? new Set(),
+    };
+
+    if (aw) {
+      const actualGreens = (aw.lbs_by_group['Lettuce'] ?? 0) +
+        (aw.lbs_by_group['Spinach'] ?? 0) +
+        (aw.lbs_by_group['Kale'] ?? 0);
+      row.actual_Greens = +actualGreens.toFixed(1);
+      row.actual_Total = +aw.total_lbs.toFixed(1);
+    }
+
+    return row;
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HarvestTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const row: ChartRow = payload[0]?.payload;
+  if (!row) return null;
+
+  const lines: { name: string; value: string; color: string }[] = [];
+  for (const group of DISPLAY_GROUPS) {
+    const lbs = row[group as keyof ChartRow] as number;
+    const isSowing = row.sowingGroups.has(group);
+    if (lbs > 0) {
+      lines.push({ name: group, value: `${lbs} lbs`, color: GROUP_COLORS[group] ?? '#9ca3af' });
+    } else if (isSowing) {
+      lines.push({ name: group, value: 'sow', color: GROUP_COLORS[group] ?? '#9ca3af' });
+    }
+  }
+  if (row.Greens > 0) {
+    lines.push({ name: 'Greens total', value: `${row.Greens} lbs`, color: '#22d3ee' });
+  }
+
+  return (
+    <div style={{
+      backgroundColor: '#1f2937', border: '1px solid #374151',
+      borderRadius: 4, padding: '8px 12px', fontSize: 12,
+    }}>
+      <p style={{ color: '#f3f4f6', margin: '0 0 4px', fontWeight: 600 }}>{label}</p>
+      {lines.map((l) => (
+        <p key={l.name} style={{ color: l.color, margin: '2px 0' }}>
+          {l.name}: {l.value}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+const SEASON_START = new Date('2025-04-14');
+const MS_PER_DAY = 86_400_000;
+
+interface SowingDot {
+  weekLabel: string;
+  group: string;
+  color: string;
+}
+
+/** One dot per crop per sowing date, positioned at y=0 on the crop's color. */
+function buildSowingDots(plan: readonly CropPlanting[]): SowingDot[] {
+  const seen = new Set<string>();
+  const dots: SowingDot[] = [];
+  for (const p of plan) {
+    const d = new Date(p.planting_date);
+    const weekIndex = Math.floor((d.getTime() - SEASON_START.getTime()) / (7 * MS_PER_DAY));
+    const weekStart = new Date(SEASON_START.getTime() + weekIndex * 7 * MS_PER_DAY);
+    const label = formatWeekLabel(weekStart);
+    const key = `${label}-${p.display_group}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    dots.push({ weekLabel: label, group: p.display_group, color: GROUP_COLORS[p.display_group] ?? '#9ca3af' });
+  }
+  return dots;
+}
+
+interface HarvestTimelineProps {
+  actualData?: WeeklyHarvest[];
+}
+
+export function HarvestTimeline({ actualData }: HarvestTimelineProps = {}) {
+  const { env } = useWeatherSource();
+  const chartData = useMemo(() => buildChartData(PRODUCTION_PLAN, env, actualData), [env, actualData]);
+  const sowingDots = useMemo(() => buildSowingDots(PRODUCTION_PLAN), []);
+  const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLegendEnter = useCallback((e: any) => {
+    setHoveredGroup(e?.dataKey ?? e?.value ?? null);
+  }, []);
+
+  const handleLegendLeave = useCallback(() => {
+    setHoveredGroup(null);
+  }, []);
+
+  if (chartData.length === 0) {
     return (
-      <div className="bg-gray-900 p-4 border-b border-gray-700">
-        <h2 className="text-white text-sm font-semibold mb-2">Harvest Timeline</h2>
+      <div className="bg-gray-900 p-4">
         <p className="text-gray-400 text-xs">No harvest data available</p>
       </div>
     );
   }
 
-  const { harvest_schedule } = projection;
-
-  // Transform data for chart
-  const chartData = harvest_schedule.map((week) => {
-    const dataPoint: Record<string, number | string> = {
-      week: `W${week.week_number}`,
-      weekNumber: week.week_number,
-    };
-
-    // Add species-specific yields
-    for (const harvest of week.harvests) {
-      const species = harvest.species_id;
-      dataPoint[species] = (dataPoint[species] as number || 0) + harvest.lbs;
-    }
-
-    return dataPoint;
-  });
-
-  // Get all unique species IDs
-  const allSpecies = Array.from(
-    new Set(
-      harvest_schedule.flatMap((week) =>
-        week.harvests.map((h) => h.species_id)
-      )
-    )
-  );
-
-  const speciesColors: Record<string, string> = {
-    corn_wapsie_valley: '#fbbf24', // amber
-    tomato_better_boy: '#ef4444', // red
-    potato_yukon_gold: '#a78bfa', // purple
-  };
-
   return (
-    <div className="bg-gray-900 p-4 border-b border-gray-700 h-full flex flex-col">
-      <h2 className="text-white text-sm font-semibold mb-2">Harvest Timeline</h2>
+    <div className="bg-gray-900 p-4 h-full flex flex-col">
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-          <defs>
-            {allSpecies.map((speciesId) => (
-              <linearGradient key={speciesId} id={`color-${speciesId}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={speciesColors[speciesId]} stopOpacity={0.8} />
-                <stop offset="95%" stopColor={speciesColors[speciesId]} stopOpacity={0.1} />
-              </linearGradient>
-            ))}
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis
-            dataKey="week"
-            stroke="#9ca3af"
-            tick={{ fontSize: 10 }}
-            interval="preserveStartEnd"
-          />
-          <YAxis
-            stroke="#9ca3af"
-            tick={{ fontSize: 10 }}
-            label={{
-              value: 'Yield (lbs)',
-              angle: -90,
-              position: 'insideLeft',
-              fontSize: 10,
-              fill: '#9ca3af',
-            }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '4px',
-              fontSize: '12px',
-            }}
-            labelStyle={{ color: '#f3f4f6' }}
-            itemStyle={{ color: '#d1d5db' }}
-          />
-          <Legend wrapperStyle={{ fontSize: '10px' }} iconType="square" iconSize={8} />
-          {allSpecies.map((speciesId) => (
-            <Area
-              key={speciesId}
-              type="monotone"
-              dataKey={speciesId}
-              stackId="1"
-              stroke={speciesColors[speciesId]}
-              fill={`url(#color-${speciesId})`}
-              name={formatSpeciesName(speciesId)}
+          <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+            <defs>
+              {DISPLAY_GROUPS.map((group) => (
+                <linearGradient key={group} id={`color-${group}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={GROUP_COLORS[group]} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={GROUP_COLORS[group]} stopOpacity={0.1} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="week"
+              stroke="#9ca3af"
+              tick={{ fontSize: 10 }}
+              interval={2}
             />
-          ))}
-        </AreaChart>
-      </ResponsiveContainer>
+            <YAxis
+              stroke="#9ca3af"
+              tick={{ fontSize: 10 }}
+              label={{
+                value: 'lbs/week',
+                angle: -90,
+                position: 'insideLeft',
+                fontSize: 10,
+                fill: '#9ca3af',
+                offset: 10,
+              }}
+            />
+            <Tooltip content={<HarvestTooltip />} />
+            <Legend
+              wrapperStyle={{ fontSize: '10px', cursor: 'pointer' }}
+              iconType="square"
+              iconSize={8}
+              onMouseEnter={handleLegendEnter}
+              onMouseLeave={handleLegendLeave}
+            />
+            <ReferenceLine
+              y={GREENS_TARGET_PER_WEEK}
+              stroke="#22d3ee"
+              strokeDasharray="6 3"
+              label={{ value: 'Greens 15 lb', fill: '#22d3ee', fontSize: 10, position: 'right' }}
+            />
+            {sowingDots.map((dot) => (
+              <ReferenceDot
+                key={`sow-${dot.weekLabel}-${dot.group}`}
+                x={dot.weekLabel}
+                y={0}
+                r={5}
+                fill={dot.color}
+                stroke="#1f2937"
+                strokeWidth={1}
+              />
+            ))}
+            {DISPLAY_GROUPS.map((group) => {
+              const dimmed = hoveredGroup !== null && hoveredGroup !== group;
+              return (
+                <Area
+                  key={group}
+                  type="monotone"
+                  dataKey={group}
+                  stackId="1"
+                  stroke={GROUP_COLORS[group]}
+                  fill={`url(#color-${group})`}
+                  fillOpacity={dimmed ? 0.15 : 1}
+                  strokeOpacity={dimmed ? 0.2 : 1}
+                />
+              );
+            })}
+            <Line
+              type="monotone"
+              dataKey="Greens"
+              stroke="#22d3ee"
+              strokeWidth={actualData ? 1 : 2}
+              strokeDasharray={actualData ? '6 3' : undefined}
+              strokeOpacity={actualData ? 0.5 : 1}
+              dot={false}
+              legendType="line"
+            />
+            {actualData && (
+              <Line
+                type="monotone"
+                dataKey="actual_Greens"
+                name="Greens (actual)"
+                stroke="#22d3ee"
+                strokeWidth={2}
+                dot={false}
+                legendType="line"
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
-}
-
-function formatSpeciesName(speciesId: string): string {
-  return speciesId
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }
