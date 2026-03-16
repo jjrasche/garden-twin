@@ -228,7 +228,8 @@ function createPlant(
     occupied_subcells: createRectFootprint(pos.x_in, pos.y_in, footprintDx, footprintDy),
     planted_date: plantedDate,
     current_stage: 'seed',
-    height_cm: 0,
+    accumulated_gdd: 0,
+    measurements: { height_cm: 0 },
     last_observed: PROJECTION_DATE,
     health_status: 'healthy',
   };
@@ -241,26 +242,20 @@ function generateSubcells(): SubcellState[] {
 
   for (let physX = 0; physX < PHYS_WIDTH_IN; physX += SUBCELL_SIZE_IN) {
     for (let physY = 0; physY < PHYS_LENGTH_IN; physY += SUBCELL_SIZE_IN) {
-      let sun_hours: number;
       let shade_map: SubcellState['shade_map'];
 
       if (physY < 120) {
-        sun_hours = 4;
         shade_map = {
           summer: { early_morning: true, mid_morning: false, early_afternoon: true, late_afternoon: true },
           winter: { early_morning: true, mid_morning: true, early_afternoon: true, late_afternoon: true },
         };
       } else if (physY < 240) {
-        sun_hours = 6;
         shade_map = {
           summer: { early_morning: false, mid_morning: false, early_afternoon: true, late_afternoon: true },
           winter: { early_morning: false, mid_morning: false, early_afternoon: true, late_afternoon: true },
         };
-      } else {
-        sun_hours = 8;
       }
 
-      let moisture_pct = 50;
       let type: SubcellState['type'] = 'planting';
 
       const centerPhysX = physX + SUBCELL_SIZE_IN / 2;
@@ -270,12 +265,8 @@ function generateSubcells(): SubcellState[] {
 
         if (distToChannel <= 6) {
           type = 'water';
-          moisture_pct = 80;
         } else if (distToChannel <= 12) {
           type = 'pathway';
-          moisture_pct = 70;
-        } else if (distToChannel <= 36) {
-          moisture_pct = 70;
         }
       }
 
@@ -295,9 +286,7 @@ function generateSubcells(): SubcellState[] {
           pH: 6.5,
           compaction_psi: 0.4,
           organic_matter_pct: 4,
-          moisture_pct,
         },
-        sun_hours,
         ...(shade_map ? { shade_map } : {}),
       });
     }
@@ -525,7 +514,8 @@ function generateTrellisPlants(
         occupied_subcells,
         planted_date: TOMATO_DATE,
         current_stage: 'seed',
-        height_cm: 0,
+        accumulated_gdd: 0,
+        measurements: { height_cm: 0 },
         last_observed: PROJECTION_DATE,
         health_status: 'healthy',
       });
@@ -551,7 +541,8 @@ function generateTrellisPlants(
         occupied_subcells,
         planted_date: TOMATO_DATE,
         current_stage: 'seed',
-        height_cm: 0,
+        accumulated_gdd: 0,
+        measurements: { height_cm: 0 },
         last_observed: PROJECTION_DATE,
         health_status: 'healthy',
       });
@@ -683,25 +674,6 @@ export function createGardenStateFromPlan(plan: CropPlanting[]): GardenState {
     plants,
     subcells,
     infrastructure,
-
-    environment: {
-      temp_f: 68,
-      humidity_pct: 60,
-      precipitation_in: 0,
-      wind_mph: 8,
-      soil_temp_f: 62,
-      avg_soil_moisture_pct: 50,
-    },
-
-    summary: {
-      total_plants: plants.length,
-      healthy_count: plants.length,
-      attention_count: 0,
-      critical_count: 0,
-      tasks_pending: 0,
-      labor_hours_this_week: 0,
-      expected_yield_lbs: 0,
-    },
 
     created_at: now,
     updated_at: now,

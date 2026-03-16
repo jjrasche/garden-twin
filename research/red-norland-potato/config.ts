@@ -21,7 +21,8 @@ export const POTATO_RED_NORLAND: PlantSpecies = {
 
   // Yield: ~2 lbs per plant (fresh weight at harvest), 95% success rate
   baseline_lbs_per_plant: 2.0,
-  success_rate: 0.95,
+  germination_rate: 0.97,
+  establishment_rate: 0.98,
 
   // Modifiers (using standard POTATO modifiers)
   modifiers: {

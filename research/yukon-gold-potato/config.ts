@@ -23,7 +23,8 @@ export const POTATO_YUKON_GOLD: PlantSpecies = {
   // Yield: ~1.5 lbs per plant (fresh weight at harvest), 95% success rate
   // Note: Yukon Gold yields slightly less than Russet but more than early varieties
   baseline_lbs_per_plant: 1.5,
-  success_rate: 0.95,
+  germination_rate: 0.97,
+  establishment_rate: 0.98,
 
   // Modifiers (using standard POTATO modifiers)
   modifiers: {

@@ -21,7 +21,8 @@ export const CORN_DENT: PlantSpecies = {
 
   // Yield: ~0.5 lbs dried grain per plant (2 ears × 0.25 lbs), 90% success rate
   baseline_lbs_per_plant: 0.5,
-  success_rate: 0.9,
+  germination_rate: 0.95,
+  establishment_rate: 0.95,
 
   modifiers: {
     // Sun hours

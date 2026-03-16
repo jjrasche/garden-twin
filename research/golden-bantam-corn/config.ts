@@ -21,7 +21,8 @@ export const CORN_GOLDEN_BANTAM: PlantSpecies = {
 
   // Yield: ~0.3 lbs per plant (1.5 ears × 0.2 lbs/ear), 90% success rate
   baseline_lbs_per_plant: 0.3,
-  success_rate: 0.9,
+  germination_rate: 0.95,
+  establishment_rate: 0.95,
 
   // Modifiers (using standard CORN modifiers)
   modifiers: {

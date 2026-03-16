@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { useGardenStore } from '../../store/gardenStore';
 import { CanvasGarden } from './CanvasGarden';
-import { createSampleGardenState } from '@core/data/sampleGarden';
+import { createGardenStateFromPlan } from '@core/data/sampleGarden';
+import { PRODUCTION_PLAN } from '@core/calculators/ProductionTimeline';
 
 export function GridLayout() {
   const gardenState = useGardenStore((state) => state.gardenState);
@@ -9,12 +10,12 @@ export function GridLayout() {
 
   // Load sample garden on mount
   useEffect(() => {
-    const sampleState = createSampleGardenState();
+    const sampleState = createGardenStateFromPlan(PRODUCTION_PLAN);
     setGardenState(sampleState);
   }, [setGardenState]);
 
   const handleLoadSampleData = () => {
-    const sampleState = createSampleGardenState();
+    const sampleState = createGardenStateFromPlan(PRODUCTION_PLAN);
     setGardenState(sampleState);
   };
 

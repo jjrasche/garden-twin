@@ -78,8 +78,7 @@ export function getPlantsByStage(
  */
 export function getPlantsReadyForHarvest(state: GardenState): PlantInstance[] {
   return state.plants.filter(p =>
-    (p.current_stage === 'fruiting' || p.current_stage === 'harvest') &&
-    (p.fruit_count ?? 0) > 0
+    p.current_stage === 'fruiting' || p.current_stage === 'harvest'
   );
 }
 
@@ -130,15 +129,15 @@ export function getEmptyPlantingSubcells(state: GardenState): SubcellState[] {
 }
 
 /**
- * Get subcells with low moisture
+ * Get subcells with low moisture.
+ * Requires moisture conditions from the Conditions resolver (Phase 5).
+ * Stub: returns empty until Conditions system is implemented.
  */
 export function getDrySubcells(
-  state: GardenState,
-  threshold: number = 40
+  _state: GardenState,
+  _threshold: number = 40
 ): SubcellState[] {
-  return state.subcells.filter(s =>
-    s.soil.moisture_pct !== undefined && s.soil.moisture_pct < threshold
-  );
+  return [];
 }
 
 // =============================================================================
@@ -254,7 +253,6 @@ export function getZoneStats(
   plantCount: number;
   healthyCount: number;
   emptySubcells: number;
-  avgMoisture: number | null;
 } {
   const plants = getPlantsInZone(state, zone_x, zone_y);
   const subcells = getSubcellsInZone(state, zone_x, zone_y);
@@ -267,19 +265,10 @@ export function getZoneStats(
     s.type === 'planting' && !s.plant_id
   ).length;
 
-  const moistureReadings = subcells
-    .filter(s => s.soil.moisture_pct !== undefined)
-    .map(s => s.soil.moisture_pct!);
-
-  const avgMoisture = moistureReadings.length > 0
-    ? moistureReadings.reduce((a, b) => a + b, 0) / moistureReadings.length
-    : null;
-
   return {
     plantCount: plants.length,
     healthyCount: healthy,
     emptySubcells: empty,
-    avgMoisture,
   };
 }
 
@@ -327,17 +316,14 @@ export function compareStates(
     if (beforePlant) {
       const changes: { [key: string]: any } = {};
 
-      if (beforePlant.height_cm !== afterPlant.height_cm) {
-        changes.height_cm = afterPlant.height_cm;
-      }
       if (beforePlant.health_status !== afterPlant.health_status) {
         changes.health_status = afterPlant.health_status;
       }
       if (beforePlant.current_stage !== afterPlant.current_stage) {
         changes.current_stage = afterPlant.current_stage;
       }
-      if (beforePlant.fruit_count !== afterPlant.fruit_count) {
-        changes.fruit_count = afterPlant.fruit_count;
+      if (beforePlant.accumulated_gdd !== afterPlant.accumulated_gdd) {
+        changes.accumulated_gdd = afterPlant.accumulated_gdd;
       }
 
       if (Object.keys(changes).length > 0) {
@@ -366,11 +352,15 @@ export function applyObservations(
     if (obs.plant_id) {
       const plantIndex = newPlants.findIndex(p => p.plant_id === obs.plant_id);
       if (plantIndex >= 0) {
-        const plant = { ...newPlants[plantIndex] };
+        const plant: PlantInstance = { ...newPlants[plantIndex]! };
 
-        if (obs.height_cm !== undefined) plant.height_cm = obs.height_cm;
         if (obs.growth_stage !== undefined) plant.current_stage = obs.growth_stage;
-        if (obs.fruit_count !== undefined) plant.fruit_count = obs.fruit_count;
+        if (obs.height_cm !== undefined || obs.fruit_count !== undefined) {
+          const m: Record<string, number> = { ...plant.measurements };
+          if (obs.height_cm !== undefined) m.height_cm = obs.height_cm;
+          if (obs.fruit_count !== undefined) m.fruit_count = obs.fruit_count;
+          plant.measurements = m;
+        }
 
         plant.last_observed = obs.timestamp;
 

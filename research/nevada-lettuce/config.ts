@@ -21,7 +21,8 @@ export const LETTUCE_NEVADA: PlantSpecies = {
 
   // Yield: ~0.5 lbs per plant over 3-4 cuttings, 90% success rate
   baseline_lbs_per_plant: 0.5,
-  success_rate: 0.9,
+  germination_rate: 0.95,
+  establishment_rate: 0.95,
 
   modifiers: {
     // Sun hours — lettuce is shade tolerant, prefers partial shade in heat

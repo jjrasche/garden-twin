@@ -184,11 +184,7 @@ function drawSubcellLayer(
     // Draw subcell rectangle (pixel-snapped)
     ctx.fillRect(x0, y0, w, h);
 
-    // Moisture bonus zone: subtle blue wash for high-moisture planting soil near channel
-    if ((actualSubcell.soil?.moisture_pct ?? 0) >= 70 && terrainType === 'planting' && !speciesId) {
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; // blue-500 at 15%
-      ctx.fillRect(x0, y0, w, h);
-    }
+    // Moisture wash: will use Conditions resolver (Phase 5) instead of subcell field
 
     // Draw shade overlay if subcell has shade data
     const shadeMap = actualSubcell.shade_map;

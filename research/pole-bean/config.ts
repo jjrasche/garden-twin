@@ -21,7 +21,8 @@ export const BEAN_POLE: PlantSpecies = {
 
   // Yield: ~0.5 lbs per plant over season, 85% success rate
   baseline_lbs_per_plant: 0.5,
-  success_rate: 0.85,
+  germination_rate: 0.90,
+  establishment_rate: 0.95,
 
   modifiers: {
     // Sun hours

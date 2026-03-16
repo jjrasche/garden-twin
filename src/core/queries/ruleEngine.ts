@@ -164,7 +164,7 @@ function generatePlantTasks(
     const context = {
       plant: actualPlant,
       expected: expectedPlant,
-      environment: actualState.environment,
+      // environment: provided by Conditions resolver (Phase 5)
     };
 
     if (evaluateRuleCondition(rule, context)) {
@@ -208,7 +208,7 @@ function generateSubcellTasks(
   for (const subcell of actualState.subcells) {
     const context = {
       subcell,
-      environment: actualState.environment,
+      // environment: provided by Conditions resolver (Phase 5)
     };
 
     if (evaluateRuleCondition(rule, context)) {
@@ -258,7 +258,7 @@ function generateZoneTasks(
     const [zone_x, zone_y] = zoneKey.split('_').map(Number);
 
     const context = {
-      environment: actualState.environment,
+      // environment: provided by Conditions resolver (Phase 5)
     };
 
     if (evaluateRuleCondition(rule, context)) {

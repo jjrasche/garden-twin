@@ -1,6 +1,8 @@
 # Garden Twin — Claude Code Constitution
 
-Digital twin of a 40x100ft garden in Grand Rapids, MI. Used for planning, simulation, and eventual robotic interaction.
+Digital twin of a 30x100ft garden in Grand Rapids, MI (Zone 6a). Used for planning, simulation, and eventual robotic interaction.
+
+**Target architecture: `docs/architecture.md`** - GDD-based growth engine, unified conditions system, declarative species biology. Current codebase is migrating toward this.
 
 ---
 
@@ -16,7 +18,8 @@ Digital twin of a 40x100ft garden in Grand Rapids, MI. Used for planning, simula
 
 Key files:
 - `src/core/types/` — All Zod schemas and TypeScript types
-- `src/core/data/sampleGarden.ts` — Generates the default 40x100ft garden state
+- `src/core/data/sampleGarden.ts` — `createGardenStateFromPlan(plan)` generates GardenState from PRODUCTION_PLAN
+- `src/core/data/species/` — Individual species files (11 species, each with modifiers + layout profile)
 
 ---
 
@@ -27,7 +30,7 @@ Two coordinate spaces exist. Every directional operation must specify which one.
 ### Physical Garden (real-world orientation)
 
 ```
-physX: 0 (west edge) → 480 (east edge)   [40ft east-west]
+physX: 0 (west edge) → 360 (east edge)   [30ft east-west]
 physY: 0 (south edge) → 1200 (north edge) [100ft north-south]
 
 +physX = eastward
@@ -38,10 +41,10 @@ physY: 0 (south edge) → 1200 (north edge) [100ft north-south]
 
 ```
 x_in: 0 (north/left) → 1200 (south/right)
-y_in: 0 (east/top) → 480 (west/bottom)
+y_in: 0 (east/top) → 360 (west/bottom)
 
 x_in = 1200 - physY   (north-south → left-right)
-y_in = 480 - physX    (east-west → top-bottom)
+y_in = 360 - physX    (east-west → top-bottom)
 ```
 
 ### Screen Direction Mapping
@@ -55,13 +58,13 @@ y_in = 480 - physX    (east-west → top-bottom)
 
 ### Worked Examples
 
-**Cherry tomatoes** (planted west of channel, physX ~ 444):
-- Screen `y_in = 480 - 444 = 36`
-- Water center at physX=456 → `y_in = 480 - 456 = 24`
+**Cherry tomatoes** (planted west of channel, physX ~ 324):
+- Screen `y_in = 360 - 324 = 36`
+- Water center at physX=336 → `y_in = 360 - 336 = 24`
 - To extend EASTWARD over water: need LOWER y_in → use `-dy` in occupied_subcells loop
 
-**Paste tomatoes** (planted east of channel, physX ~ 468):
-- Screen `y_in = 480 - 468 = 12`
+**Paste tomatoes** (planted east of channel, physX ~ 348):
+- Screen `y_in = 360 - 348 = 12`
 - Water center → `y_in = 24`
 - To extend WESTWARD over water: need HIGHER y_in → use `+dy` in occupied_subcells loop
 
@@ -94,42 +97,65 @@ y_in = 480 - physX    (east-west → top-bottom)
 PHYSICAL LAYOUT (south at bottom, north at top):
 
 physY=1200 ──── North End ────────────────────────
-  │  Three Sisters zone (mounds + squash vines)
-  │  6 rows of mounds at physY = 1100, 940, 780, 620, 460, 300
+  │  Corn field (physY 660-1080, 18" grid)
+  │  Greens zone (physY 540-660, lettuce + spinach)
+  │  Potato zone (physY 420-540, E-W rows)
+  │  Buffer zone (physY 360-420, companions)
+  │  Kale main (physY 240-360, full sun)
+  │  Shade kale comparison (physY 120-240, ~20 plants)
   │  Channel + trellis runs along east side
-physY=240 ─── Shade boundary ──────────────────────
-  │  Lettuce zone: 12 succession batches
-  │  (physY 0-240, 20ft of south end)
-physY=0 ──── South End ────────────────────────────
-  physX=0 (west)                    physX=480 (east)
+physY=0 ──── South End (40ft tree, shade + roots) ─
+  physX=0 (west)                    physX=360 (east)
 ```
 
-### Mound Grid (Three Sisters)
+Layout is driven by `ZONE_CONFIG` in `sampleGarden.ts` — a declarative config object.
+To rearrange zones, change physY ranges there. Generators read from config.
 
-- **5 columns x 6 rows = 30 mounds**
-- Column physX: 30, 90, 150, 210, 270 (60" / 5ft spacing)
-- Row physY: 300, 460, 620, 780, 940, 1100 (160" / 13.3ft spacing)
-- Mound diameter: 36" (3ft), height: 8"
-- Each mound: 6 corn (circle), 2 beans (support_plant_id → corn), 1 squash (east edge)
+### Species Catalog (11 plants)
+
+Split into individual files under `src/core/data/species/`:
+- Corn (Nothstine Dent), Potato (Kennebec)
+- Tomato (Sun Gold, Amish Paste)
+- Lettuce (BSS), Kale (Red Russian), Spinach (Bloomsdale)
+- Marigold (French), Nasturtium (Trailing), Calendula
+
+Dropped: Sweetie tomato, catnip, parsley, cilantro, spearmint.
+
+### Zones (south to north)
+
+- **Dead zone** (physY 0-120): heavy shade + tree roots, pathways only
+- **Shade kale** (physY 120-240): ~20 kale for shade vs sun comparison
+- **Kale main** (physY 240-360): 100 kale, 12" spacing, full sun
+- **Buffer zone** (physY 360-420): calendula + nasturtium companion strips
+- **Potato zone** (physY 420-540): 88 plants, E-W rows for drainage, 30" row / 12" plant
+- **Greens zone** (physY 540-660): spring lettuce, fall spinach+lettuce (overlapping subcells)
+- **Corn field** (physY 660-1080): 18" equidistant grid, capped at plan count
+- **Trellis tomatoes** (physY 240-1200): along channel, 18" spacing
+
+Plant counts driven by `PRODUCTION_PLAN` in `ProductionTimeline.ts` (single source of truth).
 
 ### Channel Path
 
-The channel carries ephemeral water along the east side of the garden. Three segments:
+Ephemeral water channel along the east side. Three segments:
 
 ```
-Segment 1 — Straight north along east edge:
-  (456, 0) → (456, 660)    55ft straight run, 2ft from east boundary
+Segment 1 -- Straight north along east edge:
+  (336, 0) -> (336, 660)    55ft straight run, 2ft from east boundary
 
-Segment 2 — Gradual westward curve:
-  (456, 660) → (408, 720) → (360, 780)    10ft transition, 8ft westward
+Segment 2 -- Gradual westward curve:
+  (336, 660) -> (288, 720) -> (240, 780)    10ft transition, 8ft westward
 
-Segment 3 — Straight north, offset west:
-  (360, 780) → (360, 1200)    35ft straight run, 10ft from east boundary
+Segment 3 -- Straight north, offset west:
+  (240, 780) -> (240, 1200)    35ft straight run, 10ft from east boundary
 ```
 
-Channel cross-section: 12" water center + 6" log border each side = 24" total width.
+Cross-section: 12" water center + 6" log border each side = 24" total width.
 
-`getChannelCenterX(physY)` returns the interpolated center X at any physY, handling the gradual bend via linear interpolation between 660-780.
+`getChannelCenterX(physY)` returns the interpolated center X at any physY. Linear interpolation between physY 660-780 for the bend.
+
+Crop zone boundaries:
+- `CROP_ZONE_SOUTH_EAST_X = 300` (physY < 660, channel at 336)
+- `CROP_ZONE_NORTH_EAST_X = 204` (physY >= 660, channel at 240)
 
 ### Trellis
 
@@ -137,13 +163,14 @@ Single trellis following the channel path. T-posts every 120" (10ft) in the wate
 
 ### Tomato Placement
 
-- **Cherry tomatoes** planted WEST of channel center at `channelX - 12` (at west log boundary)
-  - `occupied_subcells` extend **EASTWARD** over the water (using `-dy` in screen coords)
-- **Paste (San Marzano) tomatoes** planted EAST of channel center at `channelX + 12` (at east log boundary)
-  - `occupied_subcells` extend **WESTWARD** over the water (using `+dy` in screen coords)
-- Footprint: 2x6 subcells (6" wide x 18" along trellis) — narrow because trained on trellis
-- 24" spacing along channel, starting at physY=240 (skips shade zone)
-- Tomatoes planted through the bend zone use interpolated `getChannelCenterX(physY)`
+- **Cherry tomatoes** (Sun Gold + Sweetie, alternating) planted WEST of channel at `channelX - 12`
+  - `occupied_subcells` extend EASTWARD over water (using `-dy` in screen coords)
+- **Paste tomatoes** (Amish Paste) planted EAST of channel at `channelX + 12`
+  - `occupied_subcells` extend WESTWARD over water (using `+dy` in screen coords)
+- Footprint: 2x6 subcells (6" wide x 18" along trellis)
+- 18" spacing along channel, starting at physY=240 (skips shade zone)
+- Nasturtium trap crops at `channelX - 84` (72" separation from cherry tomatoes)
+- Through the bend zone: uses interpolated `getChannelCenterX(physY)`
 
 ### Lettuce Zone
 
@@ -186,7 +213,7 @@ The `subcellSpecies` Map is built from all plants' `occupied_subcells` arrays, m
 - **Pixel snapping**: All subcell fillRect calls use `Math.floor` on both corners to prevent subpixel shimmer
 - **Moisture wash**: `rgba(59, 130, 246, 0.15)` blue overlay on subcells with moisture_pct ≥ 70
 - **Mound outlines**: Dashed `#A8A29E` circles at scale ≥ 0.1
-- **Canvas `desynchronized: false`**: Explicitly disabled to prevent flickering at low zoom
+- **Canvas `desynchronized: false`**: Disabled to prevent flickering at low zoom
 
 ### Files
 
@@ -199,70 +226,11 @@ The `subcellSpecies` Map is built from all plants' `occupied_subcells` arrays, m
 
 ---
 
-## Squash Vine Model
+## Channel & Trellis -- Future Work
 
-### Current Implementation
-
-Each squash plant generates 3-5 vine arms in a 240-degree fan directed AWAY from the mound center. Algorithm in `generateSquashVineSubcells()`:
-
-- Seeded PRNG (`mulberry32`, seed = `moundIdx * 1000 + 42`) for deterministic organic randomness
-- Fan avoids ~120-degree arc back toward mound center (where corn/beans are)
-- Arm length: 72-180" (6-15ft), width: 2-3 subcells (6-9")
-- Sinusoidal wobble perpendicular to arm direction (amplitude 0-6", period 30-60")
-- Bounds-checked: stays in garden, avoids channel zone (physX >= 432)
-- Deduplication via `Set<string>` (arms overlap near root)
-- Expected result: ~400 subcells per plant in tendril/vine pattern
-
-### Research: Real Squash Vine Behavior
-
-From USDA studies, university extensions, and experienced Three Sisters practitioners:
-
-**Vine anatomy:**
-- 2 primary vines in roughly opposite directions from crown
-- Each primary produces 2-4 secondary branches (3-7ft each)
-- Mature plant: 15-21ft total vine length, 5-7 branches
-- Peak growth: ~6in/day during midsummer
-- Gardeners begin training at ~18" vine length
-- Tertiary vines pruned in managed gardens
-- Adventitious roots anchor vine at nodes along ground contact
-
-**Three Sisters ground-cover behavior:**
-- Vines directed OUTWARD from mound perimeter, never back over corn/beans
-- Vines from adjacent mounds DO intermingle (this is desired — continuous ground cover)
-- No pre-planned vine routing — management is reactive (lift + redirect growing tips)
-- Corn-stalk interaction: leaf overlap at ground level is OK/beneficial, redirect climbing tips
-- Sun-seeking: vines grow toward light (away from corn shadow)
-- 12x12" mature leaves create dense canopy blocking all light to soil
-
-**Inter-mound coverage:**
-- Our layout: 60" column spacing, 160" row spacing, 36" mound diameter
-- East-west gap between mound edges: 24" (small — easily bridged by vines)
-- North-south gap between mound edges: 124" (large — primary target for vine coverage)
-- Standard Three Sisters spacing is 3-5ft between mound centers; our 5ft is adequate
-
-### Future Work: Vine Model Improvements
-
-1. **Anatomically correct branching**: Replace 3-5 arm fan with 2 primary vines (opposite directions, biased outward) each with 2-4 secondary branches. This matches real squash vine architecture (USDA historical study). Primary vines reach 15-21ft; secondary branches 3-7ft.
-
-2. **Vine collision/merging**: Vines from adjacent mounds should create a continuous canopy in the inter-mound gaps. Model coverage as a shared zone rather than overlapping independent sprawls. Add a coverage metric: percentage of inter-mound ground covered.
-
-3. **Corn-stalk repulsion**: Vine growing tips deflect when approaching within 6-12" of a corn stalk position. Leaf canopy can overlap corn base (beneficial ground cover), but vine stem avoids climbing.
-
-4. **Growth-stage-dependent footprint**: Currently `occupied_subcells` represents full maturity. For timeline simulation, start as 1 subcell at planting, expand over ~14 weeks to full vine pattern. This ties into the Observation → dynamic update system.
-
-5. **Sun-seeking bias**: Add phototropic angular pull away from tall corn positions when computing vine arm directions.
-
-6. **Coverage metric**: Compute what percentage of inter-mound ground is covered by squash foliage. This is the key success metric for squash's Three Sisters role.
-
----
-
-## Channel & Trellis — Future Work
-
-1. **Trellis height visualization**: Currently rendered as flat line + posts. At high zoom, could show vertical post height (72") as shadow or side-view indicator.
-
-2. **Channel water flow**: Model flow direction and rate for the ephemeral water channel.
-
-3. **Bend radius verification**: The gradual bend (physY 660-780) transitions the channel 96" westward over 120" of north-south travel. Verify tomato spacing through the curve is visually correct.
+1. **Trellis height visualization**: Rendered as flat line + posts. Could show vertical post height (72") at high zoom.
+2. **Channel water flow**: Model flow direction and rate.
+3. **Bend verification**: The bend (physY 660-780) moves channel 96" westward over 120" north-south. Verify tomato spacing through curve.
 
 ---
 
@@ -270,11 +238,12 @@ From USDA studies, university extensions, and experienced Three Sisters practiti
 
 These errors exist in the codebase but are NOT caused by the garden visualization work:
 
-- `research/*/config.ts` (11 files) — `tasks` property not in PlantSpecies schema
-- `src/cli/validate.ts` — References removed `Garden` and `Plan` types
-- `src/core/aggregators/utils.ts` — References `plant` property on subcell (schema changed)
-- `src/ui/components/Timelines/*` — References `projection` on GardenStoreState (removed)
-- `src/ui/services/*` — References `GardenSchema`, `PlanSchema`, `Garden`, `Plan` (removed)
+- `research/*/config.ts` (11 files) -- `tasks` property not in PlantSpecies schema
+- `src/cli/validate.ts` -- References removed `Garden` and `Plan` types
+- `src/core/aggregators/utils.ts` -- References `plant` property on subcell (schema changed)
+- `src/core/data/sampleGardens/*.ts` -- References removed `Garden`, `Projection` types
+- `src/ui/components/Timelines/*` -- References `projection` on GardenStoreState (removed)
+- `src/ui/services/*` -- References `GardenSchema`, `PlanSchema`, `Garden`, `Plan` (removed)
 
 To check only our files: `npx tsc --noEmit 2>&1 | grep -E "sampleGarden|useRenderLoop"`
 

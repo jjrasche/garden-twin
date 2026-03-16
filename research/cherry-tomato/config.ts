@@ -21,7 +21,8 @@ export const TOMATO_CHERRY: PlantSpecies = {
 
   // Yield: ~200 fruits × 0.5 oz = 6.25 lbs per plant, 85% success rate
   baseline_lbs_per_plant: 6.25,
-  success_rate: 0.85,
+  germination_rate: 1.00,
+  establishment_rate: 0.85,
 
   modifiers: {
     // Sun hours

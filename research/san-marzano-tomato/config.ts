@@ -21,7 +21,8 @@ export const TOMATO_SAN_MARZANO: PlantSpecies = {
 
   // Yield: ~80 fruits × 4 oz = 20 lbs per plant, 80% success rate
   baseline_lbs_per_plant: 20,
-  success_rate: 0.8,
+  germination_rate: 1.00,
+  establishment_rate: 0.80,
 
   modifiers: {
     sun: {

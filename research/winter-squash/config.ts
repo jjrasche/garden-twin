@@ -21,7 +21,8 @@ export const SQUASH_WINTER: PlantSpecies = {
 
   // Yield: 3 fruits × 15 lbs = 45 lbs per plant, 80% success rate
   baseline_lbs_per_plant: 45,
-  success_rate: 0.8,
+  germination_rate: 0.90,
+  establishment_rate: 0.89,
 
   modifiers: {
     // Sun hours
