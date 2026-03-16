@@ -10,7 +10,7 @@
 import { PlantSpecies, survivalRate } from '../types';
 import { interpolate } from './interpolate';
 import { EnvironmentSource, computeEffectiveSunHours } from '../environment';
-import { computePlantYield, computeModifierProduct } from './yieldModel';
+import { computeModifierProduct, computeSurvivalModifier } from './yieldModel';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -58,20 +58,17 @@ export function computeBoltSurvival(species: PlantSpecies, date: Date, env: Envi
   return interpolate(trigger.survival_curve, value);
 }
 
-/** Average per-plant yield across the growth phase (planting -> first harvest). */
-export function averageGrowthYield(
-  species: PlantSpecies, planting_date: Date, zone_physY: number, env: EnvironmentSource,
-): number {
-  const growth_days = species.days_to_first_harvest;
-  const sample_count = Math.max(1, Math.floor(growth_days / 7));
-  let sum = 0;
-  for (let i = 0; i < sample_count; i++) {
-    const sample_date = new Date(planting_date.getTime() + (i * 7 + 3) * MS_PER_DAY);
-    const cond = env.getConditions(sample_date);
-    const sun_hours = computeEffectiveSunHours(zone_physY, sample_date, SHADE_TREE_HEIGHT_FT, cond.sunshine_hours);
-    sum += computePlantYield(species, { sun_hours, ...cond });
-  }
-  return sum / sample_count;
+/** Population survival via growth_response[] (replaces modifiers.bolt_trigger). */
+export function computeSurvivalFromConditions(species: PlantSpecies, date: Date, env: EnvironmentSource): number {
+  if (!species.growth_response) return 1.0;
+  const cond = env.getConditions(date);
+  const flat: Record<string, number> = {
+    temperature_f: cond.avg_high_f,
+    soil_temp_f: cond.soil_temp_f,
+    photoperiod_h: cond.photoperiod_h,
+  };
+  if (cond.soil_moisture_pct_fc !== undefined) flat.soil_moisture_pct_fc = cond.soil_moisture_pct_fc;
+  return computeSurvivalModifier(species.growth_response, flat);
 }
 
 // ── Death / Frost ────────────────────────────────────────────────────────────
@@ -106,13 +103,13 @@ export function computeDeathDate(species: PlantSpecies, harvest_start: Date, env
   }
 
   // 2. Heat death: temperature modifier drops below threshold on hot side
-  const temp_curve = species.modifiers.temperature_f;
-  if (temp_curve) {
-    const peak = findPeakTemp(temp_curve);
+  const temp_response = species.growth_response?.find(r => r.factor === 'temperature_f');
+  if (temp_response) {
+    const peak = findPeakTemp(temp_response.curve);
     const scan = new Date(harvest_start);
     while (scan <= earliest) {
       const cond = env.getConditions(scan);
-      if (cond.avg_high_f > peak && interpolate(temp_curve, cond.avg_high_f) <= 0.1) {
+      if (cond.avg_high_f > peak && interpolate(temp_response.curve, cond.avg_high_f) <= 0.1) {
         earliest = minDate(earliest, scan);
         break;
       }
@@ -121,10 +118,10 @@ export function computeDeathDate(species: PlantSpecies, harvest_start: Date, env
   }
 
   // 3. Bolt death: survival drops below threshold (population destroyed)
-  if (species.modifiers.bolt_trigger) {
+  if (species.growth_response?.some(r => r.effect === 'population_survival')) {
     const scan = new Date(harvest_start);
     while (scan <= earliest) {
-      if (computeBoltSurvival(species, scan, env) <= 0.05) {
+      if (computeSurvivalFromConditions(species, scan, env) <= 0.05) {
         earliest = minDate(earliest, scan);
         break;
       }

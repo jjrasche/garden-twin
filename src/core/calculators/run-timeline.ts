@@ -9,7 +9,7 @@
  *         --years=2024,2023,2022
  */
 
-import { computeWeeklyHarvest, formatTimeline, PRODUCTION_PLAN, GR_HISTORICAL } from './ProductionTimeline';
+import { simulateSeason, formatTimeline, PRODUCTION_PLAN, GR_HISTORICAL } from './ProductionTimeline';
 import { compareTimelines, computeSeasonComparison } from './ProductionComparison';
 import { backtestYear, compareSummaries } from './WeatherBacktest';
 import { createObservedSource } from '../environment/ObservedSource';
@@ -47,8 +47,8 @@ if (mode === 'backtest') {
   const dateSet = buildObservedDateSet(entries);
   const composite = createCompositeSource(observed, GR_HISTORICAL, dateSet);
 
-  const planned = computeWeeklyHarvest(PRODUCTION_PLAN, GR_HISTORICAL);
-  const actual = computeWeeklyHarvest(PRODUCTION_PLAN, composite);
+  const planned = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
+  const actual = simulateSeason(PRODUCTION_PLAN, composite);
 
   console.log('=== PLANNED (historical averages) ===');
   console.log(formatTimeline(planned));
@@ -62,6 +62,6 @@ if (mode === 'backtest') {
   console.log(`Actual:  ${summary.actual_total_lbs.toFixed(0)} lbs`);
   console.log(`Variance: ${summary.variance_lbs >= 0 ? '+' : ''}${summary.variance_lbs.toFixed(0)} lbs (${summary.variance_pct >= 0 ? '+' : ''}${summary.variance_pct.toFixed(1)}%)`);
 } else {
-  const weeks = computeWeeklyHarvest(PRODUCTION_PLAN, GR_HISTORICAL);
+  const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
   console.log(formatTimeline(weeks));
 }

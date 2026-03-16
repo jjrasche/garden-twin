@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_LIGHT_FEEDER } from './shared-modifiers';
+import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const KALE_RED_RUSSIAN: PlantSpecies = {
   id: 'kale_red_russian',
@@ -23,6 +23,14 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   baseline_lbs_per_plant: 1.75,
   germination_rate: 0.95,   // Brassica seeds germinate reliably
   establishment_rate: 0.97, // Very hardy; minimal seedling loss
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 4: 0.6, 6: 0.9, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'temperature_f', curve: { 35: 0.3, 45: 0.6, 55: 0.9, 65: 1.0, 75: 0.8, 85: 0.6 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.3, 55: 0.75, 75: 1.0, 85: 1.0, 100: 0.85, 120: 0.15 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 0.2: 1.2, 0.44: 1.0, 0.8: 0.8, 1.5: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_LIGHT_FEEDER_RESPONSES,
+  ],
 
   modifiers: {
     // Monotonic — more DLI = more growth. Kale tolerates shade but grows

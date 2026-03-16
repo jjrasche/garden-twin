@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_HEAVY_FEEDER } from './shared-modifiers';
+import { SOIL_HEAVY_FEEDER, SOIL_HEAVY_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   id: 'corn_nothstine_dent',
@@ -16,6 +16,14 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   baseline_lbs_per_plant: 0.24,
   germination_rate: 0.90,   // Large seeds; direct sow
   establishment_rate: 0.95, // Cutworm/bird pressure on seedlings
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 4: 0.3, 6: 0.7, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'temperature_f', curve: { 50: 0.0, 60: 0.4, 70: 0.8, 80: 1.0, 90: 0.9, 95: 0.5, 100: 0.1 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 35: 0.3, 45: 0.75, 60: 0.92, 80: 1.0, 90: 1.0, 100: 0.97, 115: 0.7, 130: 0.1 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 0.2: 1.2, 0.44: 1.0, 0.8: 0.8, 1.5: 0.4 }, effect: 'growth_rate' as const },
+    ...SOIL_HEAVY_FEEDER_RESPONSES,
+  ],
 
   modifiers: {
     sun: { 4: 0.3, 6: 0.7, 8: 1.0, 10: 1.0 },

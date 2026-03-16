@@ -1,4 +1,5 @@
 import { SoilModifiers } from '../../types';
+import type { GrowthResponse } from '../../types/PlantSpecies';
 
 // ---------------------------------------------------------------------------
 // Shared soil modifier presets
@@ -22,6 +23,20 @@ export const SOIL_LIGHT_FEEDER: SoilModifiers = {
   compaction_psi: { 0: 1.0, 200: 0.9, 400: 0.7 },
 };
 
+/** Convert SoilModifiers to GrowthResponse[] for growth_response arrays. */
+function soilToResponses(soil: SoilModifiers): GrowthResponse[] {
+  return [
+    { factor: 'N_ppm', curve: soil.N_ppm, effect: 'growth_rate' },
+    { factor: 'P_ppm', curve: soil.P_ppm, effect: 'growth_rate' },
+    { factor: 'K_ppm', curve: soil.K_ppm, effect: 'growth_rate' },
+    { factor: 'pH', curve: soil.pH, effect: 'growth_rate' },
+    { factor: 'compaction_psi', curve: soil.compaction_psi, effect: 'growth_rate' },
+  ];
+}
+
+export const SOIL_HEAVY_FEEDER_RESPONSES = soilToResponses(SOIL_HEAVY_FEEDER);
+export const SOIL_LIGHT_FEEDER_RESPONSES = soilToResponses(SOIL_LIGHT_FEEDER);
+
 /** Companion / non-food plants — minimal nutrient sensitivity. */
 export const SOIL_COMPANION: SoilModifiers = {
   N_ppm: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 },
@@ -30,6 +45,8 @@ export const SOIL_COMPANION: SoilModifiers = {
   pH: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 },
   compaction_psi: { 0: 1.0, 200: 0.95, 400: 0.8 },
 };
+
+export const SOIL_COMPANION_RESPONSES = soilToResponses(SOIL_COMPANION);
 
 // ---------------------------------------------------------------------------
 // Shared tomato constants

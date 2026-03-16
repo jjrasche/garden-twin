@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_HEAVY_FEEDER } from './shared-modifiers';
+import { SOIL_HEAVY_FEEDER, SOIL_HEAVY_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const POTATO_KENNEBEC: PlantSpecies = {
   id: 'potato_kennebec',
@@ -16,6 +16,14 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   baseline_lbs_per_plant: 1.5,
   germination_rate: 0.95,   // Tubers sprout reliably
   establishment_rate: 0.90, // Seed piece rot, early blight risk
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 4: 0.4, 6: 0.8, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'soil_temp_f', curve: { 40: 0.1, 50: 0.5, 60: 0.9, 70: 1.0, 80: 0.7, 85: 0.4, 90: 0.1 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.2, 50: 0.45, 65: 0.85, 80: 1.0, 90: 1.0, 100: 0.95, 110: 0.6, 125: 0.05 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 0.2: 1.2, 0.4: 1.0, 0.8: 0.8, 1.5: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_HEAVY_FEEDER_RESPONSES,
+  ],
 
   modifiers: {
     sun: { 4: 0.4, 6: 0.8, 8: 1.0, 10: 1.0 },

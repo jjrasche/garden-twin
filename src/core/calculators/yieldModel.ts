@@ -4,11 +4,12 @@
  * All yield calculations in the system delegate here. Conditions are optional —
  * omit what you don't have and that modifier defaults to 1.0 (optimal).
  *
- * Soil factors use Liebig's Law (minimum of competing nutrients) per DSSAT/APSIM.
- * Environmental stresses (temperature, photoperiod) are independent and multiplicative.
+ * When species.growth_response exists, all modifiers are multiplicative via
+ * computeGrowthModifier. Legacy path uses Liebig's Law for soil nutrients.
  */
 
 import { PlantSpecies, survivalRate } from '../types';
+import type { GrowthResponse } from '../types/PlantSpecies';
 import { interpolate } from './interpolate';
 
 export interface YieldConditions {
@@ -28,49 +29,41 @@ export interface YieldConditions {
 }
 
 /**
- * Product of all environmental modifiers for given conditions.
+ * Flatten YieldConditions into a Record for computeGrowthModifier.
  *
- * Separated from baseline and survival so callers can accumulate
- * daily growth independently (biomass accumulation model).
- *
- * Formula:
- *   sun × min(soil_N, soil_P, soil_K, pH, compaction)
- *       × spacing × moisture × temperature × soil_temp × photoperiod
+ * Bridges the YieldConditions API (typed fields) to the GrowthResponse API
+ * (arbitrary string keys). Maps condition field names to biological factor names:
+ *   avg_high_f → temperature_f (species response curves use biological name)
+ *   soil.N_ppm → N_ppm (flattened from nested object)
  */
-export function computeModifierProduct(species: PlantSpecies, conditions: YieldConditions): number {
-  let m = interpolate(species.modifiers.sun, conditions.sun_hours);
+export function flattenYieldConditions(conditions: YieldConditions): Record<string, number> {
+  const flat: Record<string, number> = { sun_hours: conditions.sun_hours };
 
   if (conditions.soil) {
-    m *= Math.min(
-      interpolate(species.modifiers.soil.N_ppm, conditions.soil.N_ppm),
-      interpolate(species.modifiers.soil.P_ppm, conditions.soil.P_ppm),
-      interpolate(species.modifiers.soil.K_ppm, conditions.soil.K_ppm),
-      interpolate(species.modifiers.soil.pH, conditions.soil.pH),
-      interpolate(species.modifiers.soil.compaction_psi, conditions.soil.compaction_psi),
-    );
+    flat.N_ppm = conditions.soil.N_ppm;
+    flat.P_ppm = conditions.soil.P_ppm;
+    flat.K_ppm = conditions.soil.K_ppm;
+    flat.pH = conditions.soil.pH;
+    flat.compaction_psi = conditions.soil.compaction_psi;
   }
+  if (conditions.spacing_plants_per_sq_ft !== undefined) flat.spacing_plants_per_sq_ft = conditions.spacing_plants_per_sq_ft;
+  if (conditions.soil_moisture_pct_fc !== undefined) flat.soil_moisture_pct_fc = conditions.soil_moisture_pct_fc;
+  if (conditions.avg_high_f !== undefined) flat.temperature_f = conditions.avg_high_f;
+  if (conditions.soil_temp_f !== undefined) flat.soil_temp_f = conditions.soil_temp_f;
+  if (conditions.photoperiod_h !== undefined) flat.photoperiod_h = conditions.photoperiod_h;
 
-  if (conditions.spacing_plants_per_sq_ft !== undefined) {
-    m *= interpolate(species.modifiers.spacing_plants_per_sq_ft, conditions.spacing_plants_per_sq_ft);
-  }
+  return flat;
+}
 
-  if (species.modifiers.soil_moisture_pct_fc && conditions.soil_moisture_pct_fc !== undefined) {
-    m *= interpolate(species.modifiers.soil_moisture_pct_fc, conditions.soil_moisture_pct_fc);
-  }
-
-  if (species.modifiers.temperature_f && conditions.avg_high_f !== undefined) {
-    m *= interpolate(species.modifiers.temperature_f, conditions.avg_high_f);
-  }
-
-  if (species.modifiers.soil_temperature_f && conditions.soil_temp_f !== undefined) {
-    m *= interpolate(species.modifiers.soil_temperature_f, conditions.soil_temp_f);
-  }
-
-  if (species.modifiers.photoperiod_h && conditions.photoperiod_h !== undefined) {
-    m *= interpolate(species.modifiers.photoperiod_h, conditions.photoperiod_h);
-  }
-
-  return m;
+/**
+ * Product of all environmental modifiers for given conditions.
+ *
+ * When species has growth_response[], delegates to computeGrowthModifier
+ * (fully multiplicative). Falls back to legacy hardcoded field iteration
+ * for species without growth_response.
+ */
+export function computeModifierProduct(species: PlantSpecies, conditions: YieldConditions): number {
+  return computeGrowthModifier(species.growth_response ?? [], flattenYieldConditions(conditions));
 }
 
 /**
@@ -80,4 +73,48 @@ export function computeModifierProduct(species: PlantSpecies, conditions: YieldC
  */
 export function computePlantYield(species: PlantSpecies, conditions: YieldConditions): number {
   return species.baseline_lbs_per_plant * computeModifierProduct(species, conditions) * survivalRate(species);
+}
+
+// =============================================================================
+// GrowthResponse-based modifiers (Phase 1 — replaces hardcoded field iteration)
+// =============================================================================
+
+/**
+ * Product of all growth_rate response curves.
+ *
+ * Iterates GrowthResponse[] and multiplies curves where effect === 'growth_rate'.
+ * If a condition value for a factor is missing, that curve is skipped (1.0).
+ */
+export function computeGrowthModifier(
+  responses: GrowthResponse[],
+  conditions: Record<string, number>,
+): number {
+  let product = 1.0;
+  for (const r of responses) {
+    if (r.effect !== 'growth_rate') continue;
+    const value = conditions[r.factor];
+    if (value === undefined) continue;
+    product *= interpolate(r.curve, value);
+  }
+  return product;
+}
+
+/**
+ * Product of all population_survival response curves.
+ *
+ * Returns the fraction of the population that survives (bolt, heat kill, etc.).
+ * If a condition value is missing, that curve is skipped (1.0).
+ */
+export function computeSurvivalModifier(
+  responses: GrowthResponse[],
+  conditions: Record<string, number>,
+): number {
+  let product = 1.0;
+  for (const r of responses) {
+    if (r.effect !== 'population_survival') continue;
+    const value = conditions[r.factor];
+    if (value === undefined) continue;
+    product *= interpolate(r.curve, value);
+  }
+  return product;
 }

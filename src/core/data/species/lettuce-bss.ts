@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_LIGHT_FEEDER } from './shared-modifiers';
+import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const LETTUCE_BSS: PlantSpecies = {
   id: 'lettuce_bss',
@@ -23,6 +23,14 @@ export const LETTUCE_BSS: PlantSpecies = {
   baseline_lbs_per_plant: 0.5,
   germination_rate: 0.90,   // Small seeds need good soil contact
   establishment_rate: 0.95, // Hardy once emerged; slug pressure
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 3: 0.67, 4: 0.82, 6: 0.9, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'temperature_f', curve: { 32: 0.0, 38: 0.1, 45: 0.5, 55: 0.8, 65: 1.0, 70: 1.0, 75: 0.7, 80: 0.3, 85: 0.0 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.2, 60: 0.75, 80: 1.0, 95: 1.0, 110: 0.6, 130: 0.0 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 1.0: 1.1, 2.78: 1.0, 4.0: 0.8, 6.0: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_LIGHT_FEEDER_RESPONSES,
+  ],
 
   modifiers: {
     // MONOTONIC — more DLI = more photosynthesis = more growth.

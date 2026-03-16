@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_COMPANION } from './shared-modifiers';
+import { SOIL_COMPANION, SOIL_COMPANION_RESPONSES } from './shared-modifiers';
 
 export const NASTURTIUM: PlantSpecies = {
   id: 'nasturtium',
@@ -14,6 +14,13 @@ export const NASTURTIUM: PlantSpecies = {
   baseline_lbs_per_plant: 0,
   germination_rate: 0.95,   // Large seeds; direct sow after frost
   establishment_rate: 0.95, // Frost-tender but planted post-frost
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 4: 0.4, 6: 0.8, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 15: 0.0, 35: 0.5, 50: 0.75, 70: 1.0, 85: 1.0, 100: 0.85, 115: 0.5, 130: 0.15 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 0.5: 1.1, 1.0: 1.0, 2.0: 0.8, 3.0: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_COMPANION_RESPONSES,
+  ],
 
   modifiers: {
     sun: { 4: 0.4, 6: 0.8, 8: 1.0, 10: 1.0 },

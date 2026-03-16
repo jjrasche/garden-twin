@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_LIGHT_FEEDER } from './shared-modifiers';
+import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const SPINACH_BLOOMSDALE: PlantSpecies = {
   id: 'spinach_bloomsdale',
@@ -23,6 +23,14 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
   baseline_lbs_per_plant: 0.28,
   germination_rate: 0.90,   // Seeds benefit from cold stratification
   establishment_rate: 0.95, // Very cold-hardy once emerged
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 3: 0.67, 4: 0.82, 6: 0.9, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.1, 60: 0.65, 80: 1.0, 90: 0.95, 100: 0.75, 120: 0.0 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 2.0: 1.1, 4.0: 1.0, 6.0: 0.8, 9.0: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_LIGHT_FEEDER_RESPONSES,
+    { factor: 'photoperiod_h', curve: { 10: 1.0, 13: 1.0, 14: 0.6, 14.5: 0.3, 15: 0.1, 16: 0.0 }, effect: 'population_survival' as const, name: 'bolt' },
+  ],
 
   modifiers: {
     // MONOTONIC — more DLI = more photosynthesis = more growth.

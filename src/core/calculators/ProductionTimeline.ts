@@ -11,18 +11,18 @@
  */
 
 import { PlantSpecies, survivalRate } from '../types';
-import { EnvironmentSource, createGrandRapidsHistorical, computeEffectiveSunHours } from '../environment';
-import { computePlantYield } from './yieldModel';
+import { EnvironmentSource, createGrandRapidsHistorical } from '../environment';
 import { interpolate } from './interpolate';
 import {
   MS_PER_DAY, SHADE_TREE_HEIGHT_FT, ZONE_PHYS_Y,
   daysBetween,
-  computeBoltSurvival, averageGrowthYield,
+  computeSurvivalFromConditions,
   computeDeathDate, isDeadFromFrost,
-  buildCutSchedule, accumulateGrowth,
+  buildCutSchedule,
   computeDailyGrowth,
   type SunZone,
 } from './growthMath';
+import { computeDailyGdd, determineStage, isHarvestableStage } from './gddEngine';
 export type { SunZone };
 
 import { LETTUCE_BSS } from '../data/species/lettuce-bss';
@@ -143,101 +143,6 @@ const GREENS_GROUPS: readonly DisplayGroup[] = ['Lettuce', 'Spinach', 'Kale'];
 
 // ── Calculator ──────────────────────────────────────────────────────────────
 
-export function computeWeeklyHarvest(plan: CropPlanting[], env: EnvironmentSource): WeeklyHarvest[] {
-  const season_start = new Date('2025-04-14');
-  const season_end = new Date('2025-11-24');
-
-  // Pre-compute per-planting data
-  const planting_data = plan.map(planting => {
-    const plant_date = new Date(planting.planting_date);
-    const harvest_start = new Date(plant_date);
-    harvest_start.setDate(harvest_start.getDate() + planting.species.days_to_first_harvest);
-
-    // Death date used by continuous/bulk_harvest only
-    const death_date = computeDeathDate(planting.species, harvest_start, env, season_end);
-    const alive_days = Math.max(7, daysBetween(harvest_start, death_date));
-
-    // Cut schedule for cut_and_come_again
-    const cuts = buildCutSchedule(plant_date, planting.species);
-
-    return { plant_date, harvest_start, death_date, alive_days, cuts };
-  });
-
-  const weeks: WeeklyHarvest[] = [];
-  const current = new Date(season_start);
-
-  while (current <= season_end) {
-    const week_end = new Date(current);
-    week_end.setDate(week_end.getDate() + 7);
-    const lbs_by_group: Record<string, number> = {};
-
-    for (let i = 0; i < plan.length; i++) {
-      const planting = plan[i]!;
-      const data = planting_data[i]!;
-      const harvest_type = planting.species.harvest_type ?? 'continuous';
-      const zone_physY = ZONE_PHYS_Y[planting.zone];
-      const group = planting.display_group;
-
-      if (harvest_type === 'cut_and_come_again' && data.cuts) {
-        // Daily accumulation: integrate growth over each cut's regrowth window.
-        // cut_yield = sum_over_window(daily_potential × vigor × modifier) × survival × bolt × plants
-        for (let c = 0; c < data.cuts.cut_dates.length; c++) {
-          const cut_date = data.cuts.cut_dates[c]!;
-          if (cut_date < current || cut_date >= week_end) continue;
-          if (isDeadFromFrost(planting.species, cut_date, env)) break;
-
-          const window_start = data.cuts.window_starts[c]!;
-          const vigor = data.cuts.vigors[c]!;
-          const accumulated = accumulateGrowth(
-            planting.species, window_start, cut_date, vigor,
-            data.cuts.daily_potential, zone_physY, env,
-          );
-          const bolt_survival = computeBoltSurvival(planting.species, cut_date, env);
-          const cut_yield = accumulated * survivalRate(planting.species) * bolt_survival * planting.plant_count;
-
-          if (cut_yield > 0) {
-            lbs_by_group[group] = (lbs_by_group[group] ?? 0) + cut_yield;
-          }
-        }
-      } else if (harvest_type === 'bulk_harvest') {
-        // All yield at maturity
-        if (current > data.harvest_start || week_end <= data.harvest_start) continue;
-        if (data.harvest_start >= data.death_date) continue;
-
-        const mid_week = new Date(current.getTime() + 3.5 * MS_PER_DAY);
-        const bolt_survival = computeBoltSurvival(planting.species, mid_week, env);
-        const avg_yield = averageGrowthYield(planting.species, data.plant_date, zone_physY, env);
-        lbs_by_group[group] = (lbs_by_group[group] ?? 0) + avg_yield * planting.plant_count * bolt_survival;
-      } else {
-        // Continuous: spread yield across alive window (tomatoes)
-        if (week_end <= data.harvest_start || current >= data.death_date) continue;
-
-        const overlap_start = current > data.harvest_start ? current : data.harvest_start;
-        const overlap_end = week_end < data.death_date ? week_end : data.death_date;
-        const overlap_days = daysBetween(overlap_start, overlap_end);
-        const overlap_mid = new Date(overlap_start.getTime() + (overlap_end.getTime() - overlap_start.getTime()) / 2);
-
-        const sun_hours = computeEffectiveSunHours(zone_physY, overlap_mid, SHADE_TREE_HEIGHT_FT);
-        const cond = env.getConditions(overlap_mid);
-        const per_plant = computePlantYield(planting.species, { sun_hours, ...cond });
-        const mid_week = new Date(current.getTime() + 3.5 * MS_PER_DAY);
-        const bolt_survival = computeBoltSurvival(planting.species, mid_week, env);
-        const proportion = overlap_days / data.alive_days;
-        const weekly_yield = per_plant * planting.plant_count * bolt_survival * proportion;
-
-        if (weekly_yield > 0) {
-          lbs_by_group[group] = (lbs_by_group[group] ?? 0) + weekly_yield;
-        }
-      }
-    }
-
-    const total_lbs = Object.values(lbs_by_group).reduce((sum, v) => sum + v, 0);
-    weeks.push({ week_start: new Date(current), lbs_by_group, total_lbs });
-    current.setDate(current.getDate() + 7);
-  }
-
-  return weeks;
-}
 
 // ── Ledger-Driven Simulation ─────────────────────────────────────────────────
 // Replaces fixed-calendar cuts with threshold-based harvesting.
@@ -252,6 +157,7 @@ interface SimPlanting {
   harvest_type: 'cut_and_come_again' | 'bulk_harvest' | 'continuous';
   planting_date: Date;
   accumulated_lbs: number;
+  accumulated_gdd: number;
   cut_number: number;
   vigor: number;
   daily_potential: number;
@@ -262,12 +168,28 @@ interface SimPlanting {
   is_dead: boolean;
 }
 
+/** Estimate calendar date when accumulated GDD reaches a threshold. */
+function estimateGddDate(
+  plant_date: Date, target_gdd: number, base_temp_f: number,
+  env: EnvironmentSource, limit: Date,
+): Date {
+  let accumulated = 0;
+  const scan = new Date(plant_date);
+  while (scan <= limit && accumulated < target_gdd) {
+    const cond = env.getConditions(scan);
+    accumulated += computeDailyGdd(cond.avg_high_f, cond.avg_low_f, base_temp_f);
+    scan.setDate(scan.getDate() + 1);
+  }
+  return new Date(scan);
+}
+
 function initSimPlanting(planting: CropPlanting, env: EnvironmentSource, season_end: Date): SimPlanting {
   const species = planting.species;
   const harvest_type = species.harvest_type ?? 'continuous';
   const plant_date = new Date(planting.planting_date);
   const first_harvest = new Date(plant_date);
   first_harvest.setDate(first_harvest.getDate() + species.days_to_first_harvest);
+  const phenology = species.phenology;
 
   const cuts = buildCutSchedule(plant_date, species);
   let daily_potential: number;
@@ -279,13 +201,23 @@ function initSimPlanting(planting: CropPlanting, env: EnvironmentSource, season_
     vigor = cuts.vigors[0]!;
     threshold_lbs = daily_potential * vigor * species.days_to_first_harvest * 0.9;
   } else if (harvest_type === 'bulk_harvest') {
-    daily_potential = species.baseline_lbs_per_plant / Math.max(1, species.days_to_first_harvest);
+    if (phenology) {
+      const fruiting_date = estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end);
+      const mature_date = estimateGddDate(plant_date, phenology.gdd_stages.mature, phenology.base_temp_f, env, season_end);
+      const productive_days = Math.max(1, daysBetween(fruiting_date, mature_date));
+      daily_potential = species.baseline_lbs_per_plant / productive_days;
+    } else {
+      daily_potential = species.baseline_lbs_per_plant / Math.max(1, species.days_to_first_harvest);
+    }
     vigor = 1.0;
-    threshold_lbs = 0; // harvest at maturity date, not threshold
+    threshold_lbs = 0;
   } else {
-    // continuous: spread baseline across alive window
-    const death_date = computeDeathDate(species, first_harvest, env, season_end);
-    const alive_days = Math.max(7, daysBetween(first_harvest, death_date));
+    // continuous: spread baseline across productive window
+    const productive_start = phenology
+      ? estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end)
+      : first_harvest;
+    const death_date = computeDeathDate(species, productive_start, env, season_end);
+    const alive_days = Math.max(7, daysBetween(productive_start, death_date));
     daily_potential = species.baseline_lbs_per_plant / alive_days;
     vigor = 1.0;
     threshold_lbs = 0;
@@ -296,7 +228,7 @@ function initSimPlanting(planting: CropPlanting, env: EnvironmentSource, season_
     species, group: planting.display_group, plant_count: planting.plant_count,
     zone_physY: ZONE_PHYS_Y[planting.zone], harvest_type,
     planting_date: plant_date,
-    accumulated_lbs: 0, cut_number: 0, vigor, daily_potential, threshold_lbs,
+    accumulated_lbs: 0, accumulated_gdd: 0, cut_number: 0, vigor, daily_potential, threshold_lbs,
     next_harvest_date: first_harvest,
     max_cuts: cac?.max_cuts ?? 1,
     regrowth_days: cac?.regrowth_days ?? species.days_to_first_harvest,
@@ -306,7 +238,7 @@ function initSimPlanting(planting: CropPlanting, env: EnvironmentSource, season_
 
 /** Harvest a SimPlanting, returning total lbs. Mutates sim for next cycle. */
 function harvestSimPlanting(sim: SimPlanting, date: Date, env: EnvironmentSource): number {
-  const bolt_survival = computeBoltSurvival(sim.species, date, env);
+  const bolt_survival = computeSurvivalFromConditions(sim.species, date, env);
   const total = sim.accumulated_lbs * survivalRate(sim.species) * bolt_survival * sim.plant_count;
 
   sim.accumulated_lbs = 0;
@@ -345,13 +277,30 @@ export function simulateSeason(plan: CropPlanting[], env: EnvironmentSource): We
       for (const sim of sims) {
         if (sim.is_dead || day < sim.planting_date) continue;
 
-        if (isDeadFromFrost(sim.species, day, env) || computeBoltSurvival(sim.species, day, env) <= 0.05) {
+        if (isDeadFromFrost(sim.species, day, env) || computeSurvivalFromConditions(sim.species, day, env) <= 0.05) {
           sim.is_dead = true;
           continue;
         }
 
-        // Continuous crops only accumulate after first harvest date
-        if (sim.harvest_type === 'continuous' && day < sim.next_harvest_date) continue;
+        // Accumulate GDD and determine phenological stage
+        const cond = env.getConditions(day);
+        const phenology = sim.species.phenology;
+        if (phenology) {
+          sim.accumulated_gdd += computeDailyGdd(cond.avg_high_f, cond.avg_low_f, phenology.base_temp_f);
+        }
+        const stage = phenology
+          ? determineStage(sim.accumulated_gdd, phenology.gdd_stages)
+          : null;
+
+        // Gate harvestable biomass by phenological stage
+        // CAC crops: harvestable once past seed (vegetative+)
+        // Bulk/continuous: harvestable only at fruiting+ (grain fill, fruit production)
+        // No phenology: fall back to calendar gate for continuous
+        const stage_allows_growth = stage === null
+          || (sim.harvest_type === 'cut_and_come_again' ? stage !== 'seed' : isHarvestableStage(stage));
+
+        if (!stage_allows_growth) continue;
+        if (stage === null && sim.harvest_type === 'continuous' && day < sim.next_harvest_date) continue;
 
         sim.accumulated_lbs += computeDailyGrowth(
           sim.species, day, sim.vigor, sim.daily_potential, sim.zone_physY, env,
@@ -365,8 +314,11 @@ export function simulateSeason(plan: CropPlanting[], env: EnvironmentSource): We
           if (harvested > 0) lbs_by_group[sim.group] = (lbs_by_group[sim.group] ?? 0) + harvested;
         }
 
-        // Time-based harvest for bulk_harvest
-        if (sim.harvest_type === 'bulk_harvest' && day >= sim.next_harvest_date) {
+        // GDD-driven harvest for bulk_harvest (fall back to calendar without phenology)
+        const bulk_ready = phenology
+          ? stage === 'harvest'
+          : day >= sim.next_harvest_date;
+        if (sim.harvest_type === 'bulk_harvest' && bulk_ready) {
           const harvested = harvestSimPlanting(sim, day, env);
           if (harvested > 0) lbs_by_group[sim.group] = (lbs_by_group[sim.group] ?? 0) + harvested;
         }
@@ -396,7 +348,7 @@ export function simulateSeason(plan: CropPlanting[], env: EnvironmentSource): We
  *
  * Past weeks use ledger's actual accumulated values. Future weeks project
  * forward with existing planning math. Produces the same WeeklyHarvest[]
- * output as computeWeeklyHarvest for comparison.
+ * output as simulateSeason for comparison.
  */
 export function computeWeeklyHarvestFromLedger(
   ledger: import('./GrowthLedger').GrowthLedger,

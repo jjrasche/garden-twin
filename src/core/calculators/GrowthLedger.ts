@@ -13,7 +13,7 @@ import type { SunZone } from './growthMath';
 import {
   MS_PER_DAY, ZONE_PHYS_Y,
   accumulateGrowth, buildCutSchedule, computeDeathDate,
-  isDeadFromFrost, computeBoltSurvival, daysBetween,
+  isDeadFromFrost, computeSurvivalFromConditions, daysBetween,
 } from './growthMath';
 import { interpolate } from './interpolate';
 
@@ -139,7 +139,7 @@ export function advanceLedger(
       continue;
     }
 
-    const bolt_survival = computeBoltSurvival(species, toDate, env);
+    const bolt_survival = computeSurvivalFromConditions(species, toDate, env);
     if (bolt_survival <= 0.05) {
       result.set(id, { ...entry, is_dead: true, is_ready_to_harvest: false });
       continue;

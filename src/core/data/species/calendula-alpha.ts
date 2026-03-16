@@ -1,5 +1,5 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_COMPANION } from './shared-modifiers';
+import { SOIL_COMPANION, SOIL_COMPANION_RESPONSES } from './shared-modifiers';
 
 export const CALENDULA: PlantSpecies = {
   id: 'calendula',
@@ -14,6 +14,13 @@ export const CALENDULA: PlantSpecies = {
   baseline_lbs_per_plant: 0,
   germination_rate: 0.95,   // Reliable germinator
   establishment_rate: 0.95, // Semi-hardy; tolerates light frost
+
+  growth_response: [
+    { factor: 'sun_hours', curve: { 4: 0.5, 6: 0.8, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: { 15: 0.0, 35: 0.4, 50: 0.65, 75: 1.0, 100: 1.0, 115: 0.7, 130: 0.25 }, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 0.7: 1.1, 1.44: 1.0, 2.5: 0.8, 4.0: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_COMPANION_RESPONSES,
+  ],
 
   modifiers: {
     sun: { 4: 0.5, 6: 0.8, 8: 1.0, 10: 1.0 },

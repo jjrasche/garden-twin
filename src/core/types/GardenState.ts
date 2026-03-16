@@ -50,10 +50,13 @@ export const PlantInstanceSchema = z.object({
   // Temporal
   planted_date: z.string(),                 // ISO date
 
+  // Management decision — which harvest strategy applies
+  harvest_strategy_id: z.string().optional(),
+
   // Observed state (from sensors/observations)
   current_stage: GrowthStageSchema,
-  height_cm: z.number().min(0),
-  fruit_count: z.number().int().min(0).optional(),
+  accumulated_gdd: z.number().min(0).default(0),
+  measurements: z.record(z.string(), z.number()).optional(),
   last_observed: z.string(),                // ISO datetime
 
   // Physical structural dependency (e.g., bean climbing corn stalk)
@@ -96,13 +99,10 @@ export const SubcellStateSchema = z.object({
   // Terrain (static)
   type: z.enum(['planting', 'pathway', 'water', 'tree']),
 
-  // Soil (slow-changing, can be updated by sensors)
-  soil: SoilConditionsSchema.extend({
-    moisture_pct: z.number().min(0).max(100).optional(), // Daily from sensors
-  }),
+  // Soil baseline (slow-changing composition — NOT moisture, NOT sun)
+  soil: SoilConditionsSchema,
 
-  // Sun (static with seasonal variation)
-  sun_hours: z.number().min(0).max(24),
+  // Shade model (structural — tree shadow pattern, input to Conditions resolver)
   shade_map: ShadeMapSchema.optional(),
 
   // Plant reference (dynamic) - NOT the plant itself
@@ -206,12 +206,6 @@ export const GardenStateSchema = z.object({
   // Physical features (mounds, channels, trellises, paths)
   infrastructure: z.array(InfrastructureFeatureSchema).optional(),
 
-  // Garden-wide conditions
-  environment: EnvironmentalConditionsSchema,
-
-  // Pre-computed summary for UI
-  summary: GardenStateSummarySchema.optional(),
-
   // Quality/confidence (for projected states)
   confidence: z.number().min(0).max(1).optional(),
 
@@ -272,10 +266,13 @@ export function getDaysSincePlanting(plantedDate: string): number {
  */
 export function getVarianceFromExpected(
   actual: PlantInstance,
-  expected: PlantInstance
+  expected: PlantInstance,
+  measurement: string = 'height_cm'
 ): number {
-  if (expected.height_cm === 0) return 0;
-  return ((actual.height_cm - expected.height_cm) / expected.height_cm) * 100;
+  const expectedVal = expected.measurements?.[measurement] ?? 0;
+  if (expectedVal === 0) return 0;
+  const actualVal = actual.measurements?.[measurement] ?? 0;
+  return ((actualVal - expectedVal) / expectedVal) * 100;
 }
 
 /**

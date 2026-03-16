@@ -1,6 +1,7 @@
 import { PlantSpecies } from '../../types';
 import {
   SOIL_HEAVY_FEEDER,
+  SOIL_HEAVY_FEEDER_RESPONSES,
   TOMATO_SUN,
   TOMATO_TEMPERATURE,
   TOMATO_MOISTURE_PASTE,
@@ -25,6 +26,14 @@ export const TOMATO_AMISH_PASTE: PlantSpecies = {
   // Transplant survival: 0.92 (established 6-8 week seedlings past vulnerable stage)
   germination_rate: 1.00,   // Transplants — already germinated
   establishment_rate: 0.92, // Transplant shock, early season cold snaps
+
+  growth_response: [
+    { factor: 'sun_hours', curve: TOMATO_SUN, effect: 'growth_rate' as const },
+    { factor: 'temperature_f', curve: TOMATO_TEMPERATURE, effect: 'growth_rate' as const },
+    { factor: 'soil_moisture_pct_fc', curve: TOMATO_MOISTURE_PASTE, effect: 'growth_rate' as const },
+    { factor: 'spacing_plants_per_sq_ft', curve: { 0.08: 1.1, 0.17: 1.0, 0.33: 0.8, 0.5: 0.5 }, effect: 'growth_rate' as const },
+    ...SOIL_HEAVY_FEEDER_RESPONSES,
+  ],
 
   modifiers: {
     sun: TOMATO_SUN,

@@ -14,6 +14,7 @@ import {
   buildCutSchedule,
   computeDeathDate,
   computeBoltSurvival,
+  computeSurvivalFromConditions,
   isDeadFromFrost,
   daysBetween,
   MS_PER_DAY,
@@ -21,7 +22,7 @@ import {
   SHADE_TREE_HEIGHT_FT,
 } from '../../src/core/calculators/growthMath';
 import {
-  computeWeeklyHarvest,
+  simulateSeason,
   PRODUCTION_PLAN,
   GR_HISTORICAL,
 } from '../../src/core/calculators/ProductionTimeline';
@@ -36,6 +37,7 @@ import { LETTUCE_BSS } from '../../src/core/data/species/lettuce-bss';
 import { TOMATO_SUN_GOLD } from '../../src/core/data/species/tomato-sun-gold';
 import { POTATO_KENNEBEC } from '../../src/core/data/species/potato-kennebec';
 import { CORN_NOTHSTINE_DENT } from '../../src/core/data/species/corn-nothstine-dent';
+import { SPINACH_BLOOMSDALE } from '../../src/core/data/species/spinach-bloomsdale';
 import { PlantSpecies, Observation } from '../../src/core/types';
 import { EnvironmentSource } from '../../src/core/environment/types';
 import { createObservedSource } from '../../src/core/environment/ObservedSource';
@@ -114,9 +116,9 @@ describe('computeModifierProduct', () => {
     expect(modifier).toBeCloseTo(0.46, 2);
   });
 
-  test('soil Liebig minimum applies weakest nutrient', () => {
-    // Heavy feeder: N at 20ppm = 0.6 (the minimum)
-    // All others at optimal = 1.0
+  test('soil nutrient deficiency reduces modifier (multiplicative via growth_response)', () => {
+    // Heavy feeder: N at 20ppm = 0.6, all others at optimal = 1.0
+    // growth_response path: 1.0 × 1.0 × 0.6 × 1.0 × 1.0 × 1.0 × 1.0 = 0.6
     const modifier = computeModifierProduct(TOMATO_SUN_GOLD, {
       sun_hours: 8,
       avg_high_f: 80,
@@ -128,8 +130,26 @@ describe('computeModifierProduct', () => {
         compaction_psi: 0,
       },
     });
-    // sun=1.0, temp=1.0, soil=min(0.6, 1.0, 1.0, 1.0, 1.0)=0.6
     expect(modifier).toBeCloseTo(0.6, 2);
+  });
+
+  test('multiple suboptimal nutrients multiply (not Liebig min)', () => {
+    // Two deficient nutrients: N=20 (0.6) and P=10 (0.7)
+    // Multiplicative: 0.6 × 0.7 = 0.42 (via growth_response)
+    // Liebig would give: min(0.6, 0.7) = 0.6
+    const modifier = computeModifierProduct(TOMATO_SUN_GOLD, {
+      sun_hours: 8,
+      avg_high_f: 80,
+      soil: {
+        N_ppm: 20,
+        P_ppm: 10,
+        K_ppm: 120,
+        pH: 6.5,
+        compaction_psi: 0,
+      },
+    });
+    // sun=1.0, temp=1.0, N=0.6, P=0.7, rest=1.0 → 0.42
+    expect(modifier).toBeCloseTo(0.42, 2);
   });
 
   test('potato soil_temperature_f modifier works', () => {
@@ -261,10 +281,10 @@ describe('accumulateGrowth', () => {
 });
 
 // =============================================================================
-// Layer 2 — Species Scenarios via computeWeeklyHarvest
+// Layer 2 — Species Scenarios via simulateSeason
 // =============================================================================
 
-describe('computeWeeklyHarvest scenarios', () => {
+describe('simulateSeason scenarios', () => {
   test('single lettuce planting produces cuts in May-Jun', () => {
     const plan = [{
       species: LETTUCE_BSS,
@@ -274,14 +294,14 @@ describe('computeWeeklyHarvest scenarios', () => {
       zone: 'shade' as const,
     }];
 
-    const weeks = computeWeeklyHarvest(plan, GR_HISTORICAL);
+    const weeks = simulateSeason(plan, GR_HISTORICAL);
     const producing = weeks.filter(w => w.total_lbs > 0);
 
     expect(producing.length).toBeGreaterThan(0);
 
-    // First harvest around May 13 (28d after Apr 15)
+    // First harvest: threshold-based timing after vegetative GDD reached
     const first = producing[0]!;
-    expect(first.week_start.getMonth()).toBeLessThanOrEqual(4); // May or earlier
+    expect(first.week_start.getMonth()).toBeLessThanOrEqual(5); // June or earlier
 
     // Season total should be reasonable: 100 plants × 0.5 lbs × survival ≈ 42 lbs
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
@@ -298,12 +318,12 @@ describe('computeWeeklyHarvest scenarios', () => {
       zone: 'full_sun' as const,
     }];
 
-    const weeks = computeWeeklyHarvest(plan, GR_HISTORICAL);
+    const weeks = simulateSeason(plan, GR_HISTORICAL);
     const producing = weeks.filter(w => w.total_lbs > 0);
 
     expect(producing.length).toBeGreaterThan(0);
 
-    // First harvest ~60d after May 25 = ~Jul 24
+    // First harvest after GDD reaches fruiting (~300 GDD base 50°F)
     const first = producing[0]!;
     expect(first.week_start.getMonth()).toBeGreaterThanOrEqual(6); // July+
 
@@ -323,27 +343,28 @@ describe('computeWeeklyHarvest scenarios', () => {
       zone: 'full_sun' as const,
     }];
 
-    const weeks = computeWeeklyHarvest(plan, GR_HISTORICAL);
+    const weeks = simulateSeason(plan, GR_HISTORICAL);
     const producing = weeks.filter(w => w.total_lbs > 0);
 
     // Bulk harvest = exactly 1 producing week
     expect(producing).toHaveLength(1);
 
-    // ~90d after Apr 20 = mid-July
+    // GDD-driven: potato matures when accumulated GDD reaches 1700 (base 40°F)
     const harvest_week = producing[0]!;
-    expect(harvest_week.week_start.getMonth()).toBe(6); // July
+    expect(harvest_week.week_start.getMonth()).toBeGreaterThanOrEqual(5); // June+
 
-    // 153 plants × 1.5 lbs × ~0.855 survival × yield_modifier
-    expect(harvest_week.total_lbs).toBeGreaterThan(50);
+    // Calibrated: daily_potential based on GDD-productive window, not full calendar
+    // 153 plants × 1.5 lbs baseline × survival × modifiers → ~100-200 lbs
+    expect(harvest_week.total_lbs).toBeGreaterThan(80);
     expect(harvest_week.total_lbs).toBeLessThan(300);
   });
 
   test('full production plan total is stable', () => {
-    const weeks = computeWeeklyHarvest(PRODUCTION_PLAN, GR_HISTORICAL);
+    const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
 
-    // Regression: season total should be ~541 lbs (updated after removing Sweetie tomato)
-    expect(total).toBeCloseTo(541, -1); // within 10 lbs
+    // Regression: GDD-calibrated simulateSeason total (~672 lbs)
+    expect(total).toBeCloseTo(672, -1); // within 10 lbs
   });
 });
 
@@ -366,6 +387,21 @@ describe('death dates', () => {
     // At 85°F: temperature_f modifier = 0.0 → effectively dead from heat
     const survival = computeBoltSurvival(LETTUCE_BSS, new Date('2025-07-15'), GR_HISTORICAL);
     // Lettuce has no bolt_trigger field, so survival should be 1.0
+    expect(survival).toBe(1.0);
+  });
+
+  test('computeSurvivalFromConditions matches computeBoltSurvival for spinach', () => {
+    // Spinach has population_survival growth_response for photoperiod_h
+    // Mid-July: ~15h photoperiod → survival near 0.1 (bolt kills most)
+    const july15 = new Date('2025-07-15');
+    const old_result = computeBoltSurvival(SPINACH_BLOOMSDALE, july15, GR_HISTORICAL);
+    const new_result = computeSurvivalFromConditions(SPINACH_BLOOMSDALE, july15, GR_HISTORICAL);
+    expect(new_result).toBeCloseTo(old_result, 5);
+  });
+
+  test('computeSurvivalFromConditions returns 1.0 for species without survival responses', () => {
+    // Tomato has no population_survival in growth_response → always 1.0
+    const survival = computeSurvivalFromConditions(TOMATO_SUN_GOLD, new Date('2025-07-15'), GR_HISTORICAL);
     expect(survival).toBe(1.0);
   });
 
@@ -684,5 +720,57 @@ describe('ObservedSource and CompositeSource', () => {
     expect(() => observed.getConditions(new Date('2025-06-16'))).toThrow(
       'No observed weather for 2025-06-16',
     );
+  });
+});
+
+// =============================================================================
+// Layer 5 — GDD Stage-Gating (simulateSeason)
+// =============================================================================
+
+describe('simulateSeason — GDD stage-gating', () => {
+  test('corn produces zero yield when GDD never reaches fruiting', () => {
+    // Cold env: daily GDD = (65+45)/2 - 50 = 5 GDD/day
+    // 127 days to frost (Sep 29) = 635 GDD total
+    // Corn needs 1475 GDD to reach fruiting → never harvestable
+    const cold_env = createConstantEnv({ avg_high_f: 65, avg_low_f: 45 });
+    const plan = [{
+      species: CORN_NOTHSTINE_DENT,
+      display_group: 'Corn' as const,
+      plant_count: 10,
+      planting_date: '2025-05-25',
+      zone: 'full_sun' as const,
+    }];
+
+    const weeks = simulateSeason(plan, cold_env);
+    const corn_total = weeks.reduce((s, w) => s + (w.lbs_by_group['Corn'] ?? 0), 0);
+    expect(corn_total).toBe(0);
+  });
+
+  test('corn produces yield in warm environment where GDD reaches mature', () => {
+    const plan = [{
+      species: CORN_NOTHSTINE_DENT,
+      display_group: 'Corn' as const,
+      plant_count: 10,
+      planting_date: '2025-05-25',
+      zone: 'full_sun' as const,
+    }];
+
+    const weeks = simulateSeason(plan, GR_HISTORICAL);
+    const corn_total = weeks.reduce((s, w) => s + (w.lbs_by_group['Corn'] ?? 0), 0);
+    expect(corn_total).toBeGreaterThan(0);
+  });
+
+  test('lettuce produces yield in vegetative stage (CAC not gated to fruiting)', () => {
+    const plan = [{
+      species: LETTUCE_BSS,
+      display_group: 'Lettuce' as const,
+      plant_count: 10,
+      planting_date: '2025-04-15',
+      zone: 'shade' as const,
+    }];
+
+    const weeks = simulateSeason(plan, GR_HISTORICAL);
+    const lettuce_total = weeks.reduce((s, w) => s + (w.lbs_by_group['Lettuce'] ?? 0), 0);
+    expect(lettuce_total).toBeGreaterThan(0);
   });
 });

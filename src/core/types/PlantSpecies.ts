@@ -116,6 +116,28 @@ export const ModifiersSchema = z.object({
 export type Modifiers = z.infer<typeof ModifiersSchema>;
 
 /**
+ * GrowthResponse — declarative biological modifier curve.
+ *
+ * Species bring their own set of response curves. The growth engine iterates
+ * whatever curves a species declares. No hardcoded field names.
+ *
+ * factor: the condition being responded to (sun_hours, temperature_f, etc.)
+ * curve: lookup table mapping condition value → 0-1 multiplier
+ * effect: how this response is applied:
+ *   - growth_rate: multiplied into daily growth modifier
+ *   - population_survival: fraction of plants surviving (bolt, heat kill)
+ * name: optional human label (e.g., "bolt", "tuberization")
+ */
+export const GrowthResponseSchema = z.object({
+  factor: z.string(),
+  curve: LookupTableSchema,
+  effect: z.enum(['growth_rate', 'population_survival']),
+  name: z.string().optional(),
+});
+
+export type GrowthResponse = z.infer<typeof GrowthResponseSchema>;
+
+/**
  * GDD-based phenology — replaces calendar days_to_first_harvest.
  *
  * GDD (Growing Degree Days) = max(0, (high + low) / 2 - base_temp_f).
@@ -261,7 +283,10 @@ export const PlantSpeciesSchema = z.object({
   // Cut-and-come-again parameters (required when harvest_type === 'cut_and_come_again')
   cut_and_come_again: CutAndComeAgainSchema.optional(),
 
-  // Yield modifiers (interpolated lookup tables)
+  // Declarative modifier curves (replaces flat modifiers — Phase 1)
+  growth_response: z.array(GrowthResponseSchema).optional(),
+
+  // @deprecated — use growth_response. Kept for calculator migration (Phase 3/4).
   modifiers: ModifiersSchema,
 
   // Nutrition (per lb of harvest)
