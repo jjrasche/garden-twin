@@ -177,11 +177,11 @@ export function SeasonView() {
       </div>
 
       {/* Main content: map + side panel */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Garden map with hover detection */}
         <div
           ref={mapRef}
-          className="flex-1 relative"
+          className="flex-1 min-w-0 relative"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >

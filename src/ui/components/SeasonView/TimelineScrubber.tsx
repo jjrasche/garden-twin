@@ -68,11 +68,23 @@ export function TimelineScrubber({ snapshots, dayIndex, onDayChange, seasonStart
 
   return (
     <div className="bg-gray-900 border-t border-gray-700 px-4 py-2 select-none">
-      {/* Date label */}
+      {/* Date label + day input */}
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-gray-400 font-mono">{dateLabel}</span>
-        <span className="text-xs text-gray-500">
-          Day {dayIndex + 1} / {snapshots.length}
+        <span className="text-xs text-gray-500 flex items-center gap-1">
+          Day
+          <input
+            type="number"
+            min={1}
+            max={snapshots.length}
+            value={dayIndex + 1}
+            onChange={(e) => {
+              const val = Math.max(0, Math.min(snapshots.length - 1, Number(e.target.value) - 1));
+              if (!isNaN(val)) onDayChange(val);
+            }}
+            className="w-10 bg-gray-800 border border-gray-600 rounded text-center text-xs text-gray-300 font-mono px-0.5 py-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+          />
+          / {snapshots.length}
         </span>
       </div>
 

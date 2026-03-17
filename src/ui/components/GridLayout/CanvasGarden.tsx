@@ -22,10 +22,7 @@ export function CanvasGarden({ stageColorRef }: CanvasGardenProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const paintOverlayRef = useRef<Map<string, import('@core/types').SubcellState>>(new Map());
-  const [canvasSize, setCanvasSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   // Store state
   const gardenState = useGardenStore((state) => state.gardenState);
@@ -52,7 +49,7 @@ export function CanvasGarden({ stageColorRef }: CanvasGardenProps = {}) {
   // Render loop - 60fps Canvas rendering (reads from paintOverlayRef directly, no re-renders)
   useRenderLoop(canvasRef, viewport, visibleSubcells, gardenState, speciesMap, brushCursor, paintOverlayRef, stageColorRef);
 
-  // Container resize handler — tracks actual container size, not window
+  // Container resize handler — container is always rendered, so [] deps suffice.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -70,19 +67,6 @@ export function CanvasGarden({ stageColorRef }: CanvasGardenProps = {}) {
     return () => observer.disconnect();
   }, []);
 
-  if (!gardenState) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        <div className="text-center">
-          <p className="text-lg">No Garden Loaded</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Load a garden to see Canvas rendering
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div ref={containerRef} className="relative w-full h-full">
       <canvas
@@ -92,8 +76,22 @@ export function CanvasGarden({ stageColorRef }: CanvasGardenProps = {}) {
         className="block"
         style={{ cursor: paintMode !== 'none' ? 'crosshair' : 'grab' }}
       />
-      <Minimap viewport={viewport} garden={gardenState} onViewportChange={setViewport} />
-      <PaintToolbar />
+      {!gardenState && (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+          <div className="text-center">
+            <p className="text-lg">No Garden Loaded</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Load a garden to see Canvas rendering
+            </p>
+          </div>
+        </div>
+      )}
+      {gardenState && (
+        <>
+          <Minimap viewport={viewport} garden={gardenState} onViewportChange={setViewport} />
+          <PaintToolbar />
+        </>
+      )}
     </div>
   );
 }

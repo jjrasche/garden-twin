@@ -10,8 +10,11 @@ import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
 import type { ConditionsResolver } from '@core/environment/types';
 import type { PlantSpecies } from '@core/types/PlantSpecies';
+import { buildLaborSchedule, type WeeklyLabor } from '@core/calculators/LaborSchedule';
+import { PRODUCTION_PLAN, SEASON_RANGE } from '@core/calculators/ProductionTimeline';
+import { LIFECYCLE_SPECS } from '@core/data/lifecycle';
 
-type PanelTab = 'conditions' | 'accumulation';
+type PanelTab = 'conditions' | 'accumulation' | 'labor';
 
 interface ConditionsPanelProps {
   snapshot: DaySnapshot | null;
@@ -71,6 +74,26 @@ function countByStage(snapshot: DaySnapshot): Record<string, number> {
   return counts;
 }
 
+/** Sum labor minutes from weekly schedule up through a given date. */
+function sumMinutesThrough(weeks: WeeklyLabor[], date: Date): number {
+  let total = 0;
+  for (const week of weeks) {
+    for (const task of week.tasks) {
+      if (task.date <= date) total += task.duration_minutes;
+    }
+  }
+  return total;
+}
+
+/** Find the week containing a given date. */
+function findWeek(weeks: WeeklyLabor[], date: Date): WeeklyLabor | undefined {
+  for (const week of weeks) {
+    const weekEnd = new Date(week.week_start.getTime() + 7 * 86_400_000);
+    if (date >= week.week_start && date < weekEnd) return week;
+  }
+  return undefined;
+}
+
 function ConditionRow({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
   return (
     <div className="flex justify-between text-xs py-0.5">
@@ -98,6 +121,21 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
     [snapshot],
   );
 
+  const laborSchedule = useMemo(
+    () => buildLaborSchedule(PRODUCTION_PLAN, LIFECYCLE_SPECS, SEASON_RANGE.start, SEASON_RANGE.end),
+    [],
+  );
+
+  const laborHoursToDate = useMemo(() => {
+    if (!snapshot) return 0;
+    return sumMinutesThrough(laborSchedule, snapshot.date) / 60;
+  }, [laborSchedule, snapshot]);
+
+  const currentWeek = useMemo(() => {
+    if (!snapshot) return undefined;
+    return findWeek(laborSchedule, snapshot.date);
+  }, [laborSchedule, snapshot]);
+
   if (!snapshot) {
     return (
       <div className="bg-gray-800 p-3 text-gray-500 text-xs">
@@ -124,19 +162,22 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
 
       {/* Tab buttons */}
       <div className="flex border-b border-gray-700">
-        {(['conditions', 'accumulation'] as PanelTab[]).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 px-2 py-1 text-[10px] transition-colors ${
-              activeTab === tab
-                ? 'text-emerald-400 border-b border-emerald-500'
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            {tab === 'conditions' ? 'Conditions' : 'Harvest'}
-          </button>
-        ))}
+        {(['conditions', 'accumulation', 'labor'] as PanelTab[]).map(tab => {
+          const label = tab === 'conditions' ? 'Conditions' : tab === 'accumulation' ? 'Harvest' : 'Labor';
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 px-2 py-1 text-[10px] transition-colors ${
+                activeTab === tab
+                  ? 'text-emerald-400 border-b border-emerald-500'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab content */}
@@ -211,6 +252,45 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
                 <div className="text-[10px] text-gray-600">+{snapshot.events.length - 10} more</div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'labor' && (
+          <div className="space-y-3">
+            <div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Season-to-Date</div>
+              <ConditionRow label="Total hours" value={laborHoursToDate.toFixed(1)} unit=" h" />
+              <ConditionRow label="Total schedule" value={(laborSchedule.reduce((s, w) => s + w.total_minutes, 0) / 60).toFixed(1)} unit=" h" />
+            </div>
+
+            {currentWeek && (
+              <div>
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">This Week</div>
+                <ConditionRow label="Hours" value={(currentWeek.total_minutes / 60).toFixed(1)} unit=" h" />
+                <ConditionRow label="Tasks" value={currentWeek.tasks.length} />
+                {currentWeek.equipment_needed.length > 0 && (
+                  <div className="mt-1">
+                    <div className="text-[10px] text-gray-500 mb-0.5">Equipment</div>
+                    {currentWeek.equipment_needed.map(eq => (
+                      <div key={eq} className="text-[10px] text-gray-400 py-0.5">{eq}</div>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-1">
+                  <div className="text-[10px] text-gray-500 mb-0.5">Tasks</div>
+                  {currentWeek.tasks.map((task, i) => (
+                    <div key={i} className="text-[10px] text-gray-400 py-0.5 flex justify-between">
+                      <span>{task.activity_name}</span>
+                      <span className="text-gray-500 font-mono">{(task.duration_minutes / 60).toFixed(1)}h</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!currentWeek && (
+              <div className="text-[10px] text-gray-600">No scheduled tasks this week</div>
+            )}
           </div>
         )}
       </div>
