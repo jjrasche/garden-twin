@@ -1,16 +1,18 @@
 /**
  * Pure growth math extracted from ProductionTimeline.
  *
- * These functions are source-agnostic: they work with any EnvironmentSource
+ * These functions are source-agnostic: they work with any ConditionsResolver
  * (historical, observed, or composite). Used by both planning mode
  * (all-at-once season computation) and operational mode (daily ledger
  * accumulation).
  */
 
 import { PlantSpecies, survivalRate } from '../types';
+import type { HarvestStrategy } from '../types/HarvestStrategy';
 import { interpolate } from './interpolate';
-import { EnvironmentSource, computeEffectiveSunHours } from '../environment';
+import { ConditionsResolver, computeEffectiveSunHours } from '../environment';
 import { computeModifierProduct, computeSurvivalModifier } from './yieldModel';
+import { computeDailyGdd } from './gddEngine';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -50,7 +52,7 @@ export function findPeakTemp(curve: Record<string, number>): number {
 }
 
 /** Fraction of population surviving bolt trigger at given conditions. */
-export function computeBoltSurvival(species: PlantSpecies, date: Date, env: EnvironmentSource): number {
+export function computeBoltSurvival(species: PlantSpecies, date: Date, env: ConditionsResolver): number {
   const trigger = species.modifiers.bolt_trigger;
   if (!trigger) return 1.0;
   const conditions = env.getConditions(date);
@@ -59,7 +61,7 @@ export function computeBoltSurvival(species: PlantSpecies, date: Date, env: Envi
 }
 
 /** Population survival via growth_response[] (replaces modifiers.bolt_trigger). */
-export function computeSurvivalFromConditions(species: PlantSpecies, date: Date, env: EnvironmentSource): number {
+export function computeSurvivalFromConditions(species: PlantSpecies, date: Date, env: ConditionsResolver): number {
   if (!species.growth_response) return 1.0;
   const cond = env.getConditions(date);
   const flat: Record<string, number> = {
@@ -80,7 +82,7 @@ export function computeSurvivalFromConditions(species: PlantSpecies, date: Date,
  * - Heat death: temperature_f modifier <= 0.1 on the HOT side (above optimal)
  * - Bolt death: bolt_trigger survival <= 0.05 (population destroyed)
  */
-export function computeDeathDate(species: PlantSpecies, harvest_start: Date, env: EnvironmentSource, season_end: Date): Date {
+export function computeDeathDate(species: PlantSpecies, harvest_start: Date, env: ConditionsResolver, season_end: Date): Date {
   let earliest = season_end;
 
   // 1. Cold death (frost kill) — scan actual daily lows
@@ -133,7 +135,7 @@ export function computeDeathDate(species: PlantSpecies, harvest_start: Date, env
 }
 
 /** Check whether a plant is dead from frost at a given date. */
-export function isDeadFromFrost(species: PlantSpecies, date: Date, env: EnvironmentSource): boolean {
+export function isDeadFromFrost(species: PlantSpecies, date: Date, env: ConditionsResolver): boolean {
   const kill_temp = species.layout?.kill_temp_f;
   if (kill_temp === undefined) return false;
   if (env.source_type === 'historical' && kill_temp >= 32 && date >= env.avg_first_frost) return true;
@@ -156,18 +158,27 @@ export interface CutSchedule {
  * growth window. daily_potential is calibrated so total under perfect conditions
  * equals baseline_lbs_per_plant.
  */
-export function buildCutSchedule(plant_date: Date, species: PlantSpecies): CutSchedule | null {
-  const cac = species.cut_and_come_again;
-  if (!cac) return null;
+export function buildCutSchedule(
+  plant_date: Date, species: PlantSpecies,
+  strategy?: HarvestStrategy | null, env?: ConditionsResolver,
+): CutSchedule | null {
+  const max_cuts = strategy?.max_cuts;
+  const regrowth_days = strategy?.regrowth_days;
+  const cut_yield_curve = strategy?.cut_yield_curve;
+  const baseline = strategy?.baseline_lbs_per_plant ?? 0;
+
+  if (!max_cuts || !regrowth_days || !cut_yield_curve) return null;
+
+  const first_cut_offset = estimateFirstCutDays(plant_date, species, env);
 
   const cut_dates: Date[] = [];
   const window_starts: Date[] = [];
   const vigors: number[] = [];
 
   let vigor_days_total = 0;
-  for (let c = 1; c <= cac.max_cuts; c++) {
+  for (let c = 1; c <= max_cuts; c++) {
     const d = new Date(plant_date);
-    d.setDate(d.getDate() + species.days_to_first_harvest + (c - 1) * cac.regrowth_days);
+    d.setDate(d.getDate() + first_cut_offset + (c - 1) * regrowth_days);
     cut_dates.push(d);
 
     const window_start = c === 1
@@ -176,14 +187,25 @@ export function buildCutSchedule(plant_date: Date, species: PlantSpecies): CutSc
     window_starts.push(window_start);
 
     const window_days = daysBetween(window_start, d);
-    const vigor = interpolate(cac.cut_yield_curve, c);
+    const vigor = interpolate(cut_yield_curve, c);
     vigors.push(vigor);
     vigor_days_total += vigor * window_days;
   }
 
-  const daily_potential = species.baseline_lbs_per_plant / vigor_days_total;
+  const daily_potential = baseline / vigor_days_total;
 
   return { cut_dates, window_starts, vigors, daily_potential };
+}
+
+/**
+ * Days from planting to first harvestable cut.
+ *
+ * Always uses calendar days_to_first_harvest. GDD vegetative threshold
+ * represents growth stage entry, not agronomic harvest readiness (leaf size).
+ * GDD gating is handled in the daily accumulation loop, not here.
+ */
+function estimateFirstCutDays(_plant_date: Date, species: PlantSpecies, _env?: ConditionsResolver): number {
+  return species.days_to_first_harvest;
 }
 
 // ── Daily Growth ─────────────────────────────────────────────────────────────
@@ -191,7 +213,7 @@ export function buildCutSchedule(plant_date: Date, species: PlantSpecies): CutSc
 /** One day's growth for a single plant under current conditions. */
 export function computeDailyGrowth(
   species: PlantSpecies, date: Date, vigor: number,
-  daily_potential: number, zone_physY: number, env: EnvironmentSource,
+  daily_potential: number, zone_physY: number, env: ConditionsResolver,
 ): number {
   const cond = env.getConditions(date);
   const sun_hours = computeEffectiveSunHours(zone_physY, date, SHADE_TREE_HEIGHT_FT, cond.sunshine_hours);
@@ -209,7 +231,7 @@ export function computeDailyGrowth(
  */
 export function accumulateGrowth(
   species: PlantSpecies, window_start: Date, window_end: Date,
-  vigor: number, daily_potential: number, zone_physY: number, env: EnvironmentSource,
+  vigor: number, daily_potential: number, zone_physY: number, env: ConditionsResolver,
 ): number {
   const window_ms = window_end.getTime() - window_start.getTime();
   const window_days = window_ms / MS_PER_DAY;

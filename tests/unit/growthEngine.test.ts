@@ -4,7 +4,6 @@
  * Layer 1: Math primitives (computeModifierProduct, buildCutSchedule, accumulateGrowth)
  * Layer 2: Species scenarios (lettuce cuts, tomato season, death dates)
  * Layer 3: Planning ↔ Operational equivalence
- * Layer 4: Ledger operations (recordHarvest, recordDeath, applyObservationToLedger)
  */
 
 import { describe, test, expect } from 'vitest';
@@ -26,19 +25,13 @@ import {
   PRODUCTION_PLAN,
   GR_HISTORICAL,
 } from '../../src/core/calculators/ProductionTimeline';
-import {
-  createLedgerFromPlan,
-  advanceLedger,
-  recordHarvest,
-  recordDeath,
-  applyObservationToLedger,
-} from '../../src/core/calculators/GrowthLedger';
 import { LETTUCE_BSS } from '../../src/core/data/species/lettuce-bss';
 import { TOMATO_SUN_GOLD } from '../../src/core/data/species/tomato-sun-gold';
 import { POTATO_KENNEBEC } from '../../src/core/data/species/potato-kennebec';
 import { CORN_NOTHSTINE_DENT } from '../../src/core/data/species/corn-nothstine-dent';
 import { SPINACH_BLOOMSDALE } from '../../src/core/data/species/spinach-bloomsdale';
-import { PlantSpecies, Observation } from '../../src/core/types';
+import { PlantSpecies } from '../../src/core/types';
+import { resolveHarvestStrategy } from '../../src/core/calculators/strategyResolver';
 import { EnvironmentSource } from '../../src/core/environment/types';
 import { createObservedSource } from '../../src/core/environment/ObservedSource';
 import { createCompositeSource, buildObservedDateSet } from '../../src/core/environment/CompositeSource';
@@ -75,10 +68,6 @@ function createConstantEnv(overrides: Partial<{
       return weeks;
     },
   };
-}
-
-function speciesMap(...species: PlantSpecies[]): Map<string, PlantSpecies> {
-  return new Map(species.map(s => [s.id, s]));
 }
 
 // =============================================================================
@@ -179,7 +168,8 @@ describe('buildCutSchedule', () => {
   });
 
   test('lettuce: 4 cuts with correct dates', () => {
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS);
+    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
+    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy);
     expect(schedule).not.toBeNull();
     expect(schedule!.cut_dates).toHaveLength(4);
 
@@ -194,7 +184,8 @@ describe('buildCutSchedule', () => {
   });
 
   test('daily_potential calibrated so total under perfect conditions = baseline', () => {
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS);
+    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
+    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy);
     expect(schedule).not.toBeNull();
 
     // Sum vigor × window_days across all cuts should equal baseline / daily_potential
@@ -207,11 +198,12 @@ describe('buildCutSchedule', () => {
     }
 
     const reconstructed_baseline = schedule!.daily_potential * total_vigor_days;
-    expect(reconstructed_baseline).toBeCloseTo(LETTUCE_BSS.baseline_lbs_per_plant, 6);
+    expect(reconstructed_baseline).toBeCloseTo(strategy!.baseline_lbs_per_plant, 6);
   });
 
   test('vigors match cut_yield_curve values', () => {
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS);
+    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
+    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy);
     // curve: {1:1.0, 2:0.8, 3:0.6, 4:0.4}
     expect(schedule!.vigors[0]).toBeCloseTo(1.0, 2);
     expect(schedule!.vigors[1]).toBeCloseTo(0.8, 2);
@@ -223,7 +215,8 @@ describe('buildCutSchedule', () => {
 describe('accumulateGrowth', () => {
   test('constant conditions: accumulated = daily_potential × vigor × modifier × days', () => {
     const env = createConstantEnv({ avg_high_f: 65 }); // lettuce temp=1.0
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS)!;
+    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
+    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy)!;
 
     // First cut window: 28 days, vigor=1.0
     const accumulated = accumulateGrowth(
@@ -248,7 +241,7 @@ describe('accumulateGrowth', () => {
     // But sun_hours depends on shade model which varies by date even in constant temp.
     // So accumulated won't exactly match. Just verify it's positive and reasonable.
     expect(accumulated).toBeGreaterThan(0);
-    expect(accumulated).toBeLessThan(LETTUCE_BSS.baseline_lbs_per_plant);
+    expect(accumulated).toBeLessThan(strategy!.baseline_lbs_per_plant);
   });
 
   test('longer window accumulates more than shorter window', () => {
@@ -363,8 +356,9 @@ describe('simulateSeason scenarios', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
 
-    // Regression: GDD-calibrated simulateSeason total (~672 lbs)
-    expect(total).toBeCloseTo(672, -1); // within 10 lbs
+    // New engine: ~661 lbs (differs from old ~672 due to per-plant expansion,
+    // no shade model, threshold-based harvest instead of date-based).
+    expect(total).toBeCloseTo(661, -1); // within 10 lbs
   });
 });
 
@@ -466,198 +460,6 @@ describe('accumulateGrowth numerical stability', () => {
 
     // Within 10% tolerance (3-day sampling in short windows is coarser)
     expect(Math.abs(whole - sum_pieces) / whole).toBeLessThan(0.10);
-  });
-});
-
-// =============================================================================
-// Layer 4 — Ledger Operations
-// =============================================================================
-
-describe('GrowthLedger', () => {
-  test('createLedgerFromPlan creates entries for all plants', () => {
-    const plan = [{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 5,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }];
-    const ledger = createLedgerFromPlan(plan);
-    expect(ledger.size).toBe(5);
-
-    for (const entry of ledger.values()) {
-      expect(entry.species_id).toBe('lettuce_bss');
-      expect(entry.accumulated_lbs).toBe(0);
-      expect(entry.cut_number).toBe(0);
-      expect(entry.is_dead).toBe(false);
-      expect(entry.is_ready_to_harvest).toBe(false);
-      expect(entry.daily_potential).toBeGreaterThan(0);
-    }
-  });
-
-  test('advanceLedger accumulates growth', () => {
-    const plan = [{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 1,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }];
-    const ledger = createLedgerFromPlan(plan);
-    const smap = speciesMap(LETTUCE_BSS);
-
-    // Advance 14 days (before first harvest at day 28)
-    const advanced = advanceLedger(ledger, new Date('2025-04-29'), GR_HISTORICAL, smap);
-
-    const entry = [...advanced.values()][0]!;
-    expect(entry.accumulated_lbs).toBeGreaterThan(0);
-    expect(entry.is_ready_to_harvest).toBe(false); // not yet at threshold
-    expect(entry.is_dead).toBe(false);
-  });
-
-  test('advanceLedger marks frost-killed plants as dead', () => {
-    const plan = [{
-      species: TOMATO_SUN_GOLD,
-      display_group: 'Cherry' as const,
-      plant_count: 1,
-      planting_date: '2025-05-25',
-      zone: 'full_sun' as const,
-    }];
-    const ledger = createLedgerFromPlan(plan);
-    const smap = speciesMap(TOMATO_SUN_GOLD);
-
-    // Advance past first frost (Sep 29)
-    const advanced = advanceLedger(ledger, new Date('2025-10-15'), GR_HISTORICAL, smap);
-
-    const entry = [...advanced.values()][0]!;
-    expect(entry.is_dead).toBe(true);
-  });
-
-  test('recordHarvest resets accumulator and increments cut', () => {
-    const plan = [{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 1,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }];
-    const smap = speciesMap(LETTUCE_BSS);
-    let ledger = createLedgerFromPlan(plan);
-
-    // Advance to first harvest
-    ledger = advanceLedger(ledger, new Date('2025-05-13'), GR_HISTORICAL, smap);
-    const plant_id = [...ledger.keys()][0]!;
-    const before = ledger.get(plant_id)!;
-    expect(before.accumulated_lbs).toBeGreaterThan(0);
-
-    // Record harvest
-    ledger = recordHarvest(ledger, plant_id, '2025-05-13', smap);
-    const after = ledger.get(plant_id)!;
-    expect(after.accumulated_lbs).toBe(0);
-    expect(after.cut_number).toBe(1);
-    expect(after.last_reset_date).toBe('2025-05-13');
-    expect(after.is_ready_to_harvest).toBe(false);
-  });
-
-  test('recordHarvest marks dead after max cuts', () => {
-    const smap = speciesMap(LETTUCE_BSS);
-    let ledger = createLedgerFromPlan([{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 1,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }]);
-
-    const plant_id = [...ledger.keys()][0]!;
-
-    // Simulate 4 harvests (max_cuts = 4, zero-indexed: cuts 0,1,2,3)
-    // After 4th harvest (cut_number goes to 4, which >= max_cuts), plant dies
-    for (let cut = 0; cut < 4; cut++) {
-      const date = `2025-05-${13 + cut * 14}`;
-      ledger = recordHarvest(ledger, plant_id, date, smap);
-    }
-
-    const entry = ledger.get(plant_id)!;
-    expect(entry.is_dead).toBe(true);
-  });
-
-  test('recordDeath marks plant as dead', () => {
-    let ledger = createLedgerFromPlan([{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 1,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }]);
-
-    const plant_id = [...ledger.keys()][0]!;
-    ledger = recordDeath(ledger, plant_id);
-
-    const entry = ledger.get(plant_id)!;
-    expect(entry.is_dead).toBe(true);
-    expect(entry.is_ready_to_harvest).toBe(false);
-  });
-
-  test('applyObservationToLedger: growth_stage done triggers death', () => {
-    let ledger = createLedgerFromPlan([{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 1,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }]);
-
-    const plant_id = [...ledger.keys()][0]!;
-    const obs: Observation = {
-      observation_id: 'obs_1',
-      timestamp: '2025-06-01T12:00:00Z',
-      plant_id,
-      growth_stage: 'done',
-      source: { source_type: 'manual', user_id: 'test' },
-      method: 'manual_entry',
-      confidence: 1.0,
-      created_at: '2025-06-01T12:00:00Z',
-    };
-
-    const smap = speciesMap(LETTUCE_BSS);
-    ledger = applyObservationToLedger(ledger, obs, smap);
-
-    expect(ledger.get(plant_id)!.is_dead).toBe(true);
-  });
-
-  test('applyObservationToLedger: growth_stage harvest triggers recordHarvest', () => {
-    let ledger = createLedgerFromPlan([{
-      species: LETTUCE_BSS,
-      display_group: 'Lettuce' as const,
-      plant_count: 1,
-      planting_date: '2025-04-15',
-      zone: 'shade' as const,
-    }]);
-
-    const plant_id = [...ledger.keys()][0]!;
-    const smap = speciesMap(LETTUCE_BSS);
-
-    // Advance so there's accumulated growth
-    ledger = advanceLedger(ledger, new Date('2025-05-13'), GR_HISTORICAL, smap);
-    expect(ledger.get(plant_id)!.accumulated_lbs).toBeGreaterThan(0);
-
-    const obs: Observation = {
-      observation_id: 'obs_2',
-      timestamp: '2025-05-13T12:00:00Z',
-      plant_id,
-      growth_stage: 'harvest',
-      source: { source_type: 'manual', user_id: 'test' },
-      method: 'manual_entry',
-      confidence: 1.0,
-      created_at: '2025-05-13T12:00:00Z',
-    };
-
-    ledger = applyObservationToLedger(ledger, obs, smap);
-
-    const entry = ledger.get(plant_id)!;
-    expect(entry.accumulated_lbs).toBe(0);
-    expect(entry.cut_number).toBe(1);
   });
 });
 

@@ -9,9 +9,6 @@ export const NASTURTIUM: PlantSpecies = {
   height_ft: 1.0,
 
   days_to_first_harvest: 45,
-  harvest_type: 'continuous',
-
-  baseline_lbs_per_plant: 0,
   germination_rate: 0.95,   // Large seeds; direct sow after frost
   establishment_rate: 0.95, // Frost-tender but planted post-frost
 
@@ -40,6 +37,11 @@ export const NASTURTIUM: PlantSpecies = {
   },
 
   icon: { emoji: '🌺', color: '#FF6347' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'done'],
+    productive_stages: [],
+  },
 
   phenology: {
     base_temp_f: 50,

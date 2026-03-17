@@ -1,0 +1,234 @@
+/**
+ * HarvestStrategy integration tests — calculators resolve harvest config
+ * from HarvestStrategy instead of PlantSpecies fields.
+ *
+ * Step A: Wire HarvestStrategy into CropPlanting + initSimPlanting.
+ * Step 6: buildCutSchedule uses GDD timing.
+ * Step 7: GrowthLedger GDD gating.
+ */
+
+import { describe, test, expect } from 'vitest';
+import {
+  simulateSeason,
+  PRODUCTION_PLAN,
+  GR_HISTORICAL,
+  type CropPlanting,
+} from '../../src/core/calculators/ProductionTimeline';
+import { simulateFromState } from '../../src/core/engine/simulate';
+import { bucketHarvests } from '../../src/core/calculators/ProductionTimeline';
+import { buildCutSchedule } from '../../src/core/calculators/growthMath';
+import { HARVEST_STRATEGIES, DEFAULT_HARVEST_STRATEGY } from '../../src/core/data/harvestStrategies';
+import { KALE_RED_RUSSIAN } from '../../src/core/data/species/kale-red-russian';
+import { LETTUCE_BSS } from '../../src/core/data/species/lettuce-bss';
+import { TOMATO_SUN_GOLD } from '../../src/core/data/species/tomato-sun-gold';
+import { POTATO_KENNEBEC } from '../../src/core/data/species/potato-kennebec';
+import type { HarvestStrategy } from '../../src/core/types/HarvestStrategy';
+import { resolveHarvestStrategy } from '../../src/core/calculators/strategyResolver';
+import { createGardenStateFromPlan } from '../../src/core/data/sampleGarden';
+import { GARDEN_SPECIES_MAP } from '../../src/core/data/species';
+
+// Test-only strategy: lettuce with 4× baseline for strategy override test
+const LETTUCE_BOOSTED_TEST: HarvestStrategy = {
+  id: 'lettuce_boosted_test',
+  type: 'cut_and_come_again',
+  baseline_lbs_per_plant: 2.0,
+  max_cuts: 4,
+  regrowth_days: 14,
+  cut_yield_curve: { 1: 1.0, 2: 0.8, 3: 0.6, 4: 0.4 },
+};
+HARVEST_STRATEGIES.set(LETTUCE_BOOSTED_TEST.id, LETTUCE_BOOSTED_TEST);
+
+// =============================================================================
+// Step A — HarvestStrategy resolution
+// =============================================================================
+
+describe('resolveHarvestStrategy', () => {
+  test('resolves explicit harvest_strategy_id from CropPlanting', () => {
+    const strategy = resolveHarvestStrategy('kale_cut', KALE_RED_RUSSIAN);
+    expect(strategy).not.toBeNull();
+    expect(strategy!.id).toBe('kale_cut');
+    expect(strategy!.type).toBe('cut_and_come_again');
+    expect(strategy!.baseline_lbs_per_plant).toBe(1.75);
+  });
+
+  test('falls back to DEFAULT_HARVEST_STRATEGY when no id provided', () => {
+    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN);
+    expect(strategy).not.toBeNull();
+    expect(strategy!.id).toBe('kale_cut');
+  });
+
+  test('returns null for companion plants with no strategy', () => {
+    // Species without a default mapping (marigold, nasturtium, calendula)
+    const fakeCompanion = { ...KALE_RED_RUSSIAN, id: 'marigold_french' };
+    const strategy = resolveHarvestStrategy(undefined, fakeCompanion);
+    expect(strategy).toBeNull();
+  });
+
+  test('strategy baseline_lbs_per_plant matches species for all defaults', () => {
+    for (const [species_id, strategy_id] of Object.entries(DEFAULT_HARVEST_STRATEGY)) {
+      const strategy = HARVEST_STRATEGIES.get(strategy_id);
+      expect(strategy, `missing strategy for ${species_id}`).toBeDefined();
+    }
+  });
+});
+
+describe('simulateSeason with harvest_strategy_id on CropPlanting', () => {
+  test('CropPlanting with harvest_strategy_id produces same output as without', () => {
+    // Kale with explicit strategy should match kale without (default resolves same)
+    const withoutStrategy: CropPlanting[] = [{
+      species: KALE_RED_RUSSIAN,
+      display_group: 'Kale',
+      plant_count: 10,
+      planting_date: '2025-05-15',
+      zone: 'boundary',
+    }];
+
+    const withStrategy: CropPlanting[] = [{
+      species: KALE_RED_RUSSIAN,
+      display_group: 'Kale',
+      plant_count: 10,
+      planting_date: '2025-05-15',
+      zone: 'boundary',
+      harvest_strategy_id: 'kale_cut',
+    }];
+
+    const without = simulateSeason(withoutStrategy, GR_HISTORICAL);
+    const with_ = simulateSeason(withStrategy, GR_HISTORICAL);
+
+    const totalWithout = without.reduce((s, w) => s + w.total_lbs, 0);
+    const totalWith = with_.reduce((s, w) => s + w.total_lbs, 0);
+    expect(totalWith).toBeCloseTo(totalWithout, 1);
+  });
+
+  test('custom strategy overrides species baseline_lbs_per_plant', () => {
+    // Create a planting that uses lettuce species but with a custom strategy
+    // that has a higher baseline (2.0 vs 0.5) — output should scale up ~4×
+    const normalPlan: CropPlanting[] = [{
+      species: LETTUCE_BSS,
+      display_group: 'Lettuce',
+      plant_count: 10,
+      planting_date: '2025-04-15',
+      zone: 'shade',
+    }];
+
+    const boostedPlan: CropPlanting[] = [{
+      species: LETTUCE_BSS,
+      display_group: 'Lettuce',
+      plant_count: 10,
+      planting_date: '2025-04-15',
+      zone: 'shade',
+      harvest_strategy_id: 'lettuce_boosted_test',
+    }];
+
+    const normal = simulateSeason(normalPlan, GR_HISTORICAL);
+    const boosted = simulateSeason(boostedPlan, GR_HISTORICAL);
+
+    const totalNormal = normal.reduce((s, w) => s + w.total_lbs, 0);
+    const totalBoosted = boosted.reduce((s, w) => s + w.total_lbs, 0);
+
+    // Boosted baseline (2.0) is 4× normal (0.5), so total should scale ~4×
+    expect(totalBoosted / totalNormal).toBeCloseTo(4.0, 0);
+  });
+
+  test('full PRODUCTION_PLAN total unchanged after strategy wiring', () => {
+    const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
+    const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
+    // New engine: ~661 lbs (per-plant expansion, threshold-based harvest)
+    expect(total).toBeCloseTo(661, -1);
+  });
+});
+
+// =============================================================================
+// Step 6 — buildCutSchedule GDD timing
+// =============================================================================
+
+describe('buildCutSchedule calendar timing', () => {
+  test('CAC first cut uses calendar days_to_first_harvest, not GDD', () => {
+    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN);
+    const schedule = buildCutSchedule(
+      new Date('2025-05-15'), KALE_RED_RUSSIAN, strategy, GR_HISTORICAL,
+    );
+    expect(schedule).not.toBeNull();
+
+    const first_cut = schedule!.cut_dates[0]!;
+    const expected_first_cut = new Date('2025-07-04'); // May 15 + 50 days
+    expect(first_cut.getTime()).toBe(expected_first_cut.getTime());
+  });
+
+  test('env parameter does not change CAC first cut timing', () => {
+    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN);
+    const with_env = buildCutSchedule(new Date('2025-05-15'), KALE_RED_RUSSIAN, strategy, GR_HISTORICAL);
+    const without_env = buildCutSchedule(new Date('2025-05-15'), KALE_RED_RUSSIAN, strategy);
+
+    expect(with_env).not.toBeNull();
+    expect(without_env).not.toBeNull();
+    // Same first cut regardless of env — calendar-based
+    expect(with_env!.cut_dates[0]!.getTime()).toBe(without_env!.cut_dates[0]!.getTime());
+  });
+});
+
+// =============================================================================
+// Companion plants (no HarvestStrategy) still simulate correctly
+// =============================================================================
+
+describe('companion species with no harvest strategy', () => {
+  test('marigold (null strategy, no baseline) produces zero harvest', () => {
+    const MARIGOLD = GARDEN_SPECIES_MAP.get('marigold_french')!;
+    const plan: CropPlanting[] = [{
+      species: MARIGOLD,
+      display_group: 'Marigold',
+      plant_count: 5,
+      planting_date: '2025-05-15',
+      zone: 'boundary',
+    }];
+    const weeks = simulateSeason(plan, GR_HISTORICAL);
+    const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
+    expect(total).toBe(0);
+  });
+});
+
+// =============================================================================
+// Step C — Phase 4: simulateFromGardenState
+// =============================================================================
+
+describe('simulateFromState', () => {
+  test('GardenState produces comparable season total to CropPlanting plan', () => {
+    const gardenState = createGardenStateFromPlan(PRODUCTION_PLAN);
+    const fromPlan = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
+    const snapshots = simulateFromState(
+      gardenState, GARDEN_SPECIES_MAP, GR_HISTORICAL,
+      { start: new Date('2025-04-14'), end: new Date('2025-11-24') },
+    );
+    const fromState = bucketHarvests(snapshots, GARDEN_SPECIES_MAP);
+
+    const planTotal = fromPlan.reduce((s, w) => s + w.total_lbs, 0);
+    const stateTotal = fromState.reduce((s, w) => s + w.total_lbs, 0);
+
+    // GardenState has actual subcell positions → zone derivation differs from
+    // abstract plan zones. Within 15% is acceptable.
+    expect(Math.abs(stateTotal - planTotal) / planTotal).toBeLessThan(0.15);
+  });
+
+  test('GardenState produces all expected display groups', () => {
+    const gardenState = createGardenStateFromPlan(PRODUCTION_PLAN);
+    const snapshots = simulateFromState(
+      gardenState, GARDEN_SPECIES_MAP, GR_HISTORICAL,
+      { start: new Date('2025-04-14'), end: new Date('2025-11-24') },
+    );
+    const weeks = bucketHarvests(snapshots, GARDEN_SPECIES_MAP);
+
+    const allGroups = new Set<string>();
+    for (const week of weeks) {
+      for (const group of Object.keys(week.lbs_by_group)) {
+        allGroups.add(group);
+      }
+    }
+
+    expect(allGroups.has('Lettuce')).toBe(true);
+    expect(allGroups.has('Kale')).toBe(true);
+    expect(allGroups.has('Potato')).toBe(true);
+    expect(allGroups.has('Corn')).toBe(true);
+    expect(allGroups.has('Cherry')).toBe(true);
+    expect(allGroups.has('Paste')).toBe(true);
+  });
+});

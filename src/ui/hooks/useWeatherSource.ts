@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { EnvironmentSource } from '@core/environment';
+import type { ConditionsResolver } from '@core/environment';
 import {
   createGrandRapidsHistorical,
   createObservedSource,
@@ -18,8 +18,8 @@ import {
 const historical = createGrandRapidsHistorical();
 const SEASON_START = new Date('2025-04-14');
 
-export function useWeatherSource(): { env: EnvironmentSource; isLive: boolean } {
-  const [env, setEnv] = useState<EnvironmentSource>(historical);
+export function useWeatherSource(): { env: ConditionsResolver; isLive: boolean } {
+  const [env, setEnv] = useState<ConditionsResolver>(historical);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { PlantSpecies } from '../../types';
+import type { StageConfig } from '../../types/PlantState';
 import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const KALE_RED_RUSSIAN: PlantSpecies = {
@@ -9,18 +10,6 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   height_ft: 3,
 
   days_to_first_harvest: 50,
-  harvest_type: 'cut_and_come_again',
-  cut_and_come_again: {
-    max_cuts: 8,
-    regrowth_days: 14,
-    // Biennial brassica — peaks at cuts 2-4, long productive window.
-    // Source: MSU Extension, Johnny's Selected Seeds.
-    cut_yield_curve: { 1: 0.6, 2: 0.8, 3: 1.0, 4: 1.0, 5: 1.0, 6: 0.9, 7: 0.8, 8: 0.6 },
-  },
-
-  // Research-validated: cut-and-come-again range 1.5-3.0 lbs/plant.
-  // 1.75 for year 1 with vermicompost. Biennial — does NOT bolt year 1.
-  baseline_lbs_per_plant: 1.75,
   germination_rate: 0.95,   // Brassica seeds germinate reliably
   establishment_rate: 0.97, // Very hardy; minimal seedling loss
 
@@ -57,6 +46,11 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   },
 
   icon: { emoji: '🥬', color: '#8B4513' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'done'],
+    productive_stages: ['vegetative'],
+  } satisfies StageConfig,
 
   phenology: {
     base_temp_f: 40,

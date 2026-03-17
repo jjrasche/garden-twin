@@ -1,4 +1,5 @@
 import { PlantSpecies } from '../../types';
+import type { StageConfig } from '../../types/PlantState';
 import { SOIL_HEAVY_FEEDER, SOIL_HEAVY_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const CORN_NOTHSTINE_DENT: PlantSpecies = {
@@ -9,11 +10,6 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   height_ft: 7,
 
   days_to_first_harvest: 95,
-  harvest_type: 'bulk_harvest',
-
-  // Research-validated: Nothstine produces smaller 7-8" ears, catalogs say
-  // "not high-yielding." 0.24 lbs dry grain/plant for early small-eared dent.
-  baseline_lbs_per_plant: 0.24,
   germination_rate: 0.90,   // Large seeds; direct sow
   establishment_rate: 0.95, // Cutworm/bird pressure on seedlings
 
@@ -46,6 +42,11 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   },
 
   icon: { emoji: '🌽', color: '#D4A017' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    productive_stages: ['fruiting', 'harvest'],
+  } satisfies StageConfig,
 
   phenology: {
     base_temp_f: 50,

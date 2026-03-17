@@ -1,4 +1,5 @@
 import { PlantSpecies } from '../../types';
+import type { StageConfig, StressTolerances } from '../../types/PlantState';
 import { SOIL_HEAVY_FEEDER, SOIL_HEAVY_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const POTATO_KENNEBEC: PlantSpecies = {
@@ -9,11 +10,6 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   height_ft: 3,
 
   days_to_first_harvest: 90,
-  harvest_type: 'bulk_harvest',
-
-  // Research-validated: two independent Kennebec home-garden trials measured
-  // 1.4 lbs/plant. 1.5 gives modest credit for vermicompost + drip irrigation.
-  baseline_lbs_per_plant: 1.5,
   germination_rate: 0.95,   // Tubers sprout reliably
   establishment_rate: 0.90, // Seed piece rot, early blight risk
 
@@ -23,6 +19,10 @@ export const POTATO_KENNEBEC: PlantSpecies = {
     { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.2, 50: 0.45, 65: 0.85, 80: 1.0, 90: 1.0, 100: 0.95, 110: 0.6, 125: 0.05 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 0.2: 1.2, 0.4: 1.0, 0.8: 0.8, 1.5: 0.5 }, effect: 'growth_rate' as const },
     ...SOIL_HEAVY_FEEDER_RESPONSES,
+    // Short-day promotion of tuberization. Kennebec is intermediate day-length
+    // sensitivity. Long days (>14h) delay tuber initiation; short days accelerate.
+    // Source: CIP (International Potato Center), Ewing & Struik 1992.
+    { factor: 'photoperiod_h', curve: { 10: 1.2, 12: 1.1, 13: 1.0, 14: 0.9, 15: 0.8, 16: 0.7 }, effect: 'development_rate' as const, name: 'photoperiod_tuberization', active_stages: ['flowering', 'fruiting'] },
   ],
 
   modifiers: {
@@ -47,6 +47,16 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   },
 
   icon: { emoji: '🥔', color: '#C4A35A' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    productive_stages: ['fruiting', 'harvest'],
+  } satisfies StageConfig,
+
+  stress_tolerances: {
+    drought: { threshold: 30, direction: 'below', days_to_damage: 4, days_to_death: 10 },
+    waterlog: { threshold: 110, direction: 'above', days_to_damage: 1, days_to_death: 3 },
+  } satisfies StressTolerances,
 
   phenology: {
     base_temp_f: 40,

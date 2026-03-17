@@ -11,6 +11,7 @@
 import { PlantSpecies, survivalRate } from '../types';
 import type { GrowthResponse } from '../types/PlantSpecies';
 import { interpolate } from './interpolate';
+import { resolveHarvestStrategy } from './strategyResolver';
 
 export interface YieldConditions {
   sun_hours: number;
@@ -72,7 +73,9 @@ export function computeModifierProduct(species: PlantSpecies, conditions: YieldC
  * Formula: baseline × modifierProduct × survival
  */
 export function computePlantYield(species: PlantSpecies, conditions: YieldConditions): number {
-  return species.baseline_lbs_per_plant * computeModifierProduct(species, conditions) * survivalRate(species);
+  const strategy = resolveHarvestStrategy(undefined, species);
+  const baseline = strategy?.baseline_lbs_per_plant ?? 0;
+  return baseline * computeModifierProduct(species, conditions) * survivalRate(species);
 }
 
 // =============================================================================
@@ -112,6 +115,30 @@ export function computeSurvivalModifier(
   let product = 1.0;
   for (const r of responses) {
     if (r.effect !== 'population_survival') continue;
+    const value = conditions[r.factor];
+    if (value === undefined) continue;
+    product *= interpolate(r.curve, value);
+  }
+  return product;
+}
+
+/**
+ * Product of all development_rate response curves.
+ *
+ * Modulates how fast the plant accumulates development units (GDD-based).
+ * Values > 1.0 accelerate development (e.g., long-day spinach bolts faster).
+ * Respects active_stages: if a response declares active_stages and the
+ * plant's current stage is not listed, that curve is skipped (1.0).
+ */
+export function computeDevelopmentModifier(
+  responses: GrowthResponse[],
+  conditions: Record<string, number>,
+  current_stage: string,
+): number {
+  let product = 1.0;
+  for (const r of responses) {
+    if (r.effect !== 'development_rate') continue;
+    if (r.active_stages && !r.active_stages.includes(current_stage)) continue;
     const value = conditions[r.factor];
     if (value === undefined) continue;
     product *= interpolate(r.curve, value);

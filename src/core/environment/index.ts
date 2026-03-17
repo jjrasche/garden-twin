@@ -1,4 +1,4 @@
-export type { WeeklyConditions, EnvironmentSource, WeatherEntry } from './types';
+export type { WeeklyConditions, ConditionsResolver, EnvironmentSource, WeatherEntry } from './types';
 export { createGrandRapidsHistorical } from './HistoricalSource';
 export { computeEffectiveSunHours } from './ShadeModel';
 export { createObservedSource } from './ObservedSource';

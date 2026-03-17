@@ -1,12 +1,12 @@
 /**
- * EnvironmentSource backed by actual weather observations.
+ * ConditionsResolver backed by actual weather observations.
  *
  * Stores WeatherEntry[] in a Map keyed by ISO date for O(1) lookup.
  * Photoperiod computed from solar geometry (deterministic, not interpolated).
  * Missing soil_temp_f estimated from air temp: (high + low) / 2 - 3.
  */
 
-import { EnvironmentSource, WeatherEntry, WeeklyConditions } from './types';
+import { ConditionsResolver, WeatherEntry, WeeklyConditions } from './types';
 
 const MS_PER_DAY = 86_400_000;
 const DEG_TO_RAD = Math.PI / 180;
@@ -65,7 +65,7 @@ interface ObservedSourceOptions {
 export function createObservedSource(
   entries: WeatherEntry[],
   options: ObservedSourceOptions = {},
-): EnvironmentSource {
+): ConditionsResolver {
   const byDate = new Map<string, WeatherEntry>();
   for (const entry of entries) {
     byDate.set(entry.date, entry);

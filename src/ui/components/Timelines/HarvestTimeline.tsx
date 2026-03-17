@@ -71,7 +71,7 @@ function buildSowingByWeek(plan: readonly CropPlanting[]): Map<string, Set<strin
   return map;
 }
 
-function buildChartData(plan: typeof PRODUCTION_PLAN, env: import('@core/environment').EnvironmentSource, actualData?: WeeklyHarvest[]): ChartRow[] {
+function buildChartData(plan: typeof PRODUCTION_PLAN, env: import('@core/environment').ConditionsResolver, actualData?: WeeklyHarvest[]): ChartRow[] {
   const weeks = simulateSeason(plan, env);
   const sowingByWeek = buildSowingByWeek(plan);
 

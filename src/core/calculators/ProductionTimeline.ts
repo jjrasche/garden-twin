@@ -10,19 +10,12 @@
  * continuous production of cool-season greens.
  */
 
-import { PlantSpecies, survivalRate } from '../types';
-import { EnvironmentSource, createGrandRapidsHistorical } from '../environment';
-import { interpolate } from './interpolate';
-import {
-  MS_PER_DAY, SHADE_TREE_HEIGHT_FT, ZONE_PHYS_Y,
-  daysBetween,
-  computeSurvivalFromConditions,
-  computeDeathDate, isDeadFromFrost,
-  buildCutSchedule,
-  computeDailyGrowth,
-  type SunZone,
-} from './growthMath';
-import { computeDailyGdd, determineStage, isHarvestableStage } from './gddEngine';
+import { PlantSpecies } from '../types';
+import { ConditionsResolver, createGrandRapidsHistorical } from '../environment';
+import { type SunZone } from './growthMath';
+import type { PlantInstance } from '../types/GardenState';
+import { initPlantStates } from '../engine/initPlantStates';
+import { collectSnapshots } from '../engine/simulate';
 export type { SunZone };
 
 import { LETTUCE_BSS } from '../data/species/lettuce-bss';
@@ -40,6 +33,7 @@ export interface CropPlanting {
   plant_count: number;
   planting_date: string;
   zone: SunZone;
+  harvest_strategy_id?: string;
 }
 
 export const GR_HISTORICAL = createGrandRapidsHistorical();
@@ -141,246 +135,108 @@ export const WEEKLY_TARGETS: Partial<Record<DisplayGroup, number>> = {
 export const GREENS_TARGET_PER_WEEK = 14.0;
 const GREENS_GROUPS: readonly DisplayGroup[] = ['Lettuce', 'Spinach', 'Kale'];
 
-// ── Calculator ──────────────────────────────────────────────────────────────
+// ── Display Group Mapping ────────────────────────────────────────────────────
 
+const SPECIES_DISPLAY_GROUP: Record<string, DisplayGroup> = {
+  lettuce_bss: 'Lettuce',
+  spinach_bloomsdale: 'Spinach',
+  kale_red_russian: 'Kale',
+  tomato_amish_paste: 'Paste',
+  tomato_sun_gold: 'Cherry',
+  potato_kennebec: 'Potato',
+  corn_nothstine_dent: 'Corn',
+};
 
-// ── Ledger-Driven Simulation ─────────────────────────────────────────────────
-// Replaces fixed-calendar cuts with threshold-based harvesting.
-// Each planting accumulates daily growth; harvest triggers when biomass
-// reaches threshold (cut_and_come_again), maturity date (bulk), or weekly (continuous).
+// ── Plan → PlantInstance Expansion ──────────────────────────────────────────
 
-interface SimPlanting {
-  species: PlantSpecies;
-  group: DisplayGroup;
-  plant_count: number;
-  zone_physY: number;
-  harvest_type: 'cut_and_come_again' | 'bulk_harvest' | 'continuous';
-  planting_date: Date;
-  accumulated_lbs: number;
-  accumulated_gdd: number;
-  cut_number: number;
-  vigor: number;
-  daily_potential: number;
-  threshold_lbs: number;
-  next_harvest_date: Date;
-  max_cuts: number;
-  regrowth_days: number;
-  is_dead: boolean;
-}
-
-/** Estimate calendar date when accumulated GDD reaches a threshold. */
-function estimateGddDate(
-  plant_date: Date, target_gdd: number, base_temp_f: number,
-  env: EnvironmentSource, limit: Date,
-): Date {
-  let accumulated = 0;
-  const scan = new Date(plant_date);
-  while (scan <= limit && accumulated < target_gdd) {
-    const cond = env.getConditions(scan);
-    accumulated += computeDailyGdd(cond.avg_high_f, cond.avg_low_f, base_temp_f);
-    scan.setDate(scan.getDate() + 1);
-  }
-  return new Date(scan);
-}
-
-function initSimPlanting(planting: CropPlanting, env: EnvironmentSource, season_end: Date): SimPlanting {
-  const species = planting.species;
-  const harvest_type = species.harvest_type ?? 'continuous';
-  const plant_date = new Date(planting.planting_date);
-  const first_harvest = new Date(plant_date);
-  first_harvest.setDate(first_harvest.getDate() + species.days_to_first_harvest);
-  const phenology = species.phenology;
-
-  const cuts = buildCutSchedule(plant_date, species);
-  let daily_potential: number;
-  let vigor: number;
-  let threshold_lbs: number;
-
-  if (harvest_type === 'cut_and_come_again' && cuts) {
-    daily_potential = cuts.daily_potential;
-    vigor = cuts.vigors[0]!;
-    threshold_lbs = daily_potential * vigor * species.days_to_first_harvest * 0.9;
-  } else if (harvest_type === 'bulk_harvest') {
-    if (phenology) {
-      const fruiting_date = estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end);
-      const mature_date = estimateGddDate(plant_date, phenology.gdd_stages.mature, phenology.base_temp_f, env, season_end);
-      const productive_days = Math.max(1, daysBetween(fruiting_date, mature_date));
-      daily_potential = species.baseline_lbs_per_plant / productive_days;
-    } else {
-      daily_potential = species.baseline_lbs_per_plant / Math.max(1, species.days_to_first_harvest);
+/** Expand CropPlanting[] into PlantInstance[] for initPlantStates. */
+function expandPlanToInstances(plan: CropPlanting[]): PlantInstance[] {
+  const instances: PlantInstance[] = [];
+  for (const planting of plan) {
+    for (let i = 0; i < planting.plant_count; i++) {
+      instances.push({
+        plant_id: `${planting.species.id}_${planting.display_group}_${planting.planting_date}_${i}`,
+        species_id: planting.species.id,
+        root_subcell_id: `zone_${planting.zone}`,
+        occupied_subcells: [],
+        planted_date: planting.planting_date,
+        current_stage: 'seed',
+        accumulated_gdd: 0,
+        last_observed: new Date().toISOString(),
+        harvest_strategy_id: planting.harvest_strategy_id,
+      });
     }
-    vigor = 1.0;
-    threshold_lbs = 0;
-  } else {
-    // continuous: spread baseline across productive window
-    const productive_start = phenology
-      ? estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end)
-      : first_harvest;
-    const death_date = computeDeathDate(species, productive_start, env, season_end);
-    const alive_days = Math.max(7, daysBetween(productive_start, death_date));
-    daily_potential = species.baseline_lbs_per_plant / alive_days;
-    vigor = 1.0;
-    threshold_lbs = 0;
   }
-
-  const cac = species.cut_and_come_again;
-  return {
-    species, group: planting.display_group, plant_count: planting.plant_count,
-    zone_physY: ZONE_PHYS_Y[planting.zone], harvest_type,
-    planting_date: plant_date,
-    accumulated_lbs: 0, accumulated_gdd: 0, cut_number: 0, vigor, daily_potential, threshold_lbs,
-    next_harvest_date: first_harvest,
-    max_cuts: cac?.max_cuts ?? 1,
-    regrowth_days: cac?.regrowth_days ?? species.days_to_first_harvest,
-    is_dead: false,
-  };
+  return instances;
 }
 
-/** Harvest a SimPlanting, returning total lbs. Mutates sim for next cycle. */
-function harvestSimPlanting(sim: SimPlanting, date: Date, env: EnvironmentSource): number {
-  const bolt_survival = computeSurvivalFromConditions(sim.species, date, env);
-  const total = sim.accumulated_lbs * survivalRate(sim.species) * bolt_survival * sim.plant_count;
-
-  sim.accumulated_lbs = 0;
-  sim.cut_number++;
-
-  const cac = sim.species.cut_and_come_again;
-  if (cac && sim.cut_number >= sim.max_cuts) {
-    sim.is_dead = true;
-  } else if (sim.harvest_type === 'bulk_harvest') {
-    sim.is_dead = true;
-  } else if (cac) {
-    sim.vigor = interpolate(cac.cut_yield_curve, sim.cut_number + 1);
-    sim.threshold_lbs = sim.daily_potential * sim.vigor * sim.regrowth_days * 0.9;
-    sim.next_harvest_date = new Date(date);
-    sim.next_harvest_date.setDate(sim.next_harvest_date.getDate() + sim.regrowth_days);
-  }
-
-  return total;
+/** Build species catalog from plan entries. */
+function buildSpeciesCatalog(plan: CropPlanting[]): Map<string, PlantSpecies> {
+  return new Map(plan.map(p => [p.species.id, p.species]));
 }
 
-export function simulateSeason(plan: CropPlanting[], env: EnvironmentSource): WeeklyHarvest[] {
-  const season_start = new Date('2025-04-14');
-  const season_end = new Date('2025-11-24');
+// ── Season Simulation ───────────────────────────────────────────────────────
 
-  const sims = plan.map(p => initSimPlanting(p, env, season_end));
-  const weeks: WeeklyHarvest[] = [];
-  const current = new Date(season_start);
+export const SEASON_RANGE = {
+  start: new Date('2025-04-14'),
+  end: new Date('2025-11-24'),
+};
 
-  while (current <= season_end) {
-    const week_end = new Date(current);
-    week_end.setDate(week_end.getDate() + 7);
-    const lbs_by_group: Record<string, number> = {};
-
-    const day = new Date(current);
-    while (day < week_end && day <= season_end) {
-      for (const sim of sims) {
-        if (sim.is_dead || day < sim.planting_date) continue;
-
-        if (isDeadFromFrost(sim.species, day, env) || computeSurvivalFromConditions(sim.species, day, env) <= 0.05) {
-          sim.is_dead = true;
-          continue;
-        }
-
-        // Accumulate GDD and determine phenological stage
-        const cond = env.getConditions(day);
-        const phenology = sim.species.phenology;
-        if (phenology) {
-          sim.accumulated_gdd += computeDailyGdd(cond.avg_high_f, cond.avg_low_f, phenology.base_temp_f);
-        }
-        const stage = phenology
-          ? determineStage(sim.accumulated_gdd, phenology.gdd_stages)
-          : null;
-
-        // Gate harvestable biomass by phenological stage
-        // CAC crops: harvestable once past seed (vegetative+)
-        // Bulk/continuous: harvestable only at fruiting+ (grain fill, fruit production)
-        // No phenology: fall back to calendar gate for continuous
-        const stage_allows_growth = stage === null
-          || (sim.harvest_type === 'cut_and_come_again' ? stage !== 'seed' : isHarvestableStage(stage));
-
-        if (!stage_allows_growth) continue;
-        if (stage === null && sim.harvest_type === 'continuous' && day < sim.next_harvest_date) continue;
-
-        sim.accumulated_lbs += computeDailyGrowth(
-          sim.species, day, sim.vigor, sim.daily_potential, sim.zone_physY, env,
-        );
-
-        // Threshold-based harvest for cut_and_come_again
-        if (sim.harvest_type === 'cut_and_come_again'
-            && day >= sim.next_harvest_date
-            && sim.accumulated_lbs >= sim.threshold_lbs) {
-          const harvested = harvestSimPlanting(sim, day, env);
-          if (harvested > 0) lbs_by_group[sim.group] = (lbs_by_group[sim.group] ?? 0) + harvested;
-        }
-
-        // GDD-driven harvest for bulk_harvest (fall back to calendar without phenology)
-        const bulk_ready = phenology
-          ? stage === 'harvest'
-          : day >= sim.next_harvest_date;
-        if (sim.harvest_type === 'bulk_harvest' && bulk_ready) {
-          const harvested = harvestSimPlanting(sim, day, env);
-          if (harvested > 0) lbs_by_group[sim.group] = (lbs_by_group[sim.group] ?? 0) + harvested;
-        }
-      }
-      day.setDate(day.getDate() + 1);
-    }
-
-    // Weekly harvest for continuous crops
-    for (const sim of sims) {
-      if (sim.is_dead || sim.harvest_type !== 'continuous' || sim.accumulated_lbs <= 0) continue;
-      const harvested = harvestSimPlanting(sim, week_end, env);
-      if (harvested > 0) lbs_by_group[sim.group] = (lbs_by_group[sim.group] ?? 0) + harvested;
-    }
-
-    const total_lbs = Object.values(lbs_by_group).reduce((sum, v) => sum + v, 0);
-    weeks.push({ week_start: new Date(current), lbs_by_group, total_lbs });
-    current.setDate(current.getDate() + 7);
-  }
-
-  return weeks;
+export function simulateSeason(plan: CropPlanting[], env: ConditionsResolver): WeeklyHarvest[] {
+  const instances = expandPlanToInstances(plan);
+  const catalog = buildSpeciesCatalog(plan);
+  const plants = initPlantStates(instances, catalog, env, SEASON_RANGE.end);
+  const snapshots = collectSnapshots(plants, catalog, env, SEASON_RANGE);
+  return bucketHarvests(snapshots, catalog);
 }
 
-// ── Ledger-Based Timeline ────────────────────────────────────────────────────
+// ── DaySnapshot[] → WeeklyHarvest[] ─────────────────────────────────────────
 
-/**
- * Compute weekly harvest from a GrowthLedger.
- *
- * Past weeks use ledger's actual accumulated values. Future weeks project
- * forward with existing planning math. Produces the same WeeklyHarvest[]
- * output as simulateSeason for comparison.
- */
-export function computeWeeklyHarvestFromLedger(
-  ledger: import('./GrowthLedger').GrowthLedger,
-  groupLookup: Map<string, DisplayGroup>,
-  season_start: Date,
-  season_end: Date,
+import type { DaySnapshot } from '../engine/simulate';
+
+/** Aggregate DaySnapshot[] harvest events into 7-day WeeklyHarvest buckets. */
+export function bucketHarvests(
+  snapshots: DaySnapshot[],
+  catalog: Map<string, PlantSpecies>,
 ): WeeklyHarvest[] {
+  if (snapshots.length === 0) return [];
+
+  // Build plant_id → display group lookup from catalog
+  const plant_group = new Map<string, string>();
+
   const weeks: WeeklyHarvest[] = [];
-  const current = new Date(season_start);
+  let week_start = new Date(snapshots[0]!.date);
+  let lbs_by_group: Record<string, number> = {};
 
-  while (current <= season_end) {
-    const week_end = new Date(current);
-    week_end.setDate(week_end.getDate() + 7);
-    const lbs_by_group: Record<string, number> = {};
+  for (const snap of snapshots) {
+    // Start a new week bucket every 7 days
+    const days_since = Math.round((snap.date.getTime() - week_start.getTime()) / 86_400_000);
+    if (days_since >= 7) {
+      const total_lbs = Object.values(lbs_by_group).reduce((sum, v) => sum + v, 0);
+      weeks.push({ week_start: new Date(week_start), lbs_by_group, total_lbs });
+      week_start = new Date(snap.date);
+      lbs_by_group = {};
+    }
 
-    for (const [plant_id, entry] of ledger) {
-      if (entry.is_dead) continue;
+    for (const event of snap.events) {
+      if (event.type !== 'harvest_ready') continue;
 
-      const group = groupLookup.get(plant_id);
+      // Resolve display group: plant_id → species_id → display group
+      let group = plant_group.get(event.plant_id);
+      if (!group) {
+        const species_id = snap.plants.find(p => p.plant_id === event.plant_id)?.species_id;
+        group = species_id ? SPECIES_DISPLAY_GROUP[species_id] : undefined;
+        if (group) plant_group.set(event.plant_id, group);
+      }
       if (!group) continue;
 
-      // Check if this plant's harvest falls within this week
-      const reset_date = new Date(entry.last_reset_date);
-      if (reset_date >= current && reset_date < week_end && entry.accumulated_lbs > 0) {
-        lbs_by_group[group] = (lbs_by_group[group] ?? 0) + entry.accumulated_lbs;
-      }
+      lbs_by_group[group] = (lbs_by_group[group] ?? 0) + event.accumulated_lbs;
     }
-
-    const total_lbs = Object.values(lbs_by_group).reduce((sum, v) => sum + v, 0);
-    weeks.push({ week_start: new Date(current), lbs_by_group, total_lbs });
-    current.setDate(current.getDate() + 7);
   }
+
+  // Flush final partial week
+  const total_lbs = Object.values(lbs_by_group).reduce((sum, v) => sum + v, 0);
+  weeks.push({ week_start: new Date(week_start), lbs_by_group, total_lbs });
 
   return weeks;
 }

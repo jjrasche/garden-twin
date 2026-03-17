@@ -18,6 +18,9 @@
 // Reference data
 export * from './PlantSpecies';
 
+// Growth engine state
+export * from './PlantState';
+
 // Spatial foundation (conditions, shade, soil)
 export * from './Subcell';
 

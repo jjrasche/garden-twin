@@ -18,11 +18,6 @@ export const TOMATO_SUN_GOLD: PlantSpecies = {
   height_ft: 8,
 
   days_to_first_harvest: 60,
-  harvest_type: 'continuous',
-
-  // Research-validated: F1 hybrid vigor, universally cited as most prolific cherry.
-  // Cherry tomatoes generally 10-15 lbs/plant (UMD Extension).
-  baseline_lbs_per_plant: 10.0,
   germination_rate: 1.00,   // Transplants — already germinated
   establishment_rate: 0.92, // Transplant shock, early season cold snaps
 
@@ -45,6 +40,11 @@ export const TOMATO_SUN_GOLD: PlantSpecies = {
   nutrition_per_lb: TOMATO_NUTRITION,
 
   icon: { emoji: '🍅', color: '#FFA500' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    productive_stages: ['fruiting', 'harvest'],
+  },
 
   phenology: {
     base_temp_f: 50,

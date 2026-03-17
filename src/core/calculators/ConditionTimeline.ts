@@ -6,7 +6,7 @@
  * 1.0 = optimal conditions for that factor.
  */
 
-import type { EnvironmentSource } from '../environment/types';
+import type { ConditionsResolver } from '../environment/types';
 import { computeEffectiveSunHours } from '../environment/ShadeModel';
 import { interpolate } from './interpolate';
 import { LETTUCE_BSS } from '../data/gardenSpecies';
@@ -50,7 +50,7 @@ function computeModifier(
 
 /** Compute weekly condition modifiers for the growing season. */
 export function computeConditionTimeline(
-  env: EnvironmentSource,
+  env: ConditionsResolver,
   seasonStart: Date,
   seasonEnd: Date,
 ): WeeklyConditionRow[] {

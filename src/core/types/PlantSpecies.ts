@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { StageConfigSchema, StressTolerancesSchema } from './PlantState';
 
 // Labor task templates have been replaced by data-driven Rules.
 // See src/core/types/Rules.ts for the new task generation system.
@@ -83,15 +84,6 @@ export type BoltTrigger = z.infer<typeof BoltTriggerSchema>;
  *   sum = 2.8, cut 1 gets 1.0/2.8 = 35.7% of baseline, etc.
  *   Environmental modifiers scale each cut independently.
  */
-export const CutAndComeAgainSchema = z.object({
-  max_cuts: z.number().int().min(1),
-  regrowth_days: z.number().int().min(1),
-  // Cut number → relative yield weight. Normalized by sum to distribute baseline.
-  cut_yield_curve: LookupTableSchema,
-});
-
-export type CutAndComeAgain = z.infer<typeof CutAndComeAgainSchema>;
-
 /**
  * All yield modifiers for a species
  */
@@ -131,8 +123,10 @@ export type Modifiers = z.infer<typeof ModifiersSchema>;
 export const GrowthResponseSchema = z.object({
   factor: z.string(),
   curve: LookupTableSchema,
-  effect: z.enum(['growth_rate', 'population_survival']),
+  effect: z.enum(['growth_rate', 'population_survival', 'development_rate']),
   name: z.string().optional(),
+  /** Stages during which this response is active. If omitted, active in all stages. */
+  active_stages: z.array(z.string()).optional(),
 });
 
 export type GrowthResponse = z.infer<typeof GrowthResponseSchema>;
@@ -263,25 +257,12 @@ export const PlantSpeciesSchema = z.object({
   // Timing (days from planting)
   days_to_first_harvest: z.number().int().min(0),
 
-  // Harvest model
-  // 'cut_and_come_again': discrete cuts with regrowth (lettuce, spinach, kale)
-  // 'continuous': ongoing fruit production, weekly conditions scale yield (tomato)
-  // 'bulk_harvest': all yield at one point, growth conditions determine total (potato, corn)
-  harvest_type: z.enum(['cut_and_come_again', 'continuous', 'bulk_harvest']).optional(),
-
-  // Yield model — baseline = theoretical optimum under ideal conditions.
-  // Modifiers reduce to real-world values. Do not bake conservatism into baseline.
-  baseline_lbs_per_plant: z.number().min(0),
-
   // Survival decomposition: tracks seed→plant and plant→harvest independently.
   // germination_rate: fraction of seeds/tubers that emerge (1.0 for transplants).
   // establishment_rate: fraction of emerged plants that survive to harvest.
   // Combined: survivalRate(species) = germination_rate × establishment_rate
   germination_rate: z.number().min(0).max(1),
   establishment_rate: z.number().min(0).max(1),
-
-  // Cut-and-come-again parameters (required when harvest_type === 'cut_and_come_again')
-  cut_and_come_again: CutAndComeAgainSchema.optional(),
 
   // Declarative modifier curves (replaces flat modifiers — Phase 1)
   growth_response: z.array(GrowthResponseSchema).optional(),
@@ -297,6 +278,12 @@ export const PlantSpeciesSchema = z.object({
 
   // GDD-based phenology (optional — being added in Phase 1)
   phenology: PhenologySchema.optional(),
+
+  // Lifecycle stage configuration (optional — being added in unified engine)
+  stage_config: StageConfigSchema.optional(),
+
+  // Duration-based stress tolerances (optional)
+  stress_tolerances: StressTolerancesSchema.optional(),
 
   // Layout optimization profile (optional — not all legacy species have this yet)
   layout: LayoutProfileSchema.optional(),

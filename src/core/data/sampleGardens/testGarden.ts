@@ -156,7 +156,7 @@ function placePlantsInSubcells(subcells: Subcell[]): void {
             individual_id: `plant_${plantCounter}`,
             species_id: planting.species.id,
             planted_date: planting.date,
-            expected_yield_lbs: planting.species.baseline_lbs_per_plant,
+            expected_yield_lbs: 0,
           };
           placed++;
         }

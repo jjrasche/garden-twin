@@ -1,4 +1,5 @@
 import { PlantSpecies } from '../../types';
+import type { StageConfig, StressTolerances } from '../../types/PlantState';
 import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const LETTUCE_BSS: PlantSpecies = {
@@ -9,18 +10,6 @@ export const LETTUCE_BSS: PlantSpecies = {
   height_ft: 0.58,
 
   days_to_first_harvest: 28,
-  harvest_type: 'cut_and_come_again',
-  cut_and_come_again: {
-    max_cuts: 4,
-    regrowth_days: 14,
-    // Declining returns: crown energy depletes with each cut.
-    // Source: UMD Extension — loose-leaf lettuce produces 3-4 cuttings.
-    cut_yield_curve: { 1: 1.0, 2: 0.8, 3: 0.6, 4: 0.4 },
-  },
-
-  // Research-validated: 0.375-0.75 lbs/plant range (Illinois Extension).
-  // 0.5 is total across 2-3 cut-and-come-again harvests of loose-leaf.
-  baseline_lbs_per_plant: 0.5,
   germination_rate: 0.90,   // Small seeds need good soil contact
   establishment_rate: 0.95, // Hardy once emerged; slug pressure
 
@@ -65,6 +54,15 @@ export const LETTUCE_BSS: PlantSpecies = {
   },
 
   icon: { emoji: '🥬', color: '#7BC67E' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'done'],
+    productive_stages: ['vegetative'],
+  } satisfies StageConfig,
+
+  stress_tolerances: {
+    heat: { threshold: 85, direction: 'above', days_to_damage: 2, days_to_death: 5 },
+  } satisfies StressTolerances,
 
   phenology: {
     base_temp_f: 40,

@@ -10,7 +10,7 @@ import { fetchHistorical } from '../environment/OpenMeteoClient';
 import { createObservedSource } from '../environment/ObservedSource';
 import { createCompositeSource, buildObservedDateSet } from '../environment/CompositeSource';
 import { createGrandRapidsHistorical } from '../environment/HistoricalSource';
-import type { EnvironmentSource, WeatherEntry } from '../environment/types';
+import type { ConditionsResolver, WeatherEntry } from '../environment/types';
 import {
   simulateSeason,
   computeSeasonSummary,
@@ -28,7 +28,7 @@ export function remapToTargetYear(entries: WeatherEntry[], targetYear: number): 
 }
 
 /** Build a CompositeSource from weather entries (observed + historical fallback). */
-export function buildSource(entries: WeatherEntry[]): EnvironmentSource {
+export function buildSource(entries: WeatherEntry[]): ConditionsResolver {
   const observed = createObservedSource(entries);
   const historical = createGrandRapidsHistorical();
   const dates = buildObservedDateSet(entries);

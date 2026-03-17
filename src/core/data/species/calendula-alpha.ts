@@ -9,9 +9,6 @@ export const CALENDULA: PlantSpecies = {
   height_ft: 2,
 
   days_to_first_harvest: 40,
-  harvest_type: 'continuous',
-
-  baseline_lbs_per_plant: 0,
   germination_rate: 0.95,   // Reliable germinator
   establishment_rate: 0.95, // Semi-hardy; tolerates light frost
 
@@ -40,6 +37,11 @@ export const CALENDULA: PlantSpecies = {
   },
 
   icon: { emoji: '🌼', color: '#FFD700' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'done'],
+    productive_stages: [],
+  },
 
   phenology: {
     base_temp_f: 40,

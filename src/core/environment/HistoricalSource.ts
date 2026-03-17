@@ -1,4 +1,4 @@
-import { EnvironmentSource, WeeklyConditions } from './types';
+import { ConditionsResolver, WeeklyConditions } from './types';
 
 // Grand Rapids, MI (42.96°N, Zone 6a) — 10-year averages
 // Source: currentresults.com (temps), NOAA GHCN-Daily (temps), timeanddate.com (photoperiod)
@@ -36,7 +36,7 @@ function interpolateMonthly(table: Record<number, number>, date: Date): number {
 
 const MS_PER_DAY = 86_400_000;
 
-export function createGrandRapidsHistorical(): EnvironmentSource {
+export function createGrandRapidsHistorical(): ConditionsResolver {
   return {
     source_type: 'historical',
     location: 'Grand Rapids, MI (42.96°N, Zone 6a)',

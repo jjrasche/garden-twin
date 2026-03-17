@@ -7,6 +7,7 @@
 
 import { LifecycleSpec, LifecycleActivity, ProcessingActivity } from '../types/LifecycleSpec';
 import { CropPlanting } from './ProductionTimeline';
+import { resolveHarvestStrategy } from './strategyResolver';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -154,7 +155,9 @@ export function buildLaborSchedule(
     }
 
     if (spec.processing) {
-      const total_lbs = planting.species.baseline_lbs_per_plant *
+      const strategy = resolveHarvestStrategy(planting.harvest_strategy_id, planting.species);
+      const baseline = strategy?.baseline_lbs_per_plant ?? 0;
+      const total_lbs = baseline *
                          planting.species.germination_rate *
                          planting.species.establishment_rate *
                          planting.plant_count;

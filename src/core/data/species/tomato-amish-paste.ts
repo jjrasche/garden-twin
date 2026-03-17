@@ -18,12 +18,6 @@ export const TOMATO_AMISH_PASTE: PlantSpecies = {
   height_ft: 6,
 
   days_to_first_harvest: 82,
-  harvest_type: 'continuous',
-
-  // Research-validated: extension data supports 10-15 lbs for indeterminate paste.
-  // 15 lbs is the optimal baseline; modifiers reduce for real conditions.
-  baseline_lbs_per_plant: 15.0,
-  // Transplant survival: 0.92 (established 6-8 week seedlings past vulnerable stage)
   germination_rate: 1.00,   // Transplants — already germinated
   establishment_rate: 0.92, // Transplant shock, early season cold snaps
 
@@ -46,6 +40,11 @@ export const TOMATO_AMISH_PASTE: PlantSpecies = {
   nutrition_per_lb: TOMATO_NUTRITION,
 
   icon: { emoji: '🍅', color: '#C0392B' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    productive_stages: ['fruiting', 'harvest'],
+  },
 
   phenology: {
     base_temp_f: 50,

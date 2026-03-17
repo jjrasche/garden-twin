@@ -1,4 +1,5 @@
 import { PlantSpecies } from '../../types';
+import type { StageConfig, StressTolerances } from '../../types/PlantState';
 import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const SPINACH_BLOOMSDALE: PlantSpecies = {
@@ -9,18 +10,6 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
   height_ft: 0.83,
 
   days_to_first_harvest: 45,
-  harvest_type: 'cut_and_come_again',
-  cut_and_come_again: {
-    max_cuts: 6,
-    regrowth_days: 10,
-    // Spinach regrows well in cool weather; peaks at cuts 2-3.
-    // Source: Cornell Extension — Bloomsdale produces 3-6 cuttings.
-    cut_yield_curve: { 1: 0.8, 2: 1.0, 3: 1.0, 4: 0.8, 5: 0.6, 6: 0.4 },
-  },
-
-  // Research-validated: 0.20-0.40 lbs/plant range.
-  // 0.28 is moderate for cut-and-come-again over 3-5 harvests.
-  baseline_lbs_per_plant: 0.28,
   germination_rate: 0.90,   // Seeds benefit from cold stratification
   establishment_rate: 0.95, // Very cold-hardy once emerged
 
@@ -30,6 +19,7 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
     { factor: 'spacing_plants_per_sq_ft', curve: { 2.0: 1.1, 4.0: 1.0, 6.0: 0.8, 9.0: 0.5 }, effect: 'growth_rate' as const },
     ...SOIL_LIGHT_FEEDER_RESPONSES,
     { factor: 'photoperiod_h', curve: { 10: 1.0, 13: 1.0, 14: 0.6, 14.5: 0.3, 15: 0.1, 16: 0.0 }, effect: 'population_survival' as const, name: 'bolt' },
+    { factor: 'photoperiod_h', curve: { 10: 0.6, 12: 0.8, 13: 1.0, 14: 1.4, 15: 2.0 }, effect: 'development_rate' as const, name: 'photoperiod_development', active_stages: ['vegetative', 'flowering'] },
   ],
 
   modifiers: {
@@ -67,6 +57,16 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
   },
 
   icon: { emoji: '🥬', color: '#2E8B57' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'done'],
+    productive_stages: ['vegetative'],
+  } satisfies StageConfig,
+
+  stress_tolerances: {
+    drought: { threshold: 25, direction: 'below', days_to_damage: 3, days_to_death: 7 },
+    heat: { threshold: 85, direction: 'above', days_to_damage: 2, days_to_death: 5 },
+  } satisfies StressTolerances,
 
   phenology: {
     base_temp_f: 35,

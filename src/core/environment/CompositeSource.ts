@@ -5,15 +5,15 @@
  * for dates without observations. Cutoff date tracks the last observed day.
  */
 
-import { EnvironmentSource, WeatherEntry, WeeklyConditions } from './types';
+import { ConditionsResolver, WeatherEntry, WeeklyConditions } from './types';
 
 const MS_PER_DAY = 86_400_000;
 
 export function createCompositeSource(
-  observed: EnvironmentSource,
-  historical: EnvironmentSource,
+  observed: ConditionsResolver,
+  historical: ConditionsResolver,
   observedDates: Set<string>,
-): EnvironmentSource {
+): ConditionsResolver {
   return {
     source_type: 'observed',
     location: observed.location,

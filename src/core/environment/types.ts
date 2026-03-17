@@ -24,7 +24,7 @@ export interface WeatherEntry {
 }
 
 /** Pluggable source of environmental conditions */
-export interface EnvironmentSource {
+export interface ConditionsResolver {
   readonly source_type: 'historical' | 'observed' | 'forecast';
   readonly location: string;
 
@@ -33,9 +33,12 @@ export interface EnvironmentSource {
   /** Average date of first fall frost (32°F) */
   readonly avg_first_frost: Date;
 
-  /** Conditions for a single date (interpolated from underlying data) */
-  getConditions(date: Date): Omit<WeeklyConditions, 'week_start'>;
+  /** Conditions for a single date, optionally at a specific position. */
+  getConditions(date: Date, where?: { physY: number }): Omit<WeeklyConditions, 'week_start'>;
 
   /** Conditions for a date range, one entry per week */
   getWeeklyConditions(start: Date, end: Date): WeeklyConditions[];
 }
+
+/** @deprecated Use ConditionsResolver. */
+export type EnvironmentSource = ConditionsResolver;

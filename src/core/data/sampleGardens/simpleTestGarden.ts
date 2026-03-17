@@ -55,7 +55,7 @@ export function createSimpleTestGarden(): { garden: Garden; plan: Plan } {
       individual_id: 'plant_1',
       species_id: CORN_WAPSIE_VALLEY.id,
       planted_date: '2025-05-15',
-      expected_yield_lbs: CORN_WAPSIE_VALLEY.baseline_lbs_per_plant,
+      expected_yield_lbs: 0,
     };
   }
 

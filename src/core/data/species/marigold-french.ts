@@ -9,9 +9,6 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
   height_ft: 1.5,
 
   days_to_first_harvest: 55,
-  harvest_type: 'continuous',
-
-  baseline_lbs_per_plant: 0,
   germination_rate: 0.95,   // Reliable germinator
   establishment_rate: 0.95, // Hardy annual, low pest pressure
 
@@ -40,6 +37,11 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
   },
 
   icon: { emoji: '🌼', color: '#FF8C00' },
+
+  stage_config: {
+    stage_sequence: ['seed', 'vegetative', 'flowering', 'done'],
+    productive_stages: [],
+  },
 
   phenology: {
     base_temp_f: 50,
