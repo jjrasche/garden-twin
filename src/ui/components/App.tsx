@@ -1,40 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { SeasonView } from './SeasonView/SeasonView';
 import { HarvestTimeline } from './Timelines/HarvestTimeline';
 import { LaborTimeline } from './Timelines/LaborTimeline';
 import { ConditionTimeline } from './Timelines/ConditionTimeline';
 import { GridLayout } from './GridLayout/GridLayout';
-import { useGardenStore } from '../store/gardenStore';
-import { CORN_WAPSIE_VALLEY, TOMATO_BETTER_BOY } from '@core/data/plantSpecies';
-import { CORN_GOLDEN_BANTAM } from '../../../research/golden-bantam-corn/config';
-import { CORN_STOWELLS_EVERGREEN } from '../../../research/stowells-evergreen-corn/config';
-import { POTATO_RUSSET_BURBANK } from '../../../research/russet-burbank-potato/config';
-import { POTATO_RED_NORLAND } from '../../../research/red-norland-potato/config';
-import { POTATO_YUKON_GOLD } from '../../../research/yukon-gold-potato/config';
 
-type Tab = 'map' | 'yield' | 'conditions' | 'labor';
+type Tab = 'season' | 'map' | 'yield' | 'conditions' | 'labor';
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'map', label: 'Garden Map' },
-  { id: 'yield', label: 'Production Timeline' },
+  { id: 'season', label: 'Season' },
+  { id: 'map', label: 'Map' },
+  { id: 'yield', label: 'Production' },
   { id: 'conditions', label: 'Conditions' },
   { id: 'labor', label: 'Labor' },
 ];
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('map');
-  const setSpecies = useGardenStore((state) => state.setSpecies);
-
-  useEffect(() => {
-    setSpecies([
-      CORN_GOLDEN_BANTAM,
-      CORN_STOWELLS_EVERGREEN,
-      CORN_WAPSIE_VALLEY,
-      TOMATO_BETTER_BOY,
-      POTATO_RED_NORLAND,
-      POTATO_YUKON_GOLD,
-      POTATO_RUSSET_BURBANK,
-    ]);
-  }, [setSpecies]);
+  const [activeTab, setActiveTab] = useState<Tab>('season');
 
   return (
     <div className="w-screen h-screen flex flex-col bg-gray-900 text-white">
@@ -56,6 +38,7 @@ export function App() {
       </header>
 
       <div className="flex-1 min-h-0">
+        {activeTab === 'season' && <SeasonView />}
         {activeTab === 'map' && <GridLayout />}
         {activeTab === 'yield' && <HarvestTimeline />}
         {activeTab === 'conditions' && <ConditionTimeline />}
