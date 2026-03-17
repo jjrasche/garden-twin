@@ -134,3 +134,48 @@ export function getPlantColor(speciesId: string): string {
   // Default green
   return '#22C55E'; // green-500
 }
+
+// ── Stage-based color modulation ─────────────────────────────────────────────
+
+function parseHex(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+function toHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  return '#' + [r, g, b].map(v => clamp(v).toString(16).padStart(2, '0')).join('');
+}
+
+function scaleColor(hex: string, factor: number): string {
+  const [r, g, b] = parseHex(hex);
+  return toHex(r * factor, g * factor, b * factor);
+}
+
+function desaturate(hex: string, amount: number): string {
+  const [r, g, b] = parseHex(hex);
+  const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+  const t = amount; // 0 = original, 1 = full gray
+  return toHex(r + (gray - r) * t, g + (gray - g) * t, b + (gray - b) * t);
+}
+
+/** Species color modulated by growth stage. */
+export function getStageColor(speciesId: string, stage: string, isDead: boolean): string {
+  if (isDead) return desaturate(scaleColor(getPlantColor(speciesId), 0.3), 0.8);
+
+  const base = getPlantColor(speciesId);
+  switch (stage) {
+    case 'seed':        return scaleColor(base, 0.2);
+    case 'germinated':  return scaleColor(base, 0.35);
+    case 'vegetative':  return scaleColor(base, 0.6);
+    case 'flowering':   return scaleColor(base, 0.85);
+    case 'fruiting':    return base;
+    case 'harvest':     return base;
+    case 'done':        return desaturate(scaleColor(base, 0.25), 0.7);
+    default:            return base;
+  }
+}

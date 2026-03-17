@@ -37,7 +37,8 @@ export function useRenderLoop(
   gardenState: GardenState | null,
   speciesMap: Map<string, PlantSpecies>,
   brushCursor: BrushCursor | null = null,
-  paintOverlayRef: React.RefObject<Map<string, SubcellState>> | null = null
+  paintOverlayRef: React.RefObject<Map<string, SubcellState>> | null = null,
+  stageColorRef: React.RefObject<Map<string, string>> | null = null,
 ) {
   const frameRef = useRef<number>(0);
   const fpsRef = useRef<number>(60);
@@ -86,7 +87,8 @@ export function useRenderLoop(
 
       // Layer 2: Subcells (with overlay applied from ref)
       const overlayMap = paintOverlayRef?.current || new Map();
-      drawSubcellLayer(ctx, viewport, visibleSubcells, overlayMap, subcellSpecies);
+      const stageColors = stageColorRef?.current || null;
+      drawSubcellLayer(ctx, viewport, visibleSubcells, overlayMap, subcellSpecies, stageColors);
 
       // Layer 3: Infrastructure (trellis wire/posts, mound outlines)
       if (gardenState.infrastructure) {
@@ -118,7 +120,7 @@ export function useRenderLoop(
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [canvasRef, viewport, visibleSubcells, gardenState, speciesMap, brushCursor]);
+  }, [canvasRef, viewport, visibleSubcells, gardenState, speciesMap, brushCursor, stageColorRef]);
   // Note: paintOverlayRef NOT in deps - RAF reads from ref every frame without re-renders
 }
 
@@ -144,7 +146,8 @@ function drawSubcellLayer(
   viewport: Viewport,
   visibleSubcells: SubcellState[],
   paintOverlay: Map<string, SubcellState>,
-  subcellSpecies: Map<string, string>
+  subcellSpecies: Map<string, string>,
+  stageColors: Map<string, string> | null,
 ) {
   // Precompute scale factor for pixel-snapping math
   const pxPerWorldInch = PIXELS_PER_INCH * viewport.scale;
@@ -171,8 +174,9 @@ function drawSubcellLayer(
     const speciesId = subcellSpecies.get(actualSubcell.subcell_id);
 
     if (speciesId) {
-      // Occupied by a plant — color by species
-      ctx.fillStyle = getPlantColor(speciesId);
+      // Stage color overrides species color when simulation is active
+      const stageColor = stageColors?.get(actualSubcell.subcell_id);
+      ctx.fillStyle = stageColor ?? getPlantColor(speciesId);
     } else if (terrainType !== 'planting') {
       // Non-plantable terrain - use terrain color
       ctx.fillStyle = TERRAIN_COLORS[terrainType] || TERRAIN_COLORS.planting || '#374151';

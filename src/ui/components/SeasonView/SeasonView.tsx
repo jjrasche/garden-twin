@@ -1,5 +1,5 @@
 /**
- * Unified season view — garden map + timeline scrubber + conditions panel.
+ * Unified season view — the single page for the garden twin.
  *
  * Composes CanvasGarden, TimelineScrubber, ConditionsPanel, and PlantTooltip.
  * The simulation runs once per year selection; scrubbing indexes into DaySnapshot[].
@@ -14,6 +14,7 @@ import { useYearSimulation, SELECTABLE_YEARS, type YearSelection } from '../../h
 import { useGardenStore } from '../../store/gardenStore';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
 import { screenToWorld } from '../../utils/canvasTransforms';
+import { getStageColor } from '../../utils/plantIcons';
 import { createGardenStateFromPlan } from '@core/data/sampleGarden';
 import { PRODUCTION_PLAN } from '@core/calculators/ProductionTimeline';
 import type { PlantState } from '@core/types/PlantState';
@@ -36,7 +37,7 @@ function resolveSubcellId(x_in: number, y_in: number): string {
   return `sub_${snapped_x}_${snapped_y}`;
 }
 
-/** Find the PlantState whose subcell_id matches, from the current snapshot. */
+/** Find the PlantState at a given subcell via the occupancy index. */
 function findPlantAtSubcell(
   subcellId: string,
   plants: PlantState[],
@@ -45,6 +46,26 @@ function findPlantAtSubcell(
   const plantId = occupancyMap.get(subcellId);
   if (!plantId) return undefined;
   return plants.find(p => p.plant_id === plantId);
+}
+
+/**
+ * Build subcell_id → stage color map from the current snapshot.
+ *
+ * Uses the spatial occupancy from gardenState (which subcells each plant covers)
+ * and the simulated stage from the DaySnapshot (which stage each plant is in).
+ */
+function buildStageColorMap(
+  snapshot: { plants: PlantState[] },
+  occupancyMap: Map<string, string>,
+  plantStateIndex: Map<string, PlantState>,
+): Map<string, string> {
+  const colors = new Map<string, string>();
+  for (const [subcellId, plantId] of occupancyMap) {
+    const state = plantStateIndex.get(plantId);
+    if (!state) continue;
+    colors.set(subcellId, getStageColor(state.species_id, state.stage, state.is_dead));
+  }
+  return colors;
 }
 
 export function SeasonView() {
@@ -63,6 +84,7 @@ export function SeasonView() {
   const [dayIndex, setDayIndex] = useState(0);
   const [hoverPlant, setHoverPlant] = useState<{ plant: PlantState; x: number; y: number } | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
+  const stageColorRef = useRef<Map<string, string>>(new Map());
 
   const currentSnapshot = sim.snapshots[dayIndex] ?? null;
 
@@ -77,6 +99,25 @@ export function SeasonView() {
     }
     return map;
   }, [gardenState]);
+
+  // Build plant_id → PlantState index from current snapshot
+  const plantStateIndex = useMemo(() => {
+    const map = new Map<string, PlantState>();
+    if (!currentSnapshot) return map;
+    for (const p of currentSnapshot.plants) {
+      map.set(p.plant_id, p);
+    }
+    return map;
+  }, [currentSnapshot]);
+
+  // Update stage color ref whenever snapshot changes
+  useEffect(() => {
+    if (currentSnapshot) {
+      stageColorRef.current = buildStageColorMap(currentSnapshot, occupancyMap, plantStateIndex);
+    } else {
+      stageColorRef.current = new Map();
+    }
+  }, [currentSnapshot, occupancyMap, plantStateIndex]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!currentSnapshot || !mapRef.current) {
@@ -105,8 +146,9 @@ export function SeasonView() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Year selector bar */}
+      {/* Header: title + year selector */}
       <div className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 border-b border-gray-700 shrink-0">
+        <span className="text-sm font-semibold text-gray-300 mr-3">Garden Twin</span>
         <span className="text-xs text-gray-500 mr-1">Year:</span>
         {SELECTABLE_YEARS.map(year => {
           const isSelected = sim.selectedYear === year;
@@ -143,7 +185,7 @@ export function SeasonView() {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
-          <CanvasGarden />
+          <CanvasGarden stageColorRef={stageColorRef} />
 
           {/* Hover tooltip */}
           {hoverPlant && (
@@ -156,8 +198,8 @@ export function SeasonView() {
           )}
         </div>
 
-        {/* Conditions side panel */}
-        <div className="w-52 shrink-0">
+        {/* Right side panel */}
+        <div className="w-56 shrink-0">
           <ConditionsPanel
             snapshot={currentSnapshot}
             snapshots={sim.snapshots}

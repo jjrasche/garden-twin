@@ -14,8 +14,13 @@ import { usePaintBrush } from '../../hooks/usePaintBrush';
 import { Minimap } from './Minimap';
 import { PaintToolbar } from './PaintToolbar';
 
-export function CanvasGarden() {
+interface CanvasGardenProps {
+  stageColorRef?: React.RefObject<Map<string, string>>;
+}
+
+export function CanvasGarden({ stageColorRef }: CanvasGardenProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const paintOverlayRef = useRef<Map<string, import('@core/types').SubcellState>>(new Map());
   const [canvasSize, setCanvasSize] = useState({
     width: window.innerWidth,
@@ -45,19 +50,24 @@ export function CanvasGarden() {
   usePaintBrush(canvasRef, viewport, gardenState?.subcells || [], paintOverlayRef);
 
   // Render loop - 60fps Canvas rendering (reads from paintOverlayRef directly, no re-renders)
-  useRenderLoop(canvasRef, viewport, visibleSubcells, gardenState, speciesMap, brushCursor, paintOverlayRef);
+  useRenderLoop(canvasRef, viewport, visibleSubcells, gardenState, speciesMap, brushCursor, paintOverlayRef, stageColorRef);
 
-  // Window resize handler
+  // Container resize handler — tracks actual container size, not window
   useEffect(() => {
-    const handleResize = () => {
-      setCanvasSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
+    const container = containerRef.current;
+    if (!container) return;
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (!entry) return;
+      setCanvasSize({
+        width: Math.floor(entry.contentRect.width),
+        height: Math.floor(entry.contentRect.height),
+      });
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
 
   if (!gardenState) {
@@ -74,7 +84,7 @@ export function CanvasGarden() {
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div ref={containerRef} className="relative w-full h-full">
       <canvas
         ref={canvasRef}
         width={canvasSize.width}
