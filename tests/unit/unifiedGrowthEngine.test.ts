@@ -88,10 +88,11 @@ function speciesCatalog(...species: PlantSpecies[]): Map<string, PlantSpecies> {
 // =============================================================================
 
 describe('simulateSeason regression', () => {
-  test('simulateSeason total is stable (~661 lbs)', () => {
+  test('simulateSeason total is stable (~673 lbs)', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    expect(total).toBeCloseTo(661, -1);
+    // ~673 lbs after kale germination_rate fix (1.00 for transplants, was 0.95).
+    expect(total).toBeCloseTo(673, -1);
   });
 
   test('all expected display groups produce yield', () => {

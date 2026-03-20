@@ -39,13 +39,13 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
   icon: { emoji: '🌼', color: '#FF8C00' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'done'],
     productive_stages: [],
   },
 
   phenology: {
     base_temp_f: 50,
-    gdd_stages: { vegetative: 100, flowering: 600, fruiting: 800, mature: 800 },
+    gdd_stages: { germinated: 40, vegetative: 100, flowering: 600, fruiting: 800, mature: 800 },
   },
 
   layout: {
@@ -59,16 +59,6 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'pest_control',
     needs_containment: false,
-    pest_control: {
-      // Nematode suppression only works within rhizosphere (3-7" from roots).
-      // Interplanted marigolds provide visual pest confusion and pollinator
-      // attraction, NOT broadcast nematode suppression. Cover-crop protocol
-      // (20 plants/m², 2-4 months) required for actual nematode control.
-      repels: ['aphids', 'whiteflies'],
-      attracts_beneficial: ['ladybugs', 'hoverflies'],
-      effective_radius_in: 7,
-      is_trap_crop: false,
-    },
   },
 
   seed_cost_per_plant: 0.05,

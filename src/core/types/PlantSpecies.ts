@@ -141,6 +141,7 @@ export type GrowthResponse = z.infer<typeof GrowthResponseSchema>;
 export const PhenologySchema = z.object({
   base_temp_f: z.number(),
   gdd_stages: z.object({
+    germinated: z.number(),
     vegetative: z.number(),
     flowering: z.number(),
     fruiting: z.number(),
@@ -173,32 +174,6 @@ export const SpacingSchema = z.object({
 export type Spacing = z.infer<typeof SpacingSchema>;
 
 /**
- * Companion planting relationship between two species
- */
-export const CompanionEffectSchema = z.object({
-  target_species_id: z.string(),        // The other species in this relationship
-  effect: z.enum(['beneficial', 'antagonistic']),
-  mechanism: z.string(),                // Why (e.g., "shared blight", "repels aphids")
-  min_distance_in: z.number().min(0).optional(), // Minimum separation for antagonistic
-  max_distance_in: z.number().min(0).optional(), // Maximum distance for beneficial effect
-});
-
-export type CompanionEffect = z.infer<typeof CompanionEffectSchema>;
-
-/**
- * Pest control properties for companion plants (marigold, nasturtium, etc.)
- */
-export const PestControlSchema = z.object({
-  repels: z.array(z.string()),                  // Pests repelled (e.g., "nematodes", "aphids")
-  attracts_beneficial: z.array(z.string()),     // Beneficial insects attracted
-  effective_radius_in: z.number().min(0),       // How far the effect extends from plant center
-  is_trap_crop: z.boolean(),                    // Draws pests to itself (nasturtium)
-  trap_distance_in: z.number().min(0).optional(), // Optimal distance from protected crop
-});
-
-export type PestControl = z.infer<typeof PestControlSchema>;
-
-/**
  * Layout profile — all attributes needed for spatial optimization
  *
  * Captures spacing, light, temperature, companion, and containment
@@ -225,12 +200,6 @@ export const LayoutProfileSchema = z.object({
 
   // Role in the garden
   role: z.enum(['food_crop', 'pest_control', 'herb', 'cover_crop']),
-
-  // Companion planting relationships
-  companions: z.array(CompanionEffectSchema).optional(),
-
-  // Pest control properties (for companion/pest-control plants)
-  pest_control: PestControlSchema.optional(),
 
   // Containment (invasive species like mint, catnip)
   needs_containment: z.boolean(),
@@ -260,9 +229,12 @@ export const PlantSpeciesSchema = z.object({
   // Survival decomposition: tracks seed→plant and plant→harvest independently.
   // germination_rate: fraction of seeds/tubers that emerge (1.0 for transplants).
   // establishment_rate: fraction of emerged plants that survive to harvest.
-  // Combined: survivalRate(species) = germination_rate × establishment_rate
+  // seeds_per_hole: overseeding count (default 1). Position survival =
+  //   1 - (1 - germination_rate)^seeds_per_hole, then × establishment_rate.
+  // Combined: survivalRate(species) = positionSurvival × establishment_rate
   germination_rate: z.number().min(0).max(1),
   establishment_rate: z.number().min(0).max(1),
+  seeds_per_hole: z.number().int().min(1).default(1),
 
   // Declarative modifier curves (replaces flat modifiers — Phase 1)
   growth_response: z.array(GrowthResponseSchema).optional(),
@@ -299,7 +271,13 @@ export const PlantSpeciesSchema = z.object({
 
 export type PlantSpecies = z.infer<typeof PlantSpeciesSchema>;
 
-/** Combined survival fraction: germination × establishment. */
+/** Position survival: probability at least one seed germinates per hole. */
+export function positionGerminationRate(species: PlantSpecies): number {
+  const seeds = species.seeds_per_hole ?? 1;
+  return 1 - Math.pow(1 - species.germination_rate, seeds);
+}
+
+/** Combined survival fraction: position germination × establishment. */
 export function survivalRate(species: PlantSpecies): number {
-  return species.germination_rate * species.establishment_rate;
+  return positionGerminationRate(species) * species.establishment_rate;
 }

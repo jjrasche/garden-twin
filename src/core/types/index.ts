@@ -38,3 +38,6 @@ export * from './Infrastructure';
 
 // Rules engine
 export * from './Rules';
+
+// Pest/companion model (Companion → Pest → Crop chain)
+export * from './Pest';

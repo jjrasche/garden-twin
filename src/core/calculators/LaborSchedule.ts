@@ -72,7 +72,12 @@ function expandActivity(
     return tasks;
   }
 
-  // days_after_planting trigger
+  // Only days_after_planting and growth_stage triggers produce dated tasks for now.
+  // condition and observation triggers are evaluated at runtime, not scheduled ahead.
+  if (activity.trigger.type !== 'days_after_planting') {
+    return tasks;
+  }
+
   const start_date = addDays(planting_date, activity.trigger.days);
 
   if (!activity.recurrence) {

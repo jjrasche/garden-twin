@@ -464,10 +464,19 @@ Changes have dependencies. This is the sequence:
    of N, P, K, pH, compaction). This is the accepted agronomic approach and
    should stay even if environmental modifiers change.
 
-5. **Germination rate accuracy.** Kale species file says 0.95; blocking math
-   uses 0.85. Need to decide: lab rate or real-world soil block rate? If using
-   2-seeds-per-block strategy, the per-block success rate (97.75%) may matter
-   more than per-seed rate.
+5. **Germination rate accuracy.** RESOLVED — transplants use 1.00 (dead blocks
+   never reach the field). Seed germination rate (0.95 for kale) is relevant
+   for block planning only, not yield calculation.
 
-6. **Garden-level lifecycle activities.** Bed prep, trellis setup, compost:
-   not per-species. Need a concept for garden-level recurring tasks.
+6. **Garden-level lifecycle activities.** RESOLVED — season-tasks-2026.ts
+   implements garden-level tasks with `infrastructure` and `garden` target
+   types. TaskType extended with `build`, `procure`, `prepare`.
+
+7. **Layout optimization via LLM + constraint solver.** LLMs cannot reliably
+   place 300+ plants on a 48,000-subcell grid (spatial reasoning degrades at
+   scale). Architecture: LLM translates user intent into structured constraint
+   weights → OR-Tools CP-SAT solver enforces spacing, companion radii, zone
+   eligibility, non-overlap → LLM explains rationale. The Pest →
+   CropVulnerability → CompanionBenefit chain with explicit radii and efficacy
+   ratings maps directly to CP-SAT constraints. Reference: GRDN.AI (open-source
+   companion planting optimizer), LLMFP (MIT ICLR 2025), MCP-Solver.

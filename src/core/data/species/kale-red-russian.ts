@@ -10,7 +10,7 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   height_ft: 3,
 
   days_to_first_harvest: 50,
-  germination_rate: 0.95,   // Brassica seeds germinate reliably
+  germination_rate: 1.00,   // Transplant — dead blocks never reach the field
   establishment_rate: 0.97, // Very hardy; minimal seedling loss
 
   growth_response: [
@@ -48,13 +48,13 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   icon: { emoji: '🥬', color: '#8B4513' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'done'],
     productive_stages: ['vegetative'],
   } satisfies StageConfig,
 
   phenology: {
     base_temp_f: 40,
-    gdd_stages: { vegetative: 80, flowering: 450, fruiting: 750, mature: 1100 },
+    gdd_stages: { germinated: 20, vegetative: 80, flowering: 450, fruiting: 750, mature: 1100 },
   },
 
   layout: {
@@ -68,14 +68,6 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
     planting_method: 'transplant',
     role: 'food_crop',
     needs_containment: false,
-    companions: [
-      {
-        target_species_id: 'marigold_french',
-        effect: 'beneficial',
-        mechanism: 'visual pest confusion — disrupts cabbage moth host-finding',
-        max_distance_in: 18,
-      },
-    ],
   },
 
   seed_cost_per_plant: 0.05,

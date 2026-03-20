@@ -5,17 +5,28 @@ import { z } from 'zod';
 // =============================================================================
 
 export const TaskTypeSchema = z.enum([
+  // Crop management
   'plant',      // Put a plant in the ground
+  'sow',        // Direct seed into soil
   'thin',       // Remove excess seedlings
   'prune',      // Cut back growth
   'deadhead',   // Remove spent flowers
+  'hill',       // Mound soil around stems (potato)
   'harvest',    // Collect ripe produce
   'water',      // Irrigate
   'weed',       // Remove weeds
   'stake',      // Add support structure
-  'inspect',    // Observe and record state (daily photo runs)
+  'inspect',    // Observe and record state
   'mulch',      // Add mulch layer
   'fertilize',  // Apply nutrients
+  'amend',      // Apply soil amendment (changes conditions)
+  'net',        // Install/manage bird netting
+  'trap',       // Set/check live traps or snap traps
+
+  // Infrastructure & logistics
+  'build',      // Construct/install infrastructure (fence, trellis, beds)
+  'procure',    // Acquire materials or supplies
+  'prepare',    // Prep work (soil blocks, seed cutting, bed prep)
 ]);
 
 export type TaskType = z.infer<typeof TaskTypeSchema>;
@@ -46,6 +57,15 @@ export const TaskTargetSchema = z.discriminatedUnion('target_type', [
     target_type: z.literal('position'),
     x_in: z.number(),
     y_in: z.number(),
+  }),
+  // Target a named infrastructure element (fence, trellis, channel)
+  z.object({
+    target_type: z.literal('infrastructure'),
+    infrastructure_id: z.string(),
+  }),
+  // Target the entire garden (garden-level tasks: fence walk, mowing, cleanup)
+  z.object({
+    target_type: z.literal('garden'),
   }),
 ]);
 
@@ -135,6 +155,7 @@ export const TaskSchema = z.object({
   // Labor classification
   labor_type: LaborTypeSchema.optional(),
   estimated_duration_minutes: z.number().min(0).optional(),
+  actual_duration_minutes: z.number().min(0).optional(),
 
   // Status tracking
   status: TaskStatusSchema,

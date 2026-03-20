@@ -21,6 +21,19 @@ export const ActivityTriggerSchema = z.discriminatedUnion('type', [
     type: z.literal('harvest_accumulated'),
     threshold_lbs: z.number().min(0),  // Trigger when this many lbs have been harvested
   }),
+  // Condition crosses a threshold (e.g., soil temp reaches planting minimum)
+  z.object({
+    type: z.literal('condition'),
+    factor: z.string(),                // Condition key (soil_temperature_f, moisture_pct, etc.)
+    threshold: z.number(),
+    direction: z.enum(['above', 'below']),  // Trigger when value goes above/below threshold
+  }),
+  // Observation of a specific event (e.g., pest detected, damage seen)
+  z.object({
+    type: z.literal('observation'),
+    observation_type: z.string(),      // What was observed (pest_detected, damage, emergence)
+    subject_id: z.string().optional(), // Specific pest_id, species_id, etc.
+  }),
 ]);
 
 export type ActivityTrigger = z.infer<typeof ActivityTriggerSchema>;

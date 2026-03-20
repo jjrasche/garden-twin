@@ -133,8 +133,8 @@ describe('simulateSeason with harvest_strategy_id on CropPlanting', () => {
   test('full PRODUCTION_PLAN total unchanged after strategy wiring', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // New engine: ~661 lbs (per-plant expansion, threshold-based harvest)
-    expect(total).toBeCloseTo(661, -1);
+    // ~673 lbs after kale germination_rate fix (1.00 for transplants, was 0.95).
+    expect(total).toBeCloseTo(673, -1);
   });
 });
 

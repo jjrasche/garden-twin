@@ -39,13 +39,13 @@ export const NASTURTIUM: PlantSpecies = {
   icon: { emoji: '🌺', color: '#FF6347' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'done'],
     productive_stages: [],
   },
 
   phenology: {
     base_temp_f: 50,
-    gdd_stages: { vegetative: 100, flowering: 500, fruiting: 700, mature: 700 },
+    gdd_stages: { germinated: 40, vegetative: 100, flowering: 500, fruiting: 700, mature: 700 },
   },
 
   layout: {
@@ -59,38 +59,6 @@ export const NASTURTIUM: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'pest_control',
     needs_containment: false,
-    pest_control: {
-      repels: [],
-      attracts_beneficial: [
-        'hoverflies',      // larvae eat 200+ aphids each
-        'lacewings',       // larvae are voracious aphid predators
-        'predatory_wasps',
-        'bees',
-      ],
-      // Hoverfly/lacewing foraging range, not aphid trap distance.
-      // Aphids walk 3-12 m/hr; no garden-scale distance prevents movement.
-      effective_radius_in: 72,
-      is_trap_crop: true,
-      // No evidence-based distance for aphid trap cropping (Holden 2012).
-      // Aphids walk trivially between plants at any garden scale.
-      // Value is primarily beneficial insect attraction, not aphid diversion.
-      // Requires active management: remove heavily infested foliage
-      // weekly to prevent colony spillover (retention management).
-    },
-    companions: [
-      {
-        target_species_id: 'tomato_sun_gold',
-        effect: 'beneficial',
-        // Primary value: hoverfly/lacewing attraction (aphid predators).
-        // Secondary: aphid trap crop IF managed (remove infested foliage).
-        mechanism: 'attracts hoverflies + lacewings (aphid predators); aphid trap crop with management',
-      },
-{
-        target_species_id: 'tomato_amish_paste',
-        effect: 'beneficial',
-        mechanism: 'attracts hoverflies + lacewings (aphid predators); aphid trap crop with management',
-      },
-    ],
   },
 
   seed_cost_per_plant: 0.10,

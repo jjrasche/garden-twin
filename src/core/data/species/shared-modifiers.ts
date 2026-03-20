@@ -52,43 +52,6 @@ export const SOIL_COMPANION_RESPONSES = soilToResponses(SOIL_COMPANION);
 // Shared tomato constants
 // ---------------------------------------------------------------------------
 
-/** Shared companion entries for all three tomato cultivars. */
-export const TOMATO_COMPANIONS = [
-  {
-    target_species_id: 'marigold_french',
-    effect: 'beneficial' as const,
-    mechanism: 'visual pest confusion, pollinator attraction near tomatoes',
-    max_distance_in: 18,
-  },
-  {
-    target_species_id: 'nasturtium',
-    effect: 'beneficial' as const,
-    // Primary value: hoverfly/lacewing attraction (aphid predators).
-    // No evidence-based separation distance for aphids (Holden 2012).
-    // Requires management: remove heavily infested nasturtium foliage weekly.
-    mechanism: 'attracts hoverflies + lacewings near tomatoes; aphid trap crop with management',
-  },
-  {
-    target_species_id: 'corn_nothstine_dent',
-    effect: 'beneficial' as const,
-    // Corn silks are preferred earworm oviposition site, diverting moths
-    // from tomato fruit during silking (Purdue Extension E-31). No
-    // evidence-based separation distance: moths fly 30+ km/night.
-    mechanism: 'corn silks divert earworm moths during silking period',
-    max_distance_in: 240,
-  },
-  {
-    target_species_id: 'potato_kennebec',
-    effect: 'beneficial' as const,
-    // Late blight sporangia travel 10-60 km on wind (Penn State Extension).
-    // Within-garden separation provides zero protection. Shared disease
-    // susceptibility managed by monitoring (USABlight.org), resistant
-    // varieties, and preventive fungicide -- not distance.
-    mechanism: 'shared blight susceptibility managed by monitoring, not distance',
-    max_distance_in: 240,
-  },
-];
-
 /** Shared tomato moisture — paste types slightly more drought-sensitive than cherry.
   * FAO p=0.40, Ky=1.05. BER risk below 55% FC. Waterlogging: Phytophthora within 4-8h.
   * Sources: FAO Paper 33/56, Zhu et al. 2019 (PMC6436690), Vegetable Research 2023. */
@@ -126,7 +89,6 @@ export const TOMATO_LAYOUT_BASE = {
   planting_method: 'transplant' as const,
   role: 'food_crop' as const,
   needs_containment: false,
-  companions: TOMATO_COMPANIONS,
 };
 
 export const TOMATO_SOURCES = [

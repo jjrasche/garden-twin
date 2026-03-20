@@ -12,6 +12,7 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   days_to_first_harvest: 95,
   germination_rate: 0.90,   // Large seeds; direct sow
   establishment_rate: 0.95, // Cutworm/bird pressure on seedlings
+  seeds_per_hole: 2,        // Plant 2, thin to strongest
 
   growth_response: [
     { factor: 'sun_hours', curve: { 4: 0.3, 6: 0.7, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
@@ -44,13 +45,13 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   icon: { emoji: '🌽', color: '#D4A017' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
     productive_stages: ['fruiting', 'harvest'],
   } satisfies StageConfig,
 
   phenology: {
     base_temp_f: 50,
-    gdd_stages: { vegetative: 435, flowering: 1020, fruiting: 1475, mature: 2100 },
+    gdd_stages: { germinated: 60, vegetative: 435, flowering: 1020, fruiting: 1475, mature: 2100 },
   },
 
   layout: {
@@ -64,7 +65,6 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'food_crop',
     needs_containment: false,
-    companions: [],
   },
 
   seed_cost_per_plant: 0.10,

@@ -49,7 +49,7 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   icon: { emoji: '🥔', color: '#C4A35A' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
     productive_stages: ['fruiting', 'harvest'],
   } satisfies StageConfig,
 
@@ -60,7 +60,7 @@ export const POTATO_KENNEBEC: PlantSpecies = {
 
   phenology: {
     base_temp_f: 40,
-    gdd_stages: { vegetative: 350, flowering: 900, fruiting: 1200, mature: 1700 },
+    gdd_stages: { germinated: 50, vegetative: 350, flowering: 900, fruiting: 1200, mature: 1700 },
   },
 
   layout: {
@@ -74,20 +74,6 @@ export const POTATO_KENNEBEC: PlantSpecies = {
     planting_method: 'tuber',
     role: 'food_crop',
     needs_containment: false,
-    companions: [
-      {
-        target_species_id: 'marigold_french',
-        effect: 'beneficial',
-        mechanism: 'visual pest confusion — disrupts Colorado potato beetle host-finding',
-        max_distance_in: 18,
-      },
-      {
-        target_species_id: 'calendula',
-        effect: 'beneficial',
-        mechanism: 'attracts predatory insects near potato rows',
-        max_distance_in: 60,
-      },
-    ],
   },
 
   seed_cost_per_plant: 0.50,

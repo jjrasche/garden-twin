@@ -39,13 +39,13 @@ export const CALENDULA: PlantSpecies = {
   icon: { emoji: '🌼', color: '#FFD700' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'done'],
     productive_stages: [],
   },
 
   phenology: {
     base_temp_f: 40,
-    gdd_stages: { vegetative: 80, flowering: 600, fruiting: 800, mature: 800 },
+    gdd_stages: { germinated: 30, vegetative: 80, flowering: 600, fruiting: 800, mature: 800 },
   },
 
   layout: {
@@ -59,22 +59,6 @@ export const CALENDULA: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'pest_control',
     needs_containment: false,
-    pest_control: {
-      repels: [],
-      attracts_beneficial: [
-        'ladybugs',
-        'hoverflies',
-        'lacewings',
-        'parasitic_wasps',
-        'bees',
-        'butterflies',
-      ],
-      // Realistic beneficial insect attraction range is 10-15ft for flying
-      // insects. No research supports a fixed 20ft radius — insect patrol
-      // behavior is area-based, not radius-based.
-      effective_radius_in: 120,
-      is_trap_crop: false,
-    },
   },
 
   seed_cost_per_plant: 0.05,

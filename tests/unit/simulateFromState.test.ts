@@ -37,7 +37,8 @@ describe('initPlantStates', () => {
       expect(p.plant_id).toBeTruthy();
       expect(p.subcell_id).toBeTruthy();
       expect(p.species_id).toBeTruthy();
-      expect(p.stage).toBe('seed');
+      // Surviving plants start at 'seed'; eliminated ones start at 'done'
+      expect(['seed', 'done']).toContain(p.stage);
       expect(p.accumulated_dev).toBe(0);
       expect(p.accumulated_gdd).toBe(0);
       expect(p.accumulated_lbs).toBe(0);
@@ -48,9 +49,13 @@ describe('initPlantStates', () => {
     const gardenState = createGardenStateFromPlan(PRODUCTION_PLAN);
     const plants = initPlantStates(gardenState.plants, GARDEN_SPECIES_MAP, GR_HISTORICAL, new Date('2025-11-24'));
 
-    // GardenState has all planted instances; PlantState[] has fewer (survival filtered)
-    expect(plants.length).toBeLessThan(gardenState.plants.length);
-    expect(plants.length).toBeGreaterThan(0);
+    // All plants are included; eliminated ones are marked dead
+    expect(plants.length).toBe(gardenState.plants.length);
+    const alive = plants.filter(p => !p.is_dead);
+    const dead = plants.filter(p => p.is_dead);
+    expect(alive.length).toBeLessThan(plants.length);
+    expect(alive.length).toBeGreaterThan(0);
+    expect(dead.every(p => p.stage === 'done')).toBe(true);
   });
 
   test('daily_potential is non-zero for harvestable species', () => {
@@ -177,9 +182,10 @@ describe('bucketHarvests', () => {
 // =============================================================================
 
 describe('end-to-end regression', () => {
-  test('simulateSeason new path total ~ old path total (pinned to 661 lbs)', () => {
+  test('simulateSeason new path total ~ old path total (pinned to 673 lbs)', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    expect(total).toBeCloseTo(661, -1);
+    // ~673 lbs after kale germination_rate fix (1.00 for transplants, was 0.95).
+    expect(total).toBeCloseTo(673, -1);
   });
 });
