@@ -42,13 +42,13 @@ export const TOMATO_SUN_GOLD: PlantSpecies = {
   icon: { emoji: '🍅', color: '#FFA500' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
     productive_stages: ['fruiting', 'harvest'],
   },
 
   phenology: {
     base_temp_f: 50,
-    gdd_stages: { vegetative: 300, flowering: 500, fruiting: 750, mature: 1200 },
+    gdd_stages: { germinated: 30, vegetative: 300, flowering: 500, fruiting: 750, mature: 1200 },
   },
 
   layout: TOMATO_LAYOUT_BASE,

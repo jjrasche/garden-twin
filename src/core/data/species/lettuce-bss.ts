@@ -56,7 +56,7 @@ export const LETTUCE_BSS: PlantSpecies = {
   icon: { emoji: '🥬', color: '#7BC67E' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'done'],
     productive_stages: ['vegetative'],
   } satisfies StageConfig,
 
@@ -66,7 +66,7 @@ export const LETTUCE_BSS: PlantSpecies = {
 
   phenology: {
     base_temp_f: 40,
-    gdd_stages: { vegetative: 100, flowering: 650, fruiting: 900, mature: 1100 },
+    gdd_stages: { germinated: 20, vegetative: 100, flowering: 650, fruiting: 900, mature: 1100 },
   },
 
   layout: {

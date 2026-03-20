@@ -42,13 +42,13 @@ export const TOMATO_AMISH_PASTE: PlantSpecies = {
   icon: { emoji: '🍅', color: '#C0392B' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'flowering', 'fruiting', 'harvest', 'done'],
     productive_stages: ['fruiting', 'harvest'],
   },
 
   phenology: {
     base_temp_f: 50,
-    gdd_stages: { vegetative: 350, flowering: 550, fruiting: 900, mature: 1700 },
+    gdd_stages: { germinated: 30, vegetative: 350, flowering: 550, fruiting: 900, mature: 1700 },
   },
 
   layout: TOMATO_LAYOUT_BASE,

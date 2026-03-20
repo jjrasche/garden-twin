@@ -5,7 +5,7 @@
  * computes daily_potential + vigor once per group, applies survival filter.
  */
 
-import type { PlantSpecies } from '../types/PlantSpecies';
+import { type PlantSpecies, survivalRate } from '../types/PlantSpecies';
 import type { PlantState } from '../types/PlantState';
 import { createStressCounters } from '../types/PlantState';
 import type { PlantInstance } from '../types/GardenState';
@@ -13,6 +13,32 @@ import type { ConditionsResolver } from '../environment/types';
 import { computeDailyGdd } from '../calculators/gddEngine';
 import { resolveHarvestStrategy } from '../calculators/strategyResolver';
 import { daysBetween, computeDeathDate, buildCutSchedule } from '../calculators/growthMath';
+
+/** Seeded PRNG (mulberry32) for deterministic survival selection. */
+function mulberry32(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Build a Set of indices to mark as dead, distributed across the array. */
+function selectDeadIndices(total: number, deadCount: number, seed: number): Set<number> {
+  const dead = new Set<number>();
+  if (deadCount <= 0) return dead;
+  const rng = mulberry32(seed);
+  // Fisher-Yates partial shuffle: pick deadCount random indices
+  const indices = Array.from({ length: total }, (_, i) => i);
+  for (let i = total - 1; i > total - 1 - deadCount && i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [indices[i], indices[j]] = [indices[j]!, indices[i]!];
+    dead.add(indices[i]!);
+  }
+  return dead;
+}
 
 /** Scan forward to find the date when accumulated GDD reaches a target. */
 function estimateGddDate(
@@ -109,17 +135,21 @@ export function initPlantStates(
     );
 
     const surviving_count = Math.floor(
-      instances.length * species.germination_rate * species.establishment_rate,
+      instances.length * survivalRate(species),
     );
+    const dead_count = instances.length - surviving_count;
+    const seed = representative.species_id.length * 31 + instances.length;
+    const deadIndices = selectDeadIndices(instances.length, dead_count, seed);
 
-    for (let i = 0; i < surviving_count; i++) {
+    for (let i = 0; i < instances.length; i++) {
       const instance = instances[i]!;
+      const survived = !deadIndices.has(i);
       result.push({
         plant_id: instance.plant_id,
         species_id: instance.species_id,
         subcell_id: instance.root_subcell_id,
         planted_date: instance.planted_date,
-        stage: 'seed',
+        stage: survived ? 'seed' : 'done',
         accumulated_dev: 0,
         accumulated_gdd: 0,
         accumulated_lbs: 0,
@@ -129,7 +159,7 @@ export function initPlantStates(
         daily_potential,
         stress: createStressCounters(),
         is_harvestable: false,
-        is_dead: false,
+        is_dead: !survived,
       });
     }
   }

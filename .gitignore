@@ -38,3 +38,11 @@ tests/vlm-screenshots/
 
 # Claude debug tools
 .claude/debug-logs/
+.claude/modified-files.json
+.claude/plans/
+
+# Playwright/verification screenshots
+*.png
+
+# Diagram scratch files
+*.drawio

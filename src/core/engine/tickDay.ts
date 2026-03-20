@@ -48,6 +48,7 @@ function checkFrost(
   const cond = env.getConditions(date);
   if (cond.avg_low_f < kill_temp) return 'frost';
   if (env.source_type === 'historical' && kill_temp >= 32 && date >= env.avg_first_frost) return 'frost';
+  if (env.source_type === 'historical' && kill_temp >= 25 && date >= env.avg_hard_frost) return 'frost';
   return null;
 }
 

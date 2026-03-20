@@ -43,11 +43,11 @@ import {
   LETTUCE_BSS,
   KALE_RED_RUSSIAN,
   SPINACH_BLOOMSDALE,
-  MARIGOLD_FRENCH,
   NASTURTIUM,
-  CALENDULA,
+  GARDEN_SPECIES_MAP,
 } from './gardenSpecies';
 import { PRODUCTION_PLAN, type CropPlanting } from '../calculators/ProductionTimeline';
+import { resolveZoneCompanions } from './companionResolver';
 
 // --- Constants ---
 
@@ -80,12 +80,15 @@ const CROP_ZONE_NORTH_EAST_X = 204;  // physY >= 660: channel at 240
 
 export const ZONE_CONFIG = {
   dead:       { physY: [0, 120]     as [number, number] },
-  shade_kale: { physY: [120, 240]   as [number, number], count: 20, spacing: { row: 12, plant: 12 } },
-  kale_main:  { physY: [240, 360]   as [number, number], spacing: { row: 12, plant: 12 } },
-  buffer:     { physY: [360, 420]   as [number, number] },
-  potato:     { physY: [420, 540]   as [number, number], spacing: { row: 30, plant: 12 }, rows: 'ew' as const },
-  greens:     { physY: [540, 660]   as [number, number], spacing: { row: 12, plant: 6 } },
-  corn:       { physY: [660, 1080]  as [number, number], spacing: { row: 18, plant: 18 } },
+  greens:     { physY: [120, 240]   as [number, number], spacing: { row: 12, plant: 6 },
+                crop_ids: [LETTUCE_BSS.id, SPINACH_BLOOMSDALE.id] },
+  kale:       { physY: [240, 480]   as [number, number], spacing: { row: 12, plant: 12 },
+                crop_ids: [KALE_RED_RUSSIAN.id] },
+  potato:     { physY: [480, 600]   as [number, number], spacing: { row: 30, plant: 12 }, rows: 'ew' as const,
+                crop_ids: [POTATO_KENNEBEC.id] },
+  // 600-660: access pathway to trellis/channel
+  corn:       { physY: [660, 1080]  as [number, number], spacing: { row: 18, plant: 18 },
+                crop_ids: [CORN_NOTHSTINE_DENT.id] },
 };
 
 // --- Planting Dates ---
@@ -318,47 +321,18 @@ function generateInfrastructure(): InfrastructureFeature[] {
   return features;
 }
 
-function generateShadeKalePlants(totalKale: number): PlantInstance[] {
+function generateKalePlants(totalKale: number): PlantInstance[] {
   const plants: PlantInstance[] = [];
-  const shadeCount = Math.min(ZONE_CONFIG.shade_kale.count, totalKale);
   let count = 0;
 
-  const { row: skRow, plant: skPlant } = ZONE_CONFIG.shade_kale.spacing;
-  for (let physY = ZONE_CONFIG.shade_kale.physY[0]; physY < ZONE_CONFIG.shade_kale.physY[1] && count < shadeCount; physY += skRow) {
-    for (let physX = 6; physX < CROP_ZONE_SOUTH_EAST_X && count < shadeCount; physX += skPlant) {
+  const { row, plant } = ZONE_CONFIG.kale.spacing;
+  for (let physY = ZONE_CONFIG.kale.physY[0]; physY < ZONE_CONFIG.kale.physY[1] && count < totalKale; physY += row) {
+    for (let physX = 6; physX < CROP_ZONE_SOUTH_EAST_X && count < totalKale; physX += plant) {
       plants.push(createPlant(
-        `kale_shade_${count++}`, KALE_RED_RUSSIAN.id,
+        `kale_${count++}`, KALE_RED_RUSSIAN.id,
         physX, physY, 2, 2, KALE_DATE,
       ));
     }
-  }
-
-  return plants;
-}
-
-function generateKaleMainPlants(totalKale: number): PlantInstance[] {
-  const plants: PlantInstance[] = [];
-  const mainCount = Math.max(0, totalKale - ZONE_CONFIG.shade_kale.count);
-  let count = 0;
-
-  // 12" spacing both directions
-  const { row: kmRow, plant: kmPlant } = ZONE_CONFIG.kale_main.spacing;
-  for (let physY = ZONE_CONFIG.kale_main.physY[0]; physY < ZONE_CONFIG.kale_main.physY[1] && count < mainCount; physY += kmRow) {
-    for (let physX = 6; physX < CROP_ZONE_SOUTH_EAST_X && count < mainCount; physX += kmPlant) {
-      plants.push(createPlant(
-        `kale_main_${count++}`, KALE_RED_RUSSIAN.id,
-        physX, physY, 2, 2, KALE_DATE,
-      ));
-    }
-  }
-
-  // Marigolds near kale (disrupts cabbage moth host-finding)
-  let marigoldCount = 0;
-  for (const physX of [6, 90, 174]) {
-    plants.push(createPlant(
-      `marigold_kale_${marigoldCount++}`, MARIGOLD_FRENCH.id,
-      physX, ZONE_CONFIG.kale_main.physY[0] - 6, 2, 2, COMPANION_DATE,
-    ));
   }
 
   return plants;
@@ -426,7 +400,6 @@ function generatePotatoZonePlants(reqs: ZonePlantRequest[]): PlantInstance[] {
   const potatoDate = reqs[0]?.planting_date ?? POTATO_DATE;
 
   let potatoCount = 0;
-  let marigoldCount = 0;
 
   // E-W rows: physY steps by 30" (row spacing), physX steps by 12" (plant spacing)
   const { row: pRow, plant: pPlant } = ZONE_CONFIG.potato.spacing;
@@ -435,18 +408,6 @@ function generatePotatoZonePlants(reqs: ZonePlantRequest[]): PlantInstance[] {
       plants.push(createPlant(
         `potato_${potatoCount++}`, POTATO_KENNEBEC.id,
         physX, physY, 2, 2, potatoDate,
-      ));
-    }
-
-    // Marigolds at both ends of every other row (Colorado potato beetle)
-    if (Math.floor((physY - ZONE_CONFIG.potato.physY[0]) / 30) % 2 === 0) {
-      plants.push(createPlant(
-        `marigold_potato_${marigoldCount++}`, MARIGOLD_FRENCH.id,
-        6, physY, 2, 2, COMPANION_DATE,
-      ));
-      plants.push(createPlant(
-        `marigold_potato_${marigoldCount++}`, MARIGOLD_FRENCH.id,
-        CROP_ZONE_SOUTH_EAST_X, physY, 2, 2, COMPANION_DATE,
       ));
     }
   }
@@ -563,27 +524,14 @@ function generateTrellisPlants(
   return plants;
 }
 
-function generateBufferZonePlants(): PlantInstance[] {
+function resolveAllCompanions(): PlantInstance[] {
   const plants: PlantInstance[] = [];
-
-  // Calendula: beneficial insect attractor strip between potato and kale zones
-  let calendulaCount = 0;
-  for (let physX = 30; physX < CROP_ZONE_SOUTH_EAST_X; physX += 36) {
-    plants.push(createPlant(
-      `calendula_${calendulaCount++}`, CALENDULA.id,
-      physX, ZONE_CONFIG.buffer.physY[0] + 15, 2, 2, COMPANION_DATE,
-    ));
+  for (const [name, zone] of Object.entries(ZONE_CONFIG)) {
+    if (!('crop_ids' in zone)) continue;
+    const { crop_ids, physY } = zone as { crop_ids: string[]; physY: [number, number] };
+    const eastX = physY[0] >= 660 ? CROP_ZONE_NORTH_EAST_X : CROP_ZONE_SOUTH_EAST_X;
+    plants.push(...resolveZoneCompanions(name, crop_ids, physY, eastX, GARDEN_SPECIES_MAP, COMPANION_DATE));
   }
-
-  // Nasturtium strip
-  let nastCount = 0;
-  for (let physX = 30; physX < CROP_ZONE_SOUTH_EAST_X; physX += 36) {
-    plants.push(createPlant(
-      `nasturtium_buffer_${nastCount++}`, NASTURTIUM.id,
-      physX, ZONE_CONFIG.buffer.physY[0] + 30, 2, 2, COMPANION_DATE,
-    ));
-  }
-
   return plants;
 }
 
@@ -592,7 +540,7 @@ function generateBufferZonePlants(): PlantInstance[] {
 function validateZoneCapacity(alloc: ZoneAllocation): void {
   const limits: Array<{ name: string; requested: number; capacity: number }> = [
     { name: 'Greens', requested: sumReqs([...alloc.greens.lettuce, ...alloc.greens.spinach]), capacity: 490 },
-    { name: 'Kale (total)', requested: sumReqs(alloc.kale), capacity: 270 },
+    { name: 'Kale', requested: sumReqs(alloc.kale), capacity: 500 },
     { name: 'Potato', requested: sumReqs(alloc.potato), capacity: 96 },
     { name: 'Corn', requested: sumReqs(alloc.corn), capacity: 264 },
     { name: 'Cherry trellis', requested: sumReqs(alloc.trellis.cherry), capacity: 53 },
@@ -625,14 +573,13 @@ export function createGardenStateFromPlan(plan: CropPlanting[]): GardenState {
 
   const subcells = generateSubcells();
   const infrastructure = generateInfrastructure();
-  const shadeKale = generateShadeKalePlants(totalKale);
-  const kaleMain = generateKaleMainPlants(totalKale);
   const greens = generateGreensPlants(allocation.greens);
+  const kale = generateKalePlants(totalKale);
   const potatoes = generatePotatoZonePlants(allocation.potato);
   const corn = generateCornFieldPlants(allocation.corn);
   const trellis = generateTrellisPlants(allocation.trellis.cherry, allocation.trellis.paste);
-  const buffer = generateBufferZonePlants();
-  const plants = [...shadeKale, ...kaleMain, ...greens, ...potatoes, ...corn, ...trellis, ...buffer];
+  const companions = resolveAllCompanions();
+  const plants = [...greens, ...kale, ...potatoes, ...corn, ...trellis, ...companions];
 
   // Link plants to their root subcells
   const subcellMap = new Map<string, SubcellState>();

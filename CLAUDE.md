@@ -263,3 +263,102 @@ node ~/.claude/debug-tools/debug-server.js    # Start debug server
 cat .claude/debug-logs/browser-logs.jsonl     # Browser event stream
 cat .claude/debug-logs/capture-latest.json    # DOM/state snapshot
 ```
+
+---
+
+## Playwright UI Testing (MCP)
+
+Canvas-based app — standard DOM selectors can't reach rendered plants. Use these patterns:
+
+### Navigation & Buttons
+```
+browser_navigate → http://localhost:3000
+browser_click ref=<button_ref>          # Year selector, tab buttons
+browser_snapshot                         # Get accessible DOM tree + refs
+```
+
+### Viewport Control (Zustand store persisted in localStorage)
+Canvas zoom/pan is handled by `useCanvasControls` wheel listener on the `<canvas>` element.
+Playwright `mouse.wheel()` fires at page level and does NOT reach canvas listeners.
+Use localStorage + reload instead:
+```js
+browser_evaluate: () => {
+  const stored = localStorage.getItem('garden-twin-storage');
+  const parsed = JSON.parse(stored);
+  parsed.state.viewport = { offsetX: 200, offsetY: 80, scale: 0.15 };
+  localStorage.setItem('garden-twin-storage', JSON.stringify(parsed));
+}
+browser_navigate → http://localhost:3000   // reload to apply
+```
+
+### Scale Reference
+| scale | View                | Plants render as |
+|-------|---------------------|------------------|
+| 0.10  | Entire garden       | Colored dots     |
+| 0.15  | Full garden + panel | Colored dots     |
+| 0.25  | Half garden         | Colored squares  |
+| 0.50  | Zone detail         | Emoji icons      |
+| 1.00  | Subcell detail      | Emoji + grid     |
+
+### Timeline Scrubbing
+React-controlled slider — use native setter to bypass React's synthetic events:
+```js
+browser_evaluate: () => {
+  const slider = document.querySelector('input[type="range"]');
+  const setter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype, 'value').set;
+  setter.call(slider, '100');  // day index 0-223
+  slider.dispatchEvent(new Event('input', { bubbles: true }));
+}
+```
+
+### Hover / Tooltip Testing
+`mouse.move(x, y)` triggers React's `onMouseMove` on the map container div. The challenge is precision — you must land on an **occupied subcell** (3" grid). Plant subcell positions don't align to obvious pixel positions.
+
+**Get exact positions via React fiber:**
+```js
+browser_evaluate: () => {
+  const root = document.getElementById('root');
+  const key = Object.keys(root).find(k => k.startsWith('__reactContainer'));
+  let fiber = root[key], gardenState = null, visited = new Set();
+  function walk(f, d) {
+    if (!f || d > 200 || visited.has(f) || gardenState) return;
+    visited.add(f);
+    if (f.memoizedState) {
+      let h = f.memoizedState, hi = 0;
+      while (h && hi < 30) {
+        const s = h.memoizedState;
+        if (s?.plants && Array.isArray(s.plants)) gardenState = s;
+        h = h.next; hi++;
+      }
+    }
+    if (f.child) walk(f.child, d+1);
+    if (f.sibling) walk(f.sibling, d+1);
+  }
+  walk(fiber, 0);
+  // Find plant subcells, compute page coords from viewport
+  const {offsetX, offsetY, scale} = JSON.parse(
+    localStorage.getItem('garden-twin-storage')).state.viewport;
+  const PPI = 10, mapTop = 34.4;
+  const plant = gardenState.plants.find(p => p.species_id === 'potato_kennebec');
+  const [,x,y] = plant.occupied_subcells[0].split('_').map(Number);
+  return { pageX: (x-offsetX)*scale*PPI, pageY: (y-offsetY)*scale*PPI + mapTop };
+}
+// Then: mouse.move(pageX, pageY) → tooltip appears
+```
+
+**Key gotcha**: subcell x_in values for potato rows are at specific multiples (e.g., 684, 714, 744, 774 — 30" row spacing). Missing by a few inches = no hit.
+
+### Canvas Inspection
+```js
+browser_evaluate: () => {
+  const canvas = document.querySelector('canvas');
+  return JSON.stringify({ width: canvas.width, height: canvas.height });
+}
+```
+
+### Key DOM Refs (from browser_snapshot)
+- Year buttons: `button "10yr Avg"`, `button "2025 Live"`, etc.
+- Tab buttons: `button "Conditions"`, `button "Harvest"`, `button "Labor"`
+- Slider: `slider` element, also `input[type="number"]` for direct day entry
+- Right panel: contains date, alive/dead counts, weather, stage breakdown

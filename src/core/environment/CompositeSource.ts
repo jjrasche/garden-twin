@@ -19,6 +19,7 @@ export function createCompositeSource(
     location: observed.location,
     avg_last_frost: observed.avg_last_frost,
     avg_first_frost: observed.avg_first_frost,
+    avg_hard_frost: observed.avg_hard_frost,
 
     getConditions(date: Date) {
       const key = date.toISOString().slice(0, 10);

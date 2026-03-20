@@ -32,6 +32,8 @@ export interface ConditionsResolver {
   readonly avg_last_frost: Date;
   /** Average date of first fall frost (32°F) */
   readonly avg_first_frost: Date;
+  /** Average date of first hard freeze (25°F) — kills semi-hardy plants */
+  readonly avg_hard_frost: Date;
 
   /** Conditions for a single date, optionally at a specific position. */
   getConditions(date: Date, where?: { physY: number }): Omit<WeeklyConditions, 'week_start'>;

@@ -60,6 +60,7 @@ function computeDailyMoisture(entries: WeatherEntry[]): Map<string, number> {
 interface ObservedSourceOptions {
   last_frost?: Date;
   first_frost?: Date;
+  hard_frost?: Date;
 }
 
 export function createObservedSource(
@@ -77,12 +78,14 @@ export function createObservedSource(
   // Default frost dates: use historical averages if not provided
   const avg_last_frost = options.last_frost ?? new Date('2025-05-15');
   const avg_first_frost = options.first_frost ?? new Date('2025-09-29');
+  const avg_hard_frost = options.hard_frost ?? new Date('2025-10-25');
 
   return {
     source_type: 'observed',
     location: 'Grand Rapids, MI (42.96°N, Zone 6a)',
     avg_last_frost,
     avg_first_frost,
+    avg_hard_frost,
 
     getConditions(date: Date) {
       const key = date.toISOString().slice(0, 10);

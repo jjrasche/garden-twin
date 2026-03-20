@@ -11,6 +11,7 @@
 import type { GrowthStage } from '../types/GardenState';
 
 export interface GddStages {
+  germinated: number;
   vegetative: number;
   flowering: number;
   fruiting: number;
@@ -33,6 +34,7 @@ export function determineStage(accumulated_gdd: number, gdd_stages: GddStages): 
   if (accumulated_gdd >= gdd_stages.fruiting) return 'fruiting';
   if (accumulated_gdd >= gdd_stages.flowering) return 'flowering';
   if (accumulated_gdd >= gdd_stages.vegetative) return 'vegetative';
+  if (accumulated_gdd >= gdd_stages.germinated) return 'germinated';
   return 'seed';
 }
 

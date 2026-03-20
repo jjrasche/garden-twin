@@ -8,7 +8,7 @@
 import { useEffect, useRef } from 'react';
 import type { GardenState, PlantSpecies, SubcellState, InfrastructureFeature, ChannelFeature, MoundFeature } from '@core/types';
 import { worldToScreen, PIXELS_PER_INCH, type Viewport } from '../utils/canvasTransforms';
-import { drawPlantIcon, getPlantColor } from '../utils/plantIcons';
+import { drawPlantIcon, getPlantColor, getStageColor } from '../utils/plantIcons';
 import type { BrushCursor } from '../store/gardenStore';
 
 const SUBCELL_SIZE_IN = 3; // 3×3 inch subcells
@@ -96,7 +96,7 @@ export function useRenderLoop(
       }
 
       // Layer 4: Plants
-      drawPlantLayer(ctx, viewport, gardenState, speciesMap);
+      drawPlantLayer(ctx, viewport, gardenState, speciesMap, stageColors);
 
       // Layer 5: Brush cursor preview
       if (brushCursor) {
@@ -176,7 +176,8 @@ function drawSubcellLayer(
     if (speciesId) {
       // Stage color overrides species color when simulation is active
       const stageColor = stageColors?.get(actualSubcell.subcell_id);
-      ctx.fillStyle = stageColor ?? getPlantColor(speciesId);
+      // If sim active but no entry, plant didn't survive initialization — render as dead
+      ctx.fillStyle = stageColor ?? (stageColors ? getStageColor(speciesId, 'done', true) : getPlantColor(speciesId));
     } else if (terrainType !== 'planting') {
       // Non-plantable terrain - use terrain color
       ctx.fillStyle = TERRAIN_COLORS[terrainType] || TERRAIN_COLORS.planting || '#374151';
@@ -483,7 +484,8 @@ function drawPlantLayer(
   ctx: CanvasRenderingContext2D,
   viewport: Viewport,
   gardenState: GardenState,
-  _speciesMap: Map<string, PlantSpecies>
+  _speciesMap: Map<string, PlantSpecies>,
+  stageColors: Map<string, string> | null = null,
 ) {
   // Build a map of subcell_id -> position for efficient lookup
   const subcellPositions = new Map<string, { x_in: number; y_in: number }>();
@@ -493,11 +495,19 @@ function drawPlantLayer(
 
   // Render each plant in the garden
   gardenState.plants.forEach((plant) => {
+    // Skip dead plants — subcell layer already shows their dimmed color
+    if (stageColors) {
+      const stageColor = stageColors.get(plant.root_subcell_id);
+      if (!stageColor) return; // plant not in sim
+      // Check if dead by comparing to the dead color output
+      const deadColor = getStageColor(plant.species_id, 'done', true);
+      if (stageColor === deadColor) return;
+    }
+
     // Get plant position from root subcell
     const position = subcellPositions.get(plant.root_subcell_id);
-    if (!position) return; // Skip if root subcell not found
+    if (!position) return;
 
-    // Calculate center of subcell (icon stays centered in its subcell)
     const centerPos = worldToScreen(
       {
         x_in: position.x_in + SUBCELL_SIZE_IN / 2,
@@ -507,13 +517,12 @@ function drawPlantLayer(
     );
 
     if (viewport.scale >= 0.5) {
-      // Draw emoji icon at fixed readable size
-      const iconSize = 20; // Fixed size for readability
+      const iconSize = 20;
       drawPlantIcon(ctx, plant.species_id, centerPos, iconSize);
     } else {
-      // Show colored dot (icon too small to see)
       const dotRadius = Math.max(2, SUBCELL_SIZE_IN * PIXELS_PER_INCH * viewport.scale * 0.3);
-      ctx.fillStyle = getPlantColor(plant.species_id);
+      const stageColorVal = stageColors?.get(plant.root_subcell_id);
+      ctx.fillStyle = stageColorVal ?? getPlantColor(plant.species_id);
       ctx.beginPath();
       ctx.arc(centerPos.x, centerPos.y, dotRadius, 0, Math.PI * 2);
       ctx.fill();

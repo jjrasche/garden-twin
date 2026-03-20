@@ -59,7 +59,7 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
   icon: { emoji: '🥬', color: '#2E8B57' },
 
   stage_config: {
-    stage_sequence: ['seed', 'vegetative', 'done'],
+    stage_sequence: ['seed', 'germinated', 'vegetative', 'done'],
     productive_stages: ['vegetative'],
   } satisfies StageConfig,
 
@@ -70,7 +70,7 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
 
   phenology: {
     base_temp_f: 35,
-    gdd_stages: { vegetative: 80, flowering: 350, fruiting: 550, mature: 700 },
+    gdd_stages: { germinated: 20, vegetative: 80, flowering: 350, fruiting: 550, mature: 700 },
   },
 
   layout: {

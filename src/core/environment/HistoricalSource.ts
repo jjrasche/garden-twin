@@ -42,6 +42,7 @@ export function createGrandRapidsHistorical(): ConditionsResolver {
     location: 'Grand Rapids, MI (42.96°N, Zone 6a)',
     avg_last_frost: new Date('2025-05-15'),
     avg_first_frost: new Date('2025-09-29'),
+    avg_hard_frost: new Date('2025-10-25'),
 
     getConditions(date: Date) {
       const avg_high = interpolateMonthly(MONTHLY_AVG_HIGH_F, date);
