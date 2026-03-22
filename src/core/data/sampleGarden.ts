@@ -82,7 +82,7 @@ export const ZONE_CONFIG = {
   dead:       { physY: [0, 120]     as [number, number] },
   greens:     { physY: [120, 240]   as [number, number], spacing: { row: 12, plant: 6 },
                 crop_ids: [LETTUCE_BSS.id, SPINACH_BLOOMSDALE.id] },
-  kale:       { physY: [240, 480]   as [number, number], spacing: { row: 12, plant: 12 },
+  kale:       { physY: [240, 480]   as [number, number], spacing: { row: 18, plant: 18 },
                 crop_ids: [KALE_RED_RUSSIAN.id] },
   potato:     { physY: [480, 600]   as [number, number], spacing: { row: 30, plant: 12 }, rows: 'ew' as const,
                 crop_ids: [POTATO_KENNEBEC.id] },

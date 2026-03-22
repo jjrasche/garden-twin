@@ -1,6 +1,5 @@
 import { PlantSpecies } from '../../types';
 import type { StageConfig, StressTolerances } from '../../types/PlantState';
-import { SOIL_HEAVY_FEEDER, SOIL_HEAVY_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const POTATO_KENNEBEC: PlantSpecies = {
   id: 'potato_kennebec',
@@ -9,7 +8,6 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   plants_per_sq_ft: 0.40,
   height_ft: 3,
 
-  days_to_first_harvest: 90,
   germination_rate: 0.95,   // Tubers sprout reliably
   establishment_rate: 0.90, // Seed piece rot, early blight risk
 
@@ -18,7 +16,11 @@ export const POTATO_KENNEBEC: PlantSpecies = {
     { factor: 'soil_temp_f', curve: { 40: 0.1, 50: 0.5, 60: 0.9, 70: 1.0, 80: 0.7, 85: 0.4, 90: 0.1 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.2, 50: 0.45, 65: 0.85, 80: 1.0, 90: 1.0, 100: 0.95, 110: 0.6, 125: 0.05 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 0.2: 1.2, 0.4: 1.0, 0.8: 0.8, 1.5: 0.5 }, effect: 'growth_rate' as const },
-    ...SOIL_HEAVY_FEEDER_RESPONSES,
+    { factor: 'N_ppm', curve: { 20: 0.6, 50: 1.0, 100: 1.3, 150: 1.3 }, effect: 'growth_rate' as const },
+    { factor: 'P_ppm', curve: { 10: 0.7, 30: 1.0, 60: 1.2 }, effect: 'growth_rate' as const },
+    { factor: 'K_ppm', curve: { 50: 0.7, 120: 1.0, 200: 1.1 }, effect: 'growth_rate' as const },
+    { factor: 'pH', curve: { 5.5: 0.7, 6.5: 1.0, 7.5: 0.9, 8.0: 0.7 }, effect: 'growth_rate' as const },
+    { factor: 'compaction_psi', curve: { 0: 1.0, 200: 0.9, 400: 0.7 }, effect: 'growth_rate' as const },
     // Short-day promotion of tuberization. Kennebec is intermediate day-length
     // sensitivity. Long days (>14h) delay tuber initiation; short days accelerate.
     // Source: CIP (International Potato Center), Ewing & Struik 1992.
@@ -34,7 +36,13 @@ export const POTATO_KENNEBEC: PlantSpecies = {
     // FAO p=0.35, Ky=1.1. Narrow optimal band. Devastating waterlogging:
     // 64% yield loss in 2 days (ISHS). Sources: FAO 33/56, UC Davis IPM.
     soil_moisture_pct_fc: { 20: 0.0, 40: 0.2, 50: 0.45, 65: 0.85, 80: 1.0, 90: 1.0, 100: 0.95, 110: 0.6, 125: 0.05 },
-    soil: SOIL_HEAVY_FEEDER,
+    soil: {
+      N_ppm: { 20: 0.6, 50: 1.0, 100: 1.3, 150: 1.3 },
+      P_ppm: { 10: 0.7, 30: 1.0, 60: 1.2 },
+      K_ppm: { 50: 0.7, 120: 1.0, 200: 1.1 },
+      pH: { 5.5: 0.7, 6.5: 1.0, 7.5: 0.9, 8.0: 0.7 },
+      compaction_psi: { 0: 1.0, 200: 0.9, 400: 0.7 },
+    },
     spacing_plants_per_sq_ft: { 0.2: 1.2, 0.4: 1.0, 0.8: 0.8, 1.5: 0.5 },
   },
 
@@ -60,6 +68,7 @@ export const POTATO_KENNEBEC: PlantSpecies = {
 
   phenology: {
     base_temp_f: 40,
+    ceiling_temp_f: 85,
     gdd_stages: { germinated: 50, vegetative: 350, flowering: 900, fruiting: 1200, mature: 1700 },
   },
 

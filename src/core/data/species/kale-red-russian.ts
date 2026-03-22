@@ -1,6 +1,5 @@
 import { PlantSpecies } from '../../types';
 import type { StageConfig } from '../../types/PlantState';
-import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const KALE_RED_RUSSIAN: PlantSpecies = {
   id: 'kale_red_russian',
@@ -9,7 +8,6 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   plants_per_sq_ft: 0.44,
   height_ft: 3,
 
-  days_to_first_harvest: 50,
   germination_rate: 1.00,   // Transplant — dead blocks never reach the field
   establishment_rate: 0.97, // Very hardy; minimal seedling loss
 
@@ -18,14 +16,24 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
     { factor: 'temperature_f', curve: { 35: 0.3, 45: 0.6, 55: 0.9, 65: 1.0, 75: 0.8, 85: 0.6 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.3, 55: 0.75, 75: 1.0, 85: 1.0, 100: 0.85, 120: 0.15 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 0.2: 1.2, 0.44: 1.0, 0.8: 0.8, 1.5: 0.5 }, effect: 'growth_rate' as const },
-    ...SOIL_LIGHT_FEEDER_RESPONSES,
+    { factor: 'N_ppm', curve: { 10: 0.7, 30: 1.0, 60: 1.0, 120: 0.8 }, effect: 'growth_rate' as const },
+    { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'K_ppm', curve: { 40: 0.8, 100: 1.0, 180: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'pH', curve: { 5.5: 0.7, 6.5: 1.0, 7.5: 0.9, 8.0: 0.7 }, effect: 'growth_rate' as const },
+    { factor: 'compaction_psi', curve: { 0: 1.0, 200: 0.9, 400: 0.7 }, effect: 'growth_rate' as const },
   ],
 
   modifiers: {
     // Monotonic — more DLI = more growth. Kale tolerates shade but grows
     // faster in sun. Bolt risk is vernalization-driven (year 2), not sun.
     sun: { 4: 0.6, 6: 0.9, 8: 1.0, 10: 1.0 },
-    soil: SOIL_LIGHT_FEEDER,
+    soil: {
+      N_ppm: { 10: 0.7, 30: 1.0, 60: 1.0, 120: 0.8 },
+      P_ppm: { 10: 0.8, 25: 1.0, 50: 1.0 },
+      K_ppm: { 40: 0.8, 100: 1.0, 180: 1.0 },
+      pH: { 5.5: 0.7, 6.5: 1.0, 7.5: 0.9, 8.0: 0.7 },
+      compaction_psi: { 0: 1.0, 200: 0.9, 400: 0.7 },
+    },
     spacing_plants_per_sq_ft: { 0.2: 1.2, 0.44: 1.0, 0.8: 0.8, 1.5: 0.5 },
     // Kale grows best at 55-75°F, optimum 60-70°F. Above 75°F: slower
     // growth, bitter flavor. Below 40°F: growth slows. Frost sweetens
@@ -54,6 +62,7 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
 
   phenology: {
     base_temp_f: 40,
+    ceiling_temp_f: 85,
     gdd_stages: { germinated: 20, vegetative: 80, flowering: 450, fruiting: 750, mature: 1100 },
   },
 
@@ -71,6 +80,14 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   },
 
   seed_cost_per_plant: 0.05,
+
+  // Flavor: sugar increases with cold (starch→sugar conversion for frost hardening).
+  // Starts in single-digit C (34-40°F), peaks sub-freezing. Glucosinolates also increase
+  // with cold — positive for kale (peppery bite). High temps = bland.
+  // Sources: University of Oldenburg (uol.de), SciTechDaily, PubMed 25529650
+  flavor_response: [
+    { factor: 'temperature_f', curve: { 15: 1.0, 25: 0.95, 35: 0.8, 45: 0.5, 55: 0.3, 65: 0.2, 80: 0.15 }, compound: 'sugar' },
+  ],
 
   data_confidence: 'high',
   sources: [

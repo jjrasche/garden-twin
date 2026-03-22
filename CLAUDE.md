@@ -91,94 +91,13 @@ y_in = 360 - physX    (east-west → top-bottom)
 
 ## Garden Layout
 
-### Overall Structure
+**Full layout reference: `docs/garden-layout.md`** — zones, spacing, area, channel, trellis, tomato placement.
 
-```
-PHYSICAL LAYOUT (south at bottom, north at top):
+Layout driven by `ZONE_CONFIG` in `sampleGarden.ts`. Plant counts from `PRODUCTION_PLAN` in `ProductionTimeline.ts`.
+All spacings match species files (validated 2026-03-21). No overrides.
 
-physY=1200 ──── North End ────────────────────────
-  │  Corn field (physY 660-1080, 18" grid)
-  │  Greens zone (physY 540-660, lettuce + spinach)
-  │  Potato zone (physY 420-540, E-W rows)
-  │  Buffer zone (physY 360-420, companions)
-  │  Kale main (physY 240-360, full sun)
-  │  Shade kale comparison (physY 120-240, ~20 plants)
-  │  Channel + trellis runs along east side
-physY=0 ──── South End (40ft tree, shade + roots) ─
-  physX=0 (west)                    physX=360 (east)
-```
-
-Layout is driven by `ZONE_CONFIG` in `sampleGarden.ts` — a declarative config object.
-To rearrange zones, change physY ranges there. Generators read from config.
-
-### Species Catalog (11 plants)
-
-Split into individual files under `src/core/data/species/`:
-- Corn (Nothstine Dent), Potato (Kennebec)
-- Tomato (Sun Gold, Amish Paste)
-- Lettuce (BSS), Kale (Red Russian), Spinach (Bloomsdale)
-- Marigold (French), Nasturtium (Trailing), Calendula
-
-Dropped: Sweetie tomato, catnip, parsley, cilantro, spearmint.
-
-### Zones (south to north)
-
-- **Dead zone** (physY 0-120): heavy shade + tree roots, pathways only
-- **Shade kale** (physY 120-240): ~20 kale for shade vs sun comparison
-- **Kale main** (physY 240-360): 100 kale, 12" spacing, full sun
-- **Buffer zone** (physY 360-420): calendula + nasturtium companion strips
-- **Potato zone** (physY 420-540): 88 plants, E-W rows for drainage, 30" row / 12" plant
-- **Greens zone** (physY 540-660): spring lettuce, fall spinach+lettuce (overlapping subcells)
-- **Corn field** (physY 660-1080): 18" equidistant grid, capped at plan count
-- **Trellis tomatoes** (physY 240-1200): along channel, 18" spacing
-
-Plant counts driven by `PRODUCTION_PLAN` in `ProductionTimeline.ts` (single source of truth).
-
-### Channel Path
-
-Ephemeral water channel along the east side. Three segments:
-
-```
-Segment 1 -- Straight north along east edge:
-  (336, 0) -> (336, 660)    55ft straight run, 2ft from east boundary
-
-Segment 2 -- Gradual westward curve:
-  (336, 660) -> (288, 720) -> (240, 780)    10ft transition, 8ft westward
-
-Segment 3 -- Straight north, offset west:
-  (240, 780) -> (240, 1200)    35ft straight run, 10ft from east boundary
-```
-
-Cross-section: 12" water center + 6" log border each side = 24" total width.
-
-`getChannelCenterX(physY)` returns the interpolated center X at any physY. Linear interpolation between physY 660-780 for the bend.
-
-Crop zone boundaries:
-- `CROP_ZONE_SOUTH_EAST_X = 300` (physY < 660, channel at 336)
-- `CROP_ZONE_NORTH_EAST_X = 204` (physY >= 660, channel at 240)
-
-### Trellis
-
-Single trellis following the channel path. T-posts every 120" (10ft) in the water channel. Wire height: 72" (6ft). The trellis data model has only `start` and `end` points — the renderer uses the **channel's** path waypoints for accurate wire routing along the curve.
-
-### Tomato Placement
-
-- **Cherry tomatoes** (Sun Gold + Sweetie, alternating) planted WEST of channel at `channelX - 12`
-  - `occupied_subcells` extend EASTWARD over water (using `-dy` in screen coords)
-- **Paste tomatoes** (Amish Paste) planted EAST of channel at `channelX + 12`
-  - `occupied_subcells` extend WESTWARD over water (using `+dy` in screen coords)
-- Footprint: 2x6 subcells (6" wide x 18" along trellis)
-- 18" spacing along channel, starting at physY=240 (skips shade zone)
-- Nasturtium trap crops at `channelX - 84` (72" separation from cherry tomatoes)
-- Through the bend zone: uses interpolated `getChannelCenterX(physY)`
-
-### Lettuce Zone
-
-- South 20ft of garden (physY 0-240)
-- 12 succession batches, 20" strip spacing (`batch * 20`), no overlap
-- 33 plants per batch, 6" spacing
-- Each plant: 2x2 subcell footprint (6" diameter) — 4 subcells per plant
-- Partially shaded (physY 0-120 heavy shade, 120-240 moderate shade)
+Quick zone reference (south to north):
+- Dead (0-120) | Greens (120-240) | Kale (240-480) | Potato (480-600) | Corn (660-1080) | Trellis (240-1200)
 
 ---
 

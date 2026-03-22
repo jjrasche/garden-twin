@@ -12,7 +12,7 @@ import type { PlantInstance } from '../types/GardenState';
 import type { ConditionsResolver } from '../environment/types';
 import { computeDailyGdd } from '../calculators/gddEngine';
 import { resolveHarvestStrategy } from '../calculators/strategyResolver';
-import { daysBetween, computeDeathDate, buildCutSchedule } from '../calculators/growthMath';
+import { daysBetween, computeDeathDate, calibrateCacPotential } from '../calculators/growthMath';
 
 /** Seeded PRNG (mulberry32) for deterministic survival selection. */
 function mulberry32(seed: number): () => number {
@@ -44,12 +44,13 @@ function selectDeadIndices(total: number, deadCount: number, seed: number): Set<
 function estimateGddDate(
   plant_date: Date, target_gdd: number, base_temp_f: number,
   env: ConditionsResolver, limit: Date,
+  ceiling_temp_f?: number,
 ): Date {
   let accumulated = 0;
   const scan = new Date(plant_date);
   while (scan <= limit && accumulated < target_gdd) {
     const cond = env.getConditions(scan);
-    accumulated += computeDailyGdd(cond.avg_high_f, cond.avg_low_f, base_temp_f);
+    accumulated += computeDailyGdd(cond.avg_high_f, cond.avg_low_f, base_temp_f, ceiling_temp_f);
     scan.setDate(scan.getDate() + 1);
   }
   return new Date(scan);
@@ -67,28 +68,31 @@ function computeDailyPotential(
   const phenology = species.phenology;
 
   if (strategy.type === 'cut_and_come_again') {
-    const cuts = buildCutSchedule(plant_date, species, strategy, env);
-    if (cuts) return { daily_potential: cuts.daily_potential, vigor: cuts.vigors[0]! };
-    return { daily_potential: baseline / Math.max(1, species.days_to_first_harvest), vigor: 1.0 };
+    const { daily_potential, initial_vigor } = calibrateCacPotential(strategy);
+    return { daily_potential, vigor: initial_vigor };
   }
 
-  if (strategy.type === 'bulk' && phenology) {
-    const fruiting_date = estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end);
-    const mature_date = estimateGddDate(plant_date, phenology.gdd_stages.mature, phenology.base_temp_f, env, season_end);
+  if (!phenology) return { daily_potential: 0, vigor: 1.0 };
+
+  if (strategy.type === 'bulk') {
+    const fruiting_date = estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end, phenology.ceiling_temp_f);
+    const mature_date = estimateGddDate(plant_date, phenology.gdd_stages.mature, phenology.base_temp_f, env, season_end, phenology.ceiling_temp_f);
     const productive_days = Math.max(1, daysBetween(fruiting_date, mature_date));
     return { daily_potential: baseline / productive_days, vigor: 1.0 };
   }
 
   if (strategy.type === 'continuous') {
-    const productive_start = phenology
-      ? estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end)
-      : new Date(plant_date.getTime() + species.days_to_first_harvest * 86_400_000);
+    const productive_start = estimateGddDate(plant_date, phenology.gdd_stages.fruiting, phenology.base_temp_f, env, season_end, phenology.ceiling_temp_f);
     const death_date = computeDeathDate(species, productive_start, env, season_end);
     const alive_days = Math.max(7, daysBetween(productive_start, death_date));
     return { daily_potential: baseline / alive_days, vigor: 1.0 };
   }
 
-  return { daily_potential: baseline / Math.max(1, species.days_to_first_harvest), vigor: 1.0 };
+  // Fallback: estimate productive window from GDD phenology
+  const est_start = estimateGddDate(plant_date, phenology.gdd_stages.vegetative, phenology.base_temp_f, env, season_end, phenology.ceiling_temp_f);
+  const est_end = computeDeathDate(species, est_start, env, season_end);
+  const est_days = Math.max(7, daysBetween(est_start, est_end));
+  return { daily_potential: baseline / est_days, vigor: 1.0 };
 }
 
 /** Group key for plants that share the same growth parameters. */
@@ -140,6 +144,8 @@ export function initPlantStates(
     const dead_count = instances.length - surviving_count;
     const seed = representative.species_id.length * 31 + instances.length;
     const deadIndices = selectDeadIndices(instances.length, dead_count, seed);
+    const boltRng = mulberry32(seed ^ 0xBEEF);
+    const frostRng = mulberry32(seed ^ 0xDEAD);
 
     for (let i = 0; i < instances.length; i++) {
       const instance = instances[i]!;
@@ -158,6 +164,8 @@ export function initPlantStates(
         vigor,
         daily_potential,
         stress: createStressCounters(),
+        bolt_resistance: boltRng(),
+        frost_resistance: frostRng(),
         is_harvestable: false,
         is_dead: !survived,
       });

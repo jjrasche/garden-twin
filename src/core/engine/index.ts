@@ -1,5 +1,10 @@
 export { tickPlant, tickDay } from './tickDay';
 export type { TickResult, DayResult } from './tickDay';
-export { simulateGrowth, harvestPlant, collectSnapshots, simulateFromState } from './simulate';
-export type { HarvestPolicy, SimulationResult, DaySnapshot } from './simulate';
+export { simulateGrowth, harvestPlant, collectSnapshots, simulateFromState, simulateWithTasks } from './simulate';
+export type { HarvestPolicy, SimulationResult, DaySnapshot, SimulationContext, SuccessionConfig } from './simulate';
 export { initPlantStates } from './initPlantStates';
+export { evaluateTrigger } from './evaluateTrigger';
+export { generateTasksFromLifecycle } from './generateTasksFromLifecycle';
+export { planDay } from './operationalPlanner';
+export type { PlannerInput, PlannerResult } from './operationalPlanner';
+export { adaptSeasonTasks } from './adaptSeasonTasks';

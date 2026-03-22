@@ -1,5 +1,4 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_COMPANION, SOIL_COMPANION_RESPONSES } from './shared-modifiers';
 
 export const NASTURTIUM: PlantSpecies = {
   id: 'nasturtium',
@@ -8,7 +7,6 @@ export const NASTURTIUM: PlantSpecies = {
   plants_per_sq_ft: 1.0,
   height_ft: 1.0,
 
-  days_to_first_harvest: 45,
   germination_rate: 0.95,   // Large seeds; direct sow after frost
   establishment_rate: 0.95, // Frost-tender but planted post-frost
 
@@ -16,12 +14,22 @@ export const NASTURTIUM: PlantSpecies = {
     { factor: 'sun_hours', curve: { 4: 0.4, 6: 0.8, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 15: 0.0, 35: 0.5, 50: 0.75, 70: 1.0, 85: 1.0, 100: 0.85, 115: 0.5, 130: 0.15 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 0.5: 1.1, 1.0: 1.0, 2.0: 0.8, 3.0: 0.5 }, effect: 'growth_rate' as const },
-    ...SOIL_COMPANION_RESPONSES,
+    { factor: 'N_ppm', curve: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 }, effect: 'growth_rate' as const },
+    { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'K_ppm', curve: { 40: 0.8, 100: 1.0, 180: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'pH', curve: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 }, effect: 'growth_rate' as const },
+    { factor: 'compaction_psi', curve: { 0: 1.0, 200: 0.95, 400: 0.8 }, effect: 'growth_rate' as const },
   ],
 
   modifiers: {
     sun: { 4: 0.4, 6: 0.8, 8: 1.0, 10: 1.0 },
-    soil: SOIL_COMPANION,
+    soil: {
+      N_ppm: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 },
+      P_ppm: { 10: 0.8, 25: 1.0, 50: 1.0 },
+      K_ppm: { 40: 0.8, 100: 1.0, 180: 1.0 },
+      pH: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 },
+      compaction_psi: { 0: 1.0, 200: 0.95, 400: 0.8 },
+    },
     spacing_plants_per_sq_ft: { 0.5: 1.1, 1.0: 1.0, 2.0: 0.8, 3.0: 0.5 },
     // Drought-tolerant ("tolerant of drought and neglect" — WI Extension).
     // Optimal shifted dry: excess moisture pushes foliage over flowers. Very waterlogging-sensitive.
@@ -45,6 +53,7 @@ export const NASTURTIUM: PlantSpecies = {
 
   phenology: {
     base_temp_f: 50,
+    ceiling_temp_f: 90,
     gdd_stages: { germinated: 40, vegetative: 100, flowering: 500, fruiting: 700, mature: 700 },
   },
 

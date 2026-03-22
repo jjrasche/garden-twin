@@ -81,6 +81,16 @@ export const PlantStateSchema = z.object({
   // Stress tracking
   stress: StressCountersSchema,
 
+  // Per-plant random threshold for survival checks (statistical bolting).
+  // Plants with high bolt_resistance bolt earlier (when survival is still high).
+  // Assigned once during init from seeded PRNG.
+  bolt_resistance: z.number().min(0).max(1),
+
+  // Per-plant random threshold for probabilistic frost kill.
+  // Separate from bolt_resistance — cold hardiness is independent of bolt tendency.
+  // Plants with high frost_resistance survive colder nights.
+  frost_resistance: z.number().min(0).max(1),
+
   // Derived (set by engine each tick)
   is_harvestable: z.boolean(),
   is_dead: z.boolean(),

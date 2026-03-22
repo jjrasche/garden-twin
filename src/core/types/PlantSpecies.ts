@@ -132,7 +132,21 @@ export const GrowthResponseSchema = z.object({
 export type GrowthResponse = z.infer<typeof GrowthResponseSchema>;
 
 /**
- * GDD-based phenology — replaces calendar days_to_first_harvest.
+ * Flavor response — maps environmental conditions to flavor compound levels.
+ * compound: what's being measured (e.g., 'sugar', 'lactucin', 'brix')
+ * The curve maps the condition factor to a 0-1 intensity level.
+ * Higher values = more of that compound.
+ */
+export const FlavorResponseSchema = z.object({
+  factor: z.string(),           // 'temperature_f', 'photoperiod_h', etc.
+  curve: LookupTableSchema,     // condition value → compound intensity (0-1)
+  compound: z.string(),         // 'sugar', 'lactucin', 'brix', 'glucosinolate'
+});
+
+export type FlavorResponse = z.infer<typeof FlavorResponseSchema>;
+
+/**
+ * GDD-based phenology — stage transitions driven by accumulated thermal units.
  *
  * GDD (Growing Degree Days) = max(0, (high + low) / 2 - base_temp_f).
  * Stage transitions occur when accumulated GDD crosses thresholds.
@@ -140,6 +154,9 @@ export type GrowthResponse = z.infer<typeof GrowthResponseSchema>;
  */
 export const PhenologySchema = z.object({
   base_temp_f: z.number(),
+  /** Upper development cap — GDD stops accumulating above this temp.
+   *  Prevents unrealistic stage acceleration on extreme heat days. */
+  ceiling_temp_f: z.number().optional(),
   gdd_stages: z.object({
     germinated: z.number(),
     vegetative: z.number(),
@@ -223,8 +240,6 @@ export const PlantSpeciesSchema = z.object({
   plants_per_sq_ft: z.number().min(0),  // Recommended planting density
   height_ft: z.number().min(0),         // Mature height
 
-  // Timing (days from planting)
-  days_to_first_harvest: z.number().int().min(0),
 
   // Survival decomposition: tracks seed→plant and plant→harvest independently.
   // germination_rate: fraction of seeds/tubers that emerge (1.0 for transplants).
@@ -234,10 +249,14 @@ export const PlantSpeciesSchema = z.object({
   // Combined: survivalRate(species) = positionSurvival × establishment_rate
   germination_rate: z.number().min(0).max(1),
   establishment_rate: z.number().min(0).max(1),
-  seeds_per_hole: z.number().int().min(1).default(1),
+  seeds_per_hole: z.number().int().min(1).optional(),
 
   // Declarative modifier curves (replaces flat modifiers — Phase 1)
   growth_response: z.array(GrowthResponseSchema).optional(),
+
+  // Flavor response — maps conditions to flavor compound levels.
+  // Used for predicting taste quality (bitterness, sweetness, Brix).
+  flavor_response: z.array(FlavorResponseSchema).optional(),
 
   // @deprecated — use growth_response. Kept for calculator migration (Phase 3/4).
   modifiers: ModifiersSchema,

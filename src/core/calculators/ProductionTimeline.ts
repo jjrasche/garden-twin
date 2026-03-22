@@ -14,8 +14,9 @@ import { PlantSpecies } from '../types';
 import { ConditionsResolver, createGrandRapidsHistorical } from '../environment';
 import { type SunZone } from './growthMath';
 import type { PlantInstance } from '../types/GardenState';
+import type { SuccessionTrigger } from '../types/Succession';
 import { initPlantStates } from '../engine/initPlantStates';
-import { collectSnapshots } from '../engine/simulate';
+import { collectSnapshots, type SuccessionConfig, type SimulationContext } from '../engine/simulate';
 export type { SunZone };
 
 import { LETTUCE_BSS } from '../data/species/lettuce-bss';
@@ -27,6 +28,17 @@ import { TOMATO_SUN_GOLD } from '../data/species/tomato-sun-gold';
 import { POTATO_KENNEBEC } from '../data/species/potato-kennebec';
 import { CORN_NOTHSTINE_DENT } from '../data/species/corn-nothstine-dent';
 
+export interface SuccessorSpec {
+  species: PlantSpecies;
+  display_group: DisplayGroup;
+  plant_count: number;
+  harvest_strategy_id?: string;
+  stagger_days?: number;
+  trigger: SuccessionTrigger;
+  /** Days between trigger firing and actual planting (soil prep, pulling dead plants). */
+  delay_days: number;
+}
+
 export interface CropPlanting {
   species: PlantSpecies;
   display_group: DisplayGroup;
@@ -34,6 +46,14 @@ export interface CropPlanting {
   planting_date: string;
   zone: SunZone;
   harvest_strategy_id?: string;
+  /** Spread planting across this many days from planting_date.
+   *  Each plant gets an evenly distributed offset so GDD accumulation
+   *  and harvest cycles interleave naturally. 0 or undefined = all same day. */
+  stagger_days?: number;
+  /** What to plant after this crop finishes, in the same physical zone. */
+  successor?: SuccessorSpec;
+  /** Links to ZONE_CONFIG key for spatial position reuse by successor. */
+  zone_id?: string;
 }
 
 export const GR_HISTORICAL = createGrandRapidsHistorical();
@@ -59,69 +79,50 @@ const DISPLAY_GROUPS = [
 
 export type DisplayGroup = (typeof DISPLAY_GROUPS)[number];
 
-// ── Planting Helpers ────────────────────────────────────────────────────────
-
-function createSuccessionPlantings(
-  species: PlantSpecies,
-  display_group: DisplayGroup,
-  total_plants: number,
-  batch_count: number,
-  first_planting: string,
-  interval_days: number,
-  zone: SunZone,
-): CropPlanting[] {
-  const plants_per_batch = Math.round(total_plants / batch_count);
-  const start = new Date(first_planting);
-
-  return Array.from({ length: batch_count }, (_, i) => {
-    const date = new Date(start);
-    date.setDate(date.getDate() + i * interval_days);
-    return { species, display_group, plant_count: plants_per_batch, planting_date: date.toISOString().slice(0, 10), zone };
-  });
-}
-
-function createSinglePlanting(
-  species: PlantSpecies,
-  display_group: DisplayGroup,
-  plant_count: number,
-  planting_date: string,
-  zone: SunZone,
-): CropPlanting {
-  return { species, display_group, plant_count, planting_date, zone };
-}
-
 // ── Production Plan ─────────────────────────────────────────────────────────
 // Consumption-backwards: family of 4 + distribution to 5-10 households
-// Adjust plant_count values here to change the plan.
+// Adjust plant_count and stagger_days here to change the plan.
+// stagger_days spreads planting across N days so harvest cycles interleave.
 
 export const PRODUCTION_PLAN: CropPlanting[] = [
   // ── Spring/Fall greens ──────────────────────────────────────────────────
   // Consumption-derived: 7 lbs/week family + 7 distribution = 14 lbs/week greens.
-  // Lettuce 280, Spinach 200, Kale 192 total plants (all include +100% distribution).
 
-  // Spring lettuce — 3 batches × 70, 14d apart. 4 cuts before heat bolt.
-  ...createSuccessionPlantings(LETTUCE_BSS, 'Lettuce', 210, 3, '2025-04-15', 14, 'shade'),
+  // Spring lettuce → fall spinach succession in greens zone.
+  // Lettuce produces May-July, bolts from heat. When 80% dead AND temp < 80°F,
+  // pull dead lettuce and sow spinach same day.
+  {
+    species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210,
+    planting_date: '2025-04-15', zone: 'shade', stagger_days: 14,
+    zone_id: 'greens',
+    successor: {
+      species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 200,
+      trigger: {
+        predecessor_death_pct: 0.8,
+        conditions: [{ factor: 'temperature_f', threshold: 80, direction: 'below' }],
+      },
+      delay_days: 0,
+      stagger_days: 10,
+    },
+  },
 
-  // Fall spinach — emphasis crop. No bolt trigger (short days). Cuts into November.
-  createSinglePlanting(SPINACH_BLOOMSDALE, 'Spinach', 200, '2025-07-25', 'shade'),
-  // Fall lettuce — secondary. 3 cuts before hard frost (28°F kill temp).
-  createSinglePlanting(LETTUCE_BSS, 'Lettuce', 70, '2025-07-25', 'shade'),
-
-  // Kale — 120 (60 family + 60 distribution). Biennial, no bolt year 1.
-  createSinglePlanting(KALE_RED_RUSSIAN, 'Kale', 120, '2025-05-15', 'boundary'),
+  // Kale — 120 plants (60 family + 60 distribution). Biennial, no bolt year 1.
+  // Staggered over 14 days (1 full regrowth cycle) so cuts interleave weekly.
+  { species: KALE_RED_RUSSIAN, display_group: 'Kale', plant_count: 120, planting_date: '2025-05-08', zone: 'boundary', stagger_days: 21 },
 
   // ── Warm season ─────────────────────────────────────────────────────────
 
-  // Paste — 11 plants (family only, 142 lbs → 44 quarts sauce)
-  createSinglePlanting(TOMATO_AMISH_PASTE, 'Paste', 11, '2025-05-25', 'full_sun'),
-  // Cherry — 8 Sun Gold (4 family × 2 distribution)
-  createSinglePlanting(TOMATO_SUN_GOLD, 'Cherry', 8, '2025-05-25', 'full_sun'),
+  // Paste — 11 plants (family only, 142 lbs → 44 quarts sauce). Continuous harvest, no stagger needed.
+  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 11, planting_date: '2025-05-25', zone: 'full_sun' },
 
-  // Potato — 88 plants (cellar only 6 months, buy store-bought Feb-Jun)
-  createSinglePlanting(POTATO_KENNEBEC, 'Potato', 88, '2025-04-20', 'full_sun'),
+  // Cherry — 8 Sun Gold. Continuous harvest, no stagger needed.
+  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2025-05-25', zone: 'full_sun' },
 
-  // Corn — 234 (family only, 56 lbs dried grain)
-  createSinglePlanting(CORN_NOTHSTINE_DENT, 'Corn', 234, '2025-05-25', 'full_sun'),
+  // Potato — 88 plants (cellar only, buy store-bought Feb-Jun). Bulk harvest.
+  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-04-20', zone: 'full_sun' },
+
+  // Corn — 234 plants (family only, 56 lbs dried grain). Bulk harvest.
+  { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2025-05-25', zone: 'full_sun' },
 ];
 
 // ── Weekly Consumption Targets (lbs/week) ───────────────────────────────────
@@ -153,13 +154,23 @@ const SPECIES_DISPLAY_GROUP: Record<string, DisplayGroup> = {
 function expandPlanToInstances(plan: CropPlanting[]): PlantInstance[] {
   const instances: PlantInstance[] = [];
   for (const planting of plan) {
+    const baseDate = new Date(planting.planting_date);
+    const stagger = planting.stagger_days ?? 0;
+
     for (let i = 0; i < planting.plant_count; i++) {
+      const offsetDays = stagger > 0
+        ? Math.floor(i * stagger / planting.plant_count)
+        : 0;
+      const plantDate = new Date(baseDate);
+      plantDate.setDate(plantDate.getDate() + offsetDays);
+      const dateStr = plantDate.toISOString().slice(0, 10);
+
       instances.push({
-        plant_id: `${planting.species.id}_${planting.display_group}_${planting.planting_date}_${i}`,
+        plant_id: `${planting.species.id}_${planting.display_group}_${dateStr}_${i}`,
         species_id: planting.species.id,
         root_subcell_id: `zone_${planting.zone}`,
         occupied_subcells: [],
-        planted_date: planting.planting_date,
+        planted_date: dateStr,
         current_stage: 'seed',
         accumulated_gdd: 0,
         last_observed: new Date().toISOString(),
@@ -170,24 +181,78 @@ function expandPlanToInstances(plan: CropPlanting[]): PlantInstance[] {
   return instances;
 }
 
-/** Build species catalog from plan entries. */
+/** Build species catalog from plan entries, including successor species. */
 function buildSpeciesCatalog(plan: CropPlanting[]): Map<string, PlantSpecies> {
-  return new Map(plan.map(p => [p.species.id, p.species]));
+  const catalog = new Map(plan.map(p => [p.species.id, p.species]));
+  for (const p of plan) {
+    if (p.successor) catalog.set(p.successor.species.id, p.successor.species);
+  }
+  return catalog;
 }
 
 // ── Season Simulation ───────────────────────────────────────────────────────
 
-export const SEASON_RANGE = {
-  start: new Date('2025-04-14'),
-  end: new Date('2025-11-24'),
-};
+/** Derive season range from planting dates. End date is a generous safety bound —
+ *  the actual simulation terminates when all plants are dead (early termination
+ *  in collectSnapshots). The end date just prevents infinite loops. */
+function computeSeasonRange(plan: CropPlanting[]): { start: Date; end: Date } {
+  const dates = plan.map(p => new Date(p.planting_date).getTime());
+  const earliest = new Date(Math.min(...dates));
+  const start = new Date(earliest);
+  start.setDate(start.getDate() - 1);
+  // Safety bound: 18 months from start. Never reached — all plants die from frost/bolt
+  // well before this. The early termination check (plants.every(p => p.is_dead)) is
+  // the real stop condition.
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 18);
+  return { start, end };
+}
+
+export const SEASON_RANGE = computeSeasonRange(PRODUCTION_PLAN);
 
 export function simulateSeason(plan: CropPlanting[], env: ConditionsResolver): WeeklyHarvest[] {
   const instances = expandPlanToInstances(plan);
   const catalog = buildSpeciesCatalog(plan);
-  const plants = initPlantStates(instances, catalog, env, SEASON_RANGE.end);
-  const snapshots = collectSnapshots(plants, catalog, env, SEASON_RANGE);
+  const range = computeSeasonRange(plan);
+  const plants = initPlantStates(instances, catalog, env, range.end);
+
+  // Extract succession configs from plan entries that have successors
+  const successions: SuccessionConfig[] = [];
+  const plantIdsByPlanting = buildPlantIdIndex(instances, plan);
+  for (const planting of plan) {
+    if (!planting.successor || !planting.zone_id) continue;
+    const predecessorIds = plantIdsByPlanting.get(planting) ?? new Set();
+    successions.push({
+      predecessorPlantIds: predecessorIds,
+      successor: planting.successor,
+      zone: planting.zone,
+      zone_id: planting.zone_id,
+    });
+  }
+
+  const ctx: SimulationContext = {
+    catalog, env, dateRange: range,
+    successions: successions.length > 0 ? successions : undefined,
+  };
+  const snapshots = collectSnapshots(plants, ctx);
   return bucketHarvests(snapshots, catalog);
+}
+
+/** Map each CropPlanting to its expanded plant_ids for succession tracking. */
+function buildPlantIdIndex(instances: PlantInstance[], plan: CropPlanting[]): Map<CropPlanting, Set<string>> {
+  const index = new Map<CropPlanting, Set<string>>();
+  let offset = 0;
+  for (const planting of plan) {
+    const ids = new Set<string>();
+    for (let i = 0; i < planting.plant_count; i++) {
+      if (offset + i < instances.length) {
+        ids.add(instances[offset + i]!.plant_id);
+      }
+    }
+    index.set(planting, ids);
+    offset += planting.plant_count;
+  }
+  return index;
 }
 
 // ── DaySnapshot[] → WeeklyHarvest[] ─────────────────────────────────────────

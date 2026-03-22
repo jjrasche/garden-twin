@@ -1,6 +1,5 @@
 import { PlantSpecies } from '../../types';
 import type { StageConfig, StressTolerances } from '../../types/PlantState';
-import { SOIL_LIGHT_FEEDER, SOIL_LIGHT_FEEDER_RESPONSES } from './shared-modifiers';
 
 export const LETTUCE_BSS: PlantSpecies = {
   id: 'lettuce_bss',
@@ -9,7 +8,6 @@ export const LETTUCE_BSS: PlantSpecies = {
   plants_per_sq_ft: 2.78,
   height_ft: 0.58,
 
-  days_to_first_harvest: 28,
   germination_rate: 0.90,   // Small seeds need good soil contact
   establishment_rate: 0.95, // Hardy once emerged; slug pressure
 
@@ -18,7 +16,14 @@ export const LETTUCE_BSS: PlantSpecies = {
     { factor: 'temperature_f', curve: { 32: 0.0, 38: 0.1, 45: 0.5, 55: 0.8, 65: 1.0, 70: 1.0, 75: 0.7, 80: 0.3, 85: 0.0 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.2, 60: 0.75, 80: 1.0, 95: 1.0, 110: 0.6, 130: 0.0 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 1.0: 1.1, 2.78: 1.0, 4.0: 0.8, 6.0: 0.5 }, effect: 'growth_rate' as const },
-    ...SOIL_LIGHT_FEEDER_RESPONSES,
+    // Statistical bolting: temperature-driven. At 75°F some plants bolt, by 85°F all are gone.
+    // Per-plant bolt_resistance randomizes when each individual plant bolts.
+    { factor: 'temperature_f', curve: { 70: 1.0, 75: 0.85, 80: 0.4, 85: 0.0 }, effect: 'population_survival' as const },
+    { factor: 'N_ppm', curve: { 10: 0.7, 30: 1.0, 60: 1.0, 120: 0.8 }, effect: 'growth_rate' as const },
+    { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'K_ppm', curve: { 40: 0.8, 100: 1.0, 180: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'pH', curve: { 5.5: 0.7, 6.5: 1.0, 7.5: 0.9, 8.0: 0.7 }, effect: 'growth_rate' as const },
+    { factor: 'compaction_psi', curve: { 0: 1.0, 200: 0.9, 400: 0.7 }, effect: 'growth_rate' as const },
   ],
 
   modifiers: {
@@ -30,7 +35,13 @@ export const LETTUCE_BSS: PlantSpecies = {
     // achieves 80%+ yield via increased leaf area. Diffuse light during
     // Michigan's 15h summer photoperiod supplements direct sun hours.
     sun: { 3: 0.67, 4: 0.82, 6: 0.9, 8: 1.0, 10: 1.0 },
-    soil: SOIL_LIGHT_FEEDER,
+    soil: {
+      N_ppm: { 10: 0.7, 30: 1.0, 60: 1.0, 120: 0.8 },
+      P_ppm: { 10: 0.8, 25: 1.0, 50: 1.0 },
+      K_ppm: { 40: 0.8, 100: 1.0, 180: 1.0 },
+      pH: { 5.5: 0.7, 6.5: 1.0, 7.5: 0.9, 8.0: 0.7 },
+      compaction_psi: { 0: 1.0, 200: 0.9, 400: 0.7 },
+    },
     spacing_plants_per_sq_ft: { 1.0: 1.1, 2.78: 1.0, 4.0: 0.8, 6.0: 0.5 },
     // Lettuce bolting is primarily temperature-driven. Molecular evidence:
     // LsMYB15 and LsARF3 mediate thermally induced bolting (Frontiers in
@@ -66,6 +77,7 @@ export const LETTUCE_BSS: PlantSpecies = {
 
   phenology: {
     base_temp_f: 40,
+    ceiling_temp_f: 80,
     gdd_stages: { germinated: 20, vegetative: 100, flowering: 650, fruiting: 900, mature: 1100 },
   },
 
@@ -85,6 +97,14 @@ export const LETTUCE_BSS: PlantSpecies = {
   seed_cost_per_plant: 0.02,
 
   data_confidence: 'high',
+  // Flavor: bitterness (lactucin/sesquiterpene lactones) increases with heat stress.
+  // Sugar decreases with heat. Sugar:SL ratio determines perceived flavor.
+  // Sources: HortScience 2025, maritimegardening.substack.com, gardenerspath.com
+  flavor_response: [
+    { factor: 'temperature_f', curve: { 50: 0.1, 60: 0.15, 70: 0.3, 75: 0.5, 80: 0.8, 85: 1.0 }, compound: 'lactucin' },
+    { factor: 'temperature_f', curve: { 50: 0.9, 60: 1.0, 65: 1.0, 70: 0.8, 75: 0.5, 80: 0.2, 85: 0.0 }, compound: 'sugar' },
+  ],
+
   sources: [
     {
       claim: 'yield, spacing, days to harvest',

@@ -39,26 +39,59 @@ function resolveConditions(
   return flat;
 }
 
-/** Check if plant dies from frost. Returns 'frost' cause or null. */
+/** Check if plant dies from frost. Returns 'frost' cause or null.
+ *  For historical sources (smoothed monthly averages), uses categorical proxy
+ *  dates for tender/semi-hardy plants. For very hardy plants (kill_temp < 25),
+ *  estimates nightly frost probability from (avg_low - kill_temp) / daily_stdev.
+ *  Uses per-plant frost_resistance (independent of bolt_resistance). */
 function checkFrost(
   species: PlantSpecies, date: Date, env: ConditionsResolver,
+  frost_resistance?: number,
 ): string | null {
   const kill_temp = species.layout?.kill_temp_f;
   if (kill_temp === undefined) return null;
   const cond = env.getConditions(date);
+  // Observed/composite sources have actual daily lows
   if (cond.avg_low_f < kill_temp) return 'frost';
+  // Historical proxy: tender (kill_temp >= 32) and semi-hardy (>= 25) use categorical dates
   if (env.source_type === 'historical' && kill_temp >= 32 && date >= env.avg_first_frost) return 'frost';
   if (env.source_type === 'historical' && kill_temp >= 25 && date >= env.avg_hard_frost) return 'frost';
+  // Very hardy plants (kill_temp < 25): probabilistic frost from daily variance.
+  // GR daily low stdev ~9°F in winter. P(low < kill) = P(z < (kill - avg) / stdev).
+  // Plants with high frost_resistance survive colder nights.
+  if (env.source_type === 'historical' && kill_temp < 25 && frost_resistance !== undefined) {
+    const DAILY_LOW_STDEV = 9;
+    const z = (kill_temp - cond.avg_low_f) / DAILY_LOW_STDEV;
+    if (z > -3) {
+      const pKill = approxNormalCdf(z);
+      if (pKill > frost_resistance) return 'frost';
+    }
+  }
   return null;
 }
 
-/** Check population survival curves. Returns cause or null. */
+/** Fast approximation of standard normal CDF for z in [-3, 0] range. */
+function approxNormalCdf(z: number): number {
+  if (z <= -3) return 0.001;
+  if (z >= 0) return 0.5;
+  // Abramowitz & Stegun 26.2.17 approximation
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-0.5 * z * z);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z < 0 ? p : 1 - p;
+}
+
+/** Check population survival curves against per-plant bolt resistance.
+ *  Each plant has a random bolt_resistance (0-1). When the survival modifier
+ *  drops below the plant's resistance, that individual plant bolts/dies.
+ *  High-resistance plants bolt first; low-resistance plants survive longer. */
 function checkSurvival(
   species: PlantSpecies, conditions: Record<string, number>,
+  bolt_resistance: number,
 ): string | null {
   if (!species.growth_response) return null;
   const survival = computeSurvivalModifier(species.growth_response, conditions);
-  if (survival <= 0.05) return 'population_collapse';
+  if (survival <= bolt_resistance) return 'population_collapse';
   return null;
 }
 
@@ -119,7 +152,7 @@ function computeDailyDev(
   const phenology = species.phenology;
   if (!phenology) return { daily_gdd: 0, daily_dev: 0 };
 
-  const daily_gdd = computeDailyGdd(env_cond.avg_high_f, env_cond.avg_low_f, phenology.base_temp_f);
+  const daily_gdd = computeDailyGdd(env_cond.avg_high_f, env_cond.avg_low_f, phenology.base_temp_f, phenology.ceiling_temp_f);
   const dev_modifier = species.growth_response
     ? computeDevelopmentModifier(species.growth_response, conditions, current_stage)
     : 1.0;
@@ -208,7 +241,7 @@ export function tickPlant(
   const conditions = resolveConditions(date, env);
 
   // 1. Frost kill
-  const frost_cause = checkFrost(species, date, env);
+  const frost_cause = checkFrost(species, date, env, plant.frost_resistance);
   if (frost_cause) {
     return {
       plant: { ...plant, stage: 'done', is_dead: true },
@@ -217,7 +250,7 @@ export function tickPlant(
   }
 
   // 2. Population survival
-  const survival_cause = checkSurvival(species, conditions);
+  const survival_cause = checkSurvival(species, conditions, plant.bolt_resistance);
   if (survival_cause) {
     return {
       plant: { ...plant, stage: 'done', is_dead: true },
@@ -292,7 +325,10 @@ export function tickPlant(
   };
 }
 
-/** Whether a plant is ready for harvest, given its strategy type. */
+/** Whether a plant is ready for harvest, given its strategy type.
+ *  For cut-and-come-again: regrowth_days defines the threshold in "optimal-day
+ *  equivalents." Actual regrowth time depends on conditions — cold weather
+ *  (growth_mod < 1.0) means slower biomass accumulation and longer intervals. */
 function checkHarvestReady(
   stage: GrowthStage, accumulated_lbs: number,
   plant: PlantState, species: PlantSpecies,
@@ -305,7 +341,7 @@ function checkHarvestReady(
   if (strategy.type === 'continuous') return true;
 
   // CAC: accumulate to threshold before each cut
-  const window_days = strategy.regrowth_days ?? species.days_to_first_harvest;
+  const window_days = strategy.regrowth_days ?? 14;
   const threshold = plant.daily_potential * plant.vigor * window_days * 0.9;
   return accumulated_lbs >= threshold;
 }

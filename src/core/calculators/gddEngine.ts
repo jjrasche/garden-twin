@@ -23,9 +23,16 @@ export interface DailyTemp {
   low_f: number;
 }
 
-/** GDD for a single day using the averaging method. */
-export function computeDailyGdd(high_f: number, low_f: number, base_temp_f: number): number {
-  return Math.max(0, (high_f + low_f) / 2 - base_temp_f);
+/** GDD for a single day using the averaging method.
+ *  Optional ceiling caps the effective temperature — prevents unrealistic
+ *  GDD accumulation on extreme heat days when development actually stalls. */
+export function computeDailyGdd(
+  high_f: number, low_f: number, base_temp_f: number,
+  ceiling_temp_f?: number,
+): number {
+  const avg = (high_f + low_f) / 2;
+  const capped = ceiling_temp_f !== undefined ? Math.min(avg, ceiling_temp_f) : avg;
+  return Math.max(0, capped - base_temp_f);
 }
 
 /** Growth stage from accumulated GDD against species thresholds. */
@@ -44,10 +51,12 @@ export function isHarvestableStage(stage: GrowthStage): boolean {
 }
 
 /** Sum GDD over a range of daily temperatures. */
-export function accumulateGddOverRange(dailyTemps: DailyTemp[], base_temp_f: number): number {
+export function accumulateGddOverRange(
+  dailyTemps: DailyTemp[], base_temp_f: number, ceiling_temp_f?: number,
+): number {
   let total = 0;
   for (const day of dailyTemps) {
-    total += computeDailyGdd(day.high_f, day.low_f, base_temp_f);
+    total += computeDailyGdd(day.high_f, day.low_f, base_temp_f, ceiling_temp_f);
   }
   return total;
 }

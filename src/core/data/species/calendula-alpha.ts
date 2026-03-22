@@ -1,5 +1,4 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_COMPANION, SOIL_COMPANION_RESPONSES } from './shared-modifiers';
 
 export const CALENDULA: PlantSpecies = {
   id: 'calendula',
@@ -8,7 +7,6 @@ export const CALENDULA: PlantSpecies = {
   plants_per_sq_ft: 1.44,
   height_ft: 2,
 
-  days_to_first_harvest: 40,
   germination_rate: 0.95,   // Reliable germinator
   establishment_rate: 0.95, // Semi-hardy; tolerates light frost
 
@@ -16,12 +14,22 @@ export const CALENDULA: PlantSpecies = {
     { factor: 'sun_hours', curve: { 4: 0.5, 6: 0.8, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 15: 0.0, 35: 0.4, 50: 0.65, 75: 1.0, 100: 1.0, 115: 0.7, 130: 0.25 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 0.7: 1.1, 1.44: 1.0, 2.5: 0.8, 4.0: 0.5 }, effect: 'growth_rate' as const },
-    ...SOIL_COMPANION_RESPONSES,
+    { factor: 'N_ppm', curve: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 }, effect: 'growth_rate' as const },
+    { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'K_ppm', curve: { 40: 0.8, 100: 1.0, 180: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'pH', curve: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 }, effect: 'growth_rate' as const },
+    { factor: 'compaction_psi', curve: { 0: 1.0, 200: 0.95, 400: 0.8 }, effect: 'growth_rate' as const },
   ],
 
   modifiers: {
     sun: { 4: 0.5, 6: 0.8, 8: 1.0, 10: 1.0 },
-    soil: SOIL_COMPANION,
+    soil: {
+      N_ppm: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 },
+      P_ppm: { 10: 0.8, 25: 1.0, 50: 1.0 },
+      K_ppm: { 40: 0.8, 100: 1.0, 180: 1.0 },
+      pH: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 },
+      compaction_psi: { 0: 1.0, 200: 0.95, 400: 0.8 },
+    },
     spacing_plants_per_sq_ft: { 0.7: 1.1, 1.44: 1.0, 2.5: 0.8, 4.0: 0.5 },
     // Moderate drought tolerance. Flower mass +18% at 75% FC vs 100% FC (Moalem 2023).
     // -38% flower weight at 30% FC (Sardoei 2025). Root rot in wet soil (Asteraceae).
@@ -45,6 +53,7 @@ export const CALENDULA: PlantSpecies = {
 
   phenology: {
     base_temp_f: 40,
+    ceiling_temp_f: 85,
     gdd_stages: { germinated: 30, vegetative: 80, flowering: 600, fruiting: 800, mature: 800 },
   },
 

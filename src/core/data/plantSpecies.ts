@@ -62,8 +62,7 @@ export const CORN_WAPSIE_VALLEY: PlantSpecies = {
   plants_per_sq_ft: 0.67,
   height_ft: 8,
 
-  // Timing: 89 days to maturity, 14-day harvest window
-  days_to_first_harvest: 89,
+  // Timing: 14-day harvest window
   days_harvest_window: 14,
 
   // Yield: ~1/4 lb per ear
@@ -196,8 +195,7 @@ export const TOMATO_BETTER_BOY: PlantSpecies = {
   plants_per_sq_ft: 0.25,
   height_ft: 6,
 
-  // Timing: 70 days to first harvest, 60-day production window
-  days_to_first_harvest: 70,
+  // Timing: 60-day production window
   days_harvest_window: 60,
 
   // Yield: ~15 lbs per plant over season

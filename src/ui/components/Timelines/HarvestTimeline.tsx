@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import {
   ComposedChart,
   Area,
@@ -15,12 +15,15 @@ import {
 import {
   simulateSeason,
   PRODUCTION_PLAN,
+  SEASON_RANGE,
   GREENS_TARGET_PER_WEEK,
   WEEKLY_TARGETS,
   CropPlanting,
   WeeklyHarvest,
 } from '../../../core/calculators/ProductionTimeline';
 import { useWeatherSource } from '../../hooks/useWeatherSource';
+import { useLegendHighlight } from '../../hooks/useLegendHighlight';
+import { formatWeekLabel as sharedFormatWeekLabel, buildDefaultSowingDots } from './chartUtils';
 
 const GROUP_COLORS: Record<string, string> = {
   Lettuce: '#7BC67E',
@@ -34,10 +37,7 @@ const GROUP_COLORS: Record<string, string> = {
 
 const DISPLAY_GROUPS = ['Lettuce', 'Spinach', 'Kale', 'Paste', 'Cherry', 'Potato', 'Corn'];
 
-function formatWeekLabel(date: Date): string {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[date.getMonth()]} ${date.getDate()}`;
-}
+const formatWeekLabel = sharedFormatWeekLabel;
 
 interface ChartRow {
   week: string;
@@ -59,10 +59,12 @@ interface ChartRow {
 /** Map each week label to the set of groups sowed that week. */
 function buildSowingByWeek(plan: readonly CropPlanting[]): Map<string, Set<string>> {
   const map = new Map<string, Set<string>>();
+  const seasonStart = SEASON_RANGE.start;
+  const msPerDay = 86_400_000;
   for (const p of plan) {
     const d = new Date(p.planting_date);
-    const weekIndex = Math.floor((d.getTime() - SEASON_START.getTime()) / (7 * MS_PER_DAY));
-    const weekStart = new Date(SEASON_START.getTime() + weekIndex * 7 * MS_PER_DAY);
+    const weekIndex = Math.floor((d.getTime() - seasonStart.getTime()) / (7 * msPerDay));
+    const weekStart = new Date(seasonStart.getTime() + weekIndex * 7 * msPerDay);
     const label = formatWeekLabel(weekStart);
     const groups = map.get(label) ?? new Set<string>();
     groups.add(p.display_group);
@@ -150,31 +152,6 @@ function HarvestTooltip({ active, payload, label }: any) {
   );
 }
 
-const SEASON_START = new Date('2025-04-14');
-const MS_PER_DAY = 86_400_000;
-
-interface SowingDot {
-  weekLabel: string;
-  group: string;
-  color: string;
-}
-
-/** One dot per crop per sowing date, positioned at y=0 on the crop's color. */
-function buildSowingDots(plan: readonly CropPlanting[]): SowingDot[] {
-  const seen = new Set<string>();
-  const dots: SowingDot[] = [];
-  for (const p of plan) {
-    const d = new Date(p.planting_date);
-    const weekIndex = Math.floor((d.getTime() - SEASON_START.getTime()) / (7 * MS_PER_DAY));
-    const weekStart = new Date(SEASON_START.getTime() + weekIndex * 7 * MS_PER_DAY);
-    const label = formatWeekLabel(weekStart);
-    const key = `${label}-${p.display_group}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    dots.push({ weekLabel: label, group: p.display_group, color: GROUP_COLORS[p.display_group] ?? '#9ca3af' });
-  }
-  return dots;
-}
 
 interface HarvestTimelineProps {
   actualData?: WeeklyHarvest[];
@@ -183,17 +160,8 @@ interface HarvestTimelineProps {
 export function HarvestTimeline({ actualData }: HarvestTimelineProps = {}) {
   const { env } = useWeatherSource();
   const chartData = useMemo(() => buildChartData(PRODUCTION_PLAN, env, actualData), [env, actualData]);
-  const sowingDots = useMemo(() => buildSowingDots(PRODUCTION_PLAN), []);
-  const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleLegendEnter = useCallback((e: any) => {
-    setHoveredGroup(e?.dataKey ?? e?.value ?? null);
-  }, []);
-
-  const handleLegendLeave = useCallback(() => {
-    setHoveredGroup(null);
-  }, []);
+  const sowingDots = useMemo(() => buildDefaultSowingDots(GROUP_COLORS), []);
+  const { onLegendEnter, onLegendLeave, seriesOpacity } = useLegendHighlight();
 
   if (chartData.length === 0) {
     return (
@@ -240,8 +208,8 @@ export function HarvestTimeline({ actualData }: HarvestTimelineProps = {}) {
               wrapperStyle={{ fontSize: '10px', cursor: 'pointer' }}
               iconType="square"
               iconSize={8}
-              onMouseEnter={handleLegendEnter}
-              onMouseLeave={handleLegendLeave}
+              onMouseEnter={onLegendEnter}
+              onMouseLeave={onLegendLeave}
             />
             <ReferenceLine
               y={GREENS_TARGET_PER_WEEK}
@@ -261,7 +229,7 @@ export function HarvestTimeline({ actualData }: HarvestTimelineProps = {}) {
               />
             ))}
             {DISPLAY_GROUPS.map((group) => {
-              const dimmed = hoveredGroup !== null && hoveredGroup !== group;
+              const opacity = seriesOpacity(group);
               return (
                 <Area
                   key={group}
@@ -270,8 +238,8 @@ export function HarvestTimeline({ actualData }: HarvestTimelineProps = {}) {
                   stackId="1"
                   stroke={GROUP_COLORS[group]}
                   fill={`url(#color-${group})`}
-                  fillOpacity={dimmed ? 0.15 : 1}
-                  strokeOpacity={dimmed ? 0.2 : 1}
+                  fillOpacity={opacity.fillOpacity}
+                  strokeOpacity={opacity.strokeOpacity}
                 />
               );
             })}

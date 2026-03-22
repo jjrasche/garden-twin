@@ -76,9 +76,19 @@ export const HARVEST_KALE_CUT: HarvestStrategy = {
   id: 'kale_cut',
   type: 'cut_and_come_again',
   baseline_lbs_per_plant: 1.75,
-  max_cuts: 8,
+  // No max_cuts — biennial kale produces indefinitely until bolt (year 2) or hard freeze.
+  // Death comes from frost (kill_temp 10°F via probabilistic model), not cut exhaustion.
+  // Sources: gardenerspath.com, foxrunenvironmentaleducationcenter.org
   regrowth_days: 14,
-  cut_yield_curve: { 1: 0.6, 2: 0.8, 3: 1.0, 4: 1.0, 5: 1.0, 6: 0.9, 7: 0.8, 8: 0.6 },
+  // Vigor is flat at 1.0 — kale yield decline is environmental (temperature),
+  // NOT cut-number-based. Collard study: 174% leaf recovery at 21 days with
+  // 50% harvest (Tuskegee PAWJ). Mild ramp on first cut (small plant).
+  // Seasonal decline handled by growth_mod from temperature curve.
+  cut_yield_curve: {
+    1: 0.7, 2: 0.9, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0, 7: 1.0, 8: 1.0,
+    9: 1.0, 10: 1.0, 11: 1.0, 12: 1.0, 13: 1.0, 14: 1.0, 15: 1.0,
+    16: 1.0, 17: 1.0, 18: 1.0, 19: 1.0, 20: 1.0,
+  },
 };
 
 export const HARVEST_SPINACH_CUT: HarvestStrategy = {
@@ -87,7 +97,10 @@ export const HARVEST_SPINACH_CUT: HarvestStrategy = {
   baseline_lbs_per_plant: 0.28,
   max_cuts: 6,
   regrowth_days: 10,
-  cut_yield_curve: { 1: 0.8, 2: 1.0, 3: 1.0, 4: 0.8, 5: 0.6, 6: 0.4 },
+  // Gentler taper — bolting (population_survival on photoperiod) handles the
+  // real decline. Cut-based decline is minor for spinach. Portland trial:
+  // 5+ cuts with regenerative technique over 9 weeks.
+  cut_yield_curve: { 1: 0.8, 2: 1.0, 3: 1.0, 4: 0.9, 5: 0.8, 6: 0.7 },
 };
 
 /** All harvest strategies indexed by id. */

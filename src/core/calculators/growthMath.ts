@@ -142,70 +142,37 @@ export function isDeadFromFrost(species: PlantSpecies, date: Date, env: Conditio
   return env.getConditions(date).avg_low_f < kill_temp;
 }
 
-// ── Cut Schedule ─────────────────────────────────────────────────────────────
-
-export interface CutSchedule {
-  cut_dates: Date[];
-  window_starts: Date[];
-  vigors: number[];
-  daily_potential: number;
-}
+// ── Cut-and-Come-Again Calibration ───────────────────────────────────────────
 
 /**
- * Pre-compute cut schedule with daily growth potential.
+ * Calibrate daily_potential for cut-and-come-again crops.
  *
- * Each cut's yield = integral of (daily_potential x vigor x modifier) over its
- * growth window. daily_potential is calibrated so total under perfect conditions
- * equals baseline_lbs_per_plant.
+ * daily_potential is set so that at growth_mod=1.0, one regrowth_days period
+ * of biomass accumulation reaches the harvest threshold. Vigor weighting
+ * normalizes across cuts so total season yield ≈ baseline_lbs_per_plant.
+ *
+ * No dependency on planting date, environment, or calendar estimates.
+ * Actual harvest timing emerges from the daily biomass loop in tickDay.
  */
-export function buildCutSchedule(
-  plant_date: Date, species: PlantSpecies,
-  strategy?: HarvestStrategy | null, env?: ConditionsResolver,
-): CutSchedule | null {
-  const max_cuts = strategy?.max_cuts;
-  const regrowth_days = strategy?.regrowth_days;
-  const cut_yield_curve = strategy?.cut_yield_curve;
-  const baseline = strategy?.baseline_lbs_per_plant ?? 0;
-
-  if (!max_cuts || !regrowth_days || !cut_yield_curve) return null;
-
-  const first_cut_offset = estimateFirstCutDays(plant_date, species, env);
-
-  const cut_dates: Date[] = [];
-  const window_starts: Date[] = [];
-  const vigors: number[] = [];
-
-  let vigor_days_total = 0;
-  for (let c = 1; c <= max_cuts; c++) {
-    const d = new Date(plant_date);
-    d.setDate(d.getDate() + first_cut_offset + (c - 1) * regrowth_days);
-    cut_dates.push(d);
-
-    const window_start = c === 1
-      ? new Date(plant_date)
-      : cut_dates[c - 2]!;
-    window_starts.push(window_start);
-
-    const window_days = daysBetween(window_start, d);
-    const vigor = interpolate(cut_yield_curve, c);
-    vigors.push(vigor);
-    vigor_days_total += vigor * window_days;
+export function calibrateCacPotential(
+  strategy: HarvestStrategy,
+): { daily_potential: number; initial_vigor: number } {
+  const { baseline_lbs_per_plant, max_cuts, regrowth_days, cut_yield_curve } = strategy;
+  if (!regrowth_days || !cut_yield_curve) {
+    return { daily_potential: 0, initial_vigor: 1.0 };
   }
-
-  const daily_potential = baseline / vigor_days_total;
-
-  return { cut_dates, window_starts, vigors, daily_potential };
-}
-
-/**
- * Days from planting to first harvestable cut.
- *
- * Always uses calendar days_to_first_harvest. GDD vegetative threshold
- * represents growth stage entry, not agronomic harvest readiness (leaf size).
- * GDD gating is handled in the daily accumulation loop, not here.
- */
-function estimateFirstCutDays(_plant_date: Date, species: PlantSpecies, _env?: ConditionsResolver): number {
-  return species.days_to_first_harvest;
+  // Sum vigor across all defined cuts. If max_cuts is set, use it as limit.
+  // If undefined (unlimited cuts like kale), use all curve entries.
+  const num_cuts = max_cuts ?? Math.max(...Object.keys(cut_yield_curve).map(Number));
+  let vigor_sum = 0;
+  for (let c = 1; c <= num_cuts; c++) {
+    vigor_sum += interpolate(cut_yield_curve, c);
+  }
+  const vigor_days = vigor_sum * regrowth_days;
+  return {
+    daily_potential: baseline_lbs_per_plant / vigor_days,
+    initial_vigor: interpolate(cut_yield_curve, 1),
+  };
 }
 
 // ── Daily Growth ─────────────────────────────────────────────────────────────

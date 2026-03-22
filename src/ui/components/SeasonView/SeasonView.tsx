@@ -10,6 +10,11 @@ import { CanvasGarden } from '../GridLayout/CanvasGarden';
 import { TimelineScrubber } from './TimelineScrubber';
 import { ConditionsPanel } from './ConditionsPanel';
 import { PlantTooltip } from './PlantTooltip';
+import { HarvestTimeline } from '../Timelines/HarvestTimeline';
+import { GrowthModTimeline } from '../Timelines/GrowthModTimeline';
+import { FlavorTimeline } from '../Timelines/FlavorTimeline';
+
+type BottomChart = 'none' | 'production' | 'growth' | 'flavor';
 import { useYearSimulation, SELECTABLE_YEARS, type YearSelection } from '../../hooks/useYearSimulation';
 import { useGardenStore } from '../../store/gardenStore';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
@@ -72,6 +77,7 @@ export function SeasonView() {
   const gardenState = useGardenStore(s => s.gardenState);
   const setGardenState = useGardenStore(s => s.setGardenState);
   const viewport = useGardenStore(s => s.viewport);
+  const [bottomChart, setBottomChart] = useState<BottomChart>('none');
 
   // Ensure gardenState is initialized
   useEffect(() => {
@@ -218,6 +224,44 @@ export function SeasonView() {
           onDayChange={setDayIndex}
           seasonStart={sim.seasonStart}
         />
+      </div>
+
+      {/* Bottom charts */}
+      <div className="shrink-0 border-t border-gray-700">
+        <div className="flex bg-gray-900 px-2">
+          {([
+            ['production', 'Weekly Production'],
+            ['growth', 'Growth Modifiers'],
+            ['flavor', 'Flavor Quality'],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setBottomChart(bottomChart === id ? 'none' : id)}
+              className={`px-3 py-1 text-xs transition-colors ${
+                bottomChart === id
+                  ? 'text-gray-200 border-b-2 border-emerald-500'
+                  : 'text-gray-500 hover:text-gray-300 border-b-2 border-transparent'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {bottomChart === 'production' && (
+          <div className="h-64">
+            <HarvestTimeline />
+          </div>
+        )}
+        {bottomChart === 'growth' && (
+          <div className="h-64">
+            <GrowthModTimeline />
+          </div>
+        )}
+        {bottomChart === 'flavor' && (
+          <div className="h-64">
+            <FlavorTimeline />
+          </div>
+        )}
       </div>
     </div>
   );

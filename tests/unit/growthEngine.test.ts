@@ -1,7 +1,7 @@
 /**
  * Growth engine tests — the core computation pipeline from species + conditions → biomass.
  *
- * Layer 1: Math primitives (computeModifierProduct, buildCutSchedule, accumulateGrowth)
+ * Layer 1: Math primitives (computeModifierProduct, calibrateCacPotential, accumulateGrowth)
  * Layer 2: Species scenarios (lettuce cuts, tomato season, death dates)
  * Layer 3: Planning ↔ Operational equivalence
  */
@@ -10,7 +10,7 @@ import { describe, test, expect } from 'vitest';
 import { computeModifierProduct } from '../../src/core/calculators/yieldModel';
 import {
   accumulateGrowth,
-  buildCutSchedule,
+  calibrateCacPotential,
   computeDeathDate,
   computeBoltSurvival,
   computeSurvivalFromConditions,
@@ -161,87 +161,55 @@ describe('computeModifierProduct', () => {
   });
 });
 
-describe('buildCutSchedule', () => {
-  test('returns null for non-CAC species', () => {
-    expect(buildCutSchedule(new Date('2025-05-25'), TOMATO_SUN_GOLD)).toBeNull();
-    expect(buildCutSchedule(new Date('2025-04-20'), POTATO_KENNEBEC)).toBeNull();
+describe('calibrateCacPotential', () => {
+  test('lettuce: daily_potential × vigor_sum × regrowth_days = baseline', () => {
+    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS)!;
+    const { daily_potential, initial_vigor } = calibrateCacPotential(strategy);
+
+    // curve: {1:1.0, 2:0.8, 3:0.6, 4:0.4}, sum=2.8, regrowth=14
+    const vigor_sum = 1.0 + 0.8 + 0.6 + 0.4;
+    const reconstructed = daily_potential * vigor_sum * strategy.regrowth_days!;
+    expect(reconstructed).toBeCloseTo(strategy.baseline_lbs_per_plant, 6);
+    expect(initial_vigor).toBeCloseTo(1.0, 2);
   });
 
-  test('lettuce: 4 cuts with correct dates', () => {
-    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy);
-    expect(schedule).not.toBeNull();
-    expect(schedule!.cut_dates).toHaveLength(4);
-
-    // Cut 1: plant + 28d = May 13
-    expect(schedule!.cut_dates[0]!.toISOString().slice(0, 10)).toBe('2025-05-13');
-    // Cut 2: May 13 + 14d = May 27
-    expect(schedule!.cut_dates[1]!.toISOString().slice(0, 10)).toBe('2025-05-27');
-    // Cut 3: May 27 + 14d = Jun 10
-    expect(schedule!.cut_dates[2]!.toISOString().slice(0, 10)).toBe('2025-06-10');
-    // Cut 4: Jun 10 + 14d = Jun 24
-    expect(schedule!.cut_dates[3]!.toISOString().slice(0, 10)).toBe('2025-06-24');
+  test('kale: initial_vigor matches first cut yield curve', () => {
+    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN)!;
+    const { initial_vigor } = calibrateCacPotential(strategy);
+    // kale cut 1 vigor = 0.6
+    expect(initial_vigor).toBeCloseTo(0.6, 2);
   });
 
-  test('daily_potential calibrated so total under perfect conditions = baseline', () => {
-    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy);
-    expect(schedule).not.toBeNull();
-
-    // Sum vigor × window_days across all cuts should equal baseline / daily_potential
-    let total_vigor_days = 0;
-    for (let c = 0; c < schedule!.cut_dates.length; c++) {
-      const window_start = schedule!.window_starts[c]!;
-      const window_end = schedule!.cut_dates[c]!;
-      const window_days = daysBetween(window_start, window_end);
-      total_vigor_days += schedule!.vigors[c]! * window_days;
-    }
-
-    const reconstructed_baseline = schedule!.daily_potential * total_vigor_days;
-    expect(reconstructed_baseline).toBeCloseTo(strategy!.baseline_lbs_per_plant, 6);
-  });
-
-  test('vigors match cut_yield_curve values', () => {
-    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy);
-    // curve: {1:1.0, 2:0.8, 3:0.6, 4:0.4}
-    expect(schedule!.vigors[0]).toBeCloseTo(1.0, 2);
-    expect(schedule!.vigors[1]).toBeCloseTo(0.8, 2);
-    expect(schedule!.vigors[2]).toBeCloseTo(0.6, 2);
-    expect(schedule!.vigors[3]).toBeCloseTo(0.4, 2);
+  test('returns zero for non-CAC strategy', () => {
+    const { daily_potential } = calibrateCacPotential({
+      id: 'test', type: 'bulk', baseline_lbs_per_plant: 1.5,
+    } as any);
+    expect(daily_potential).toBe(0);
   });
 });
 
 describe('accumulateGrowth', () => {
   test('constant conditions: accumulated = daily_potential × vigor × modifier × days', () => {
     const env = createConstantEnv({ avg_high_f: 65 }); // lettuce temp=1.0
-    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS);
-    const schedule = buildCutSchedule(new Date('2025-04-15'), LETTUCE_BSS, strategy)!;
+    const strategy = resolveHarvestStrategy(undefined, LETTUCE_BSS)!;
+    const { daily_potential, initial_vigor } = calibrateCacPotential(strategy);
 
-    // First cut window: 28 days, vigor=1.0
+    // First cut window: 14 days (regrowth_days), vigor=1.0
+    const start = new Date('2025-04-15');
+    const end = new Date('2025-04-29');
     const accumulated = accumulateGrowth(
       LETTUCE_BSS,
-      schedule.window_starts[0]!,
-      schedule.cut_dates[0]!,
-      schedule.vigors[0]!,
-      schedule.daily_potential,
+      start,
+      end,
+      initial_vigor,
+      daily_potential,
       ZONE_PHYS_Y.shade,
       env,
     );
 
-    // Under constant env, modifier should be constant across the window.
-    // We need the actual modifier value to verify.
-    const sun_hours = 8; // constant env returns 8 effective sun hours for shade at non-summer date
-    const modifier = computeModifierProduct(LETTUCE_BSS, { sun_hours, avg_high_f: 65 });
-
-    // accumulateGrowth samples every ~3 days, but for constant conditions
-    // it should be very close to daily_potential × vigor × modifier × days
-    const expected = schedule.daily_potential * 1.0 * modifier * 28;
-
-    // But sun_hours depends on shade model which varies by date even in constant temp.
-    // So accumulated won't exactly match. Just verify it's positive and reasonable.
+    // Verify it's positive and reasonable
     expect(accumulated).toBeGreaterThan(0);
-    expect(accumulated).toBeLessThan(strategy!.baseline_lbs_per_plant);
+    expect(accumulated).toBeLessThan(strategy.baseline_lbs_per_plant);
   });
 
   test('longer window accumulates more than shorter window', () => {

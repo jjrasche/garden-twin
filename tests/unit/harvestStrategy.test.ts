@@ -3,7 +3,7 @@
  * from HarvestStrategy instead of PlantSpecies fields.
  *
  * Step A: Wire HarvestStrategy into CropPlanting + initSimPlanting.
- * Step 6: buildCutSchedule uses GDD timing.
+ * Step 6: calibrateCacPotential replaces buildCutSchedule.
  * Step 7: GrowthLedger GDD gating.
  */
 
@@ -16,7 +16,7 @@ import {
 } from '../../src/core/calculators/ProductionTimeline';
 import { simulateFromState } from '../../src/core/engine/simulate';
 import { bucketHarvests } from '../../src/core/calculators/ProductionTimeline';
-import { buildCutSchedule } from '../../src/core/calculators/growthMath';
+import { calibrateCacPotential } from '../../src/core/calculators/growthMath';
 import { HARVEST_STRATEGIES, DEFAULT_HARVEST_STRATEGY } from '../../src/core/data/harvestStrategies';
 import { KALE_RED_RUSSIAN } from '../../src/core/data/species/kale-red-russian';
 import { LETTUCE_BSS } from '../../src/core/data/species/lettuce-bss';
@@ -139,31 +139,29 @@ describe('simulateSeason with harvest_strategy_id on CropPlanting', () => {
 });
 
 // =============================================================================
-// Step 6 — buildCutSchedule GDD timing
+// Step 6 — calibrateCacPotential (replaces buildCutSchedule)
 // =============================================================================
 
-describe('buildCutSchedule calendar timing', () => {
-  test('CAC first cut uses calendar days_to_first_harvest, not GDD', () => {
-    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN);
-    const schedule = buildCutSchedule(
-      new Date('2025-05-15'), KALE_RED_RUSSIAN, strategy, GR_HISTORICAL,
-    );
-    expect(schedule).not.toBeNull();
+describe('calibrateCacPotential', () => {
+  test('kale: daily_potential × vigor_sum × regrowth_days = baseline', () => {
+    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN)!;
+    const { daily_potential } = calibrateCacPotential(strategy);
 
-    const first_cut = schedule!.cut_dates[0]!;
-    const expected_first_cut = new Date('2025-07-04'); // May 15 + 50 days
-    expect(first_cut.getTime()).toBe(expected_first_cut.getTime());
+    // Sum vigors across all cuts
+    let vigor_sum = 0;
+    for (let c = 1; c <= strategy.max_cuts!; c++) {
+      vigor_sum += strategy.cut_yield_curve![c] ?? 0;
+    }
+    const reconstructed = daily_potential * vigor_sum * strategy.regrowth_days!;
+    expect(reconstructed).toBeCloseTo(strategy.baseline_lbs_per_plant, 4);
   });
 
-  test('env parameter does not change CAC first cut timing', () => {
-    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN);
-    const with_env = buildCutSchedule(new Date('2025-05-15'), KALE_RED_RUSSIAN, strategy, GR_HISTORICAL);
-    const without_env = buildCutSchedule(new Date('2025-05-15'), KALE_RED_RUSSIAN, strategy);
-
-    expect(with_env).not.toBeNull();
-    expect(without_env).not.toBeNull();
-    // Same first cut regardless of env — calendar-based
-    expect(with_env!.cut_dates[0]!.getTime()).toBe(without_env!.cut_dates[0]!.getTime());
+  test('no dependency on environment or planting date', () => {
+    const strategy = resolveHarvestStrategy(undefined, KALE_RED_RUSSIAN)!;
+    const result = calibrateCacPotential(strategy);
+    // Same result regardless — no env param
+    expect(result.daily_potential).toBeGreaterThan(0);
+    expect(result.initial_vigor).toBeCloseTo(0.6, 2); // kale cut 1
   });
 });
 

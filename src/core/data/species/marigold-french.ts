@@ -1,5 +1,4 @@
 import { PlantSpecies } from '../../types';
-import { SOIL_COMPANION, SOIL_COMPANION_RESPONSES } from './shared-modifiers';
 
 export const MARIGOLD_FRENCH: PlantSpecies = {
   id: 'marigold_french',
@@ -8,7 +7,6 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
   plants_per_sq_ft: 1.78,
   height_ft: 1.5,
 
-  days_to_first_harvest: 55,
   germination_rate: 0.95,   // Reliable germinator
   establishment_rate: 0.95, // Hardy annual, low pest pressure
 
@@ -16,12 +14,22 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
     { factor: 'sun_hours', curve: { 4: 0.3, 6: 0.8, 8: 1.0, 10: 1.0 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 15: 0.0, 40: 0.35, 60: 0.65, 80: 0.95, 100: 1.0, 115: 0.85, 130: 0.4 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 0.8: 1.1, 1.78: 1.0, 3.0: 0.8, 4.0: 0.5 }, effect: 'growth_rate' as const },
-    ...SOIL_COMPANION_RESPONSES,
+    { factor: 'N_ppm', curve: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 }, effect: 'growth_rate' as const },
+    { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'K_ppm', curve: { 40: 0.8, 100: 1.0, 180: 1.0 }, effect: 'growth_rate' as const },
+    { factor: 'pH', curve: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 }, effect: 'growth_rate' as const },
+    { factor: 'compaction_psi', curve: { 0: 1.0, 200: 0.95, 400: 0.8 }, effect: 'growth_rate' as const },
   ],
 
   modifiers: {
     sun: { 4: 0.3, 6: 0.8, 8: 1.0, 10: 1.0 },
-    soil: SOIL_COMPANION,
+    soil: {
+      N_ppm: { 10: 0.8, 30: 1.0, 80: 1.0, 150: 0.9 },
+      P_ppm: { 10: 0.8, 25: 1.0, 50: 1.0 },
+      K_ppm: { 40: 0.8, 100: 1.0, 180: 1.0 },
+      pH: { 5.5: 0.8, 6.5: 1.0, 7.5: 1.0, 8.0: 0.8 },
+      compaction_psi: { 0: 1.0, 200: 0.95, 400: 0.8 },
+    },
     spacing_plants_per_sq_ft: { 0.8: 1.1, 1.78: 1.0, 3.0: 0.8, 4.0: 0.5 },
     // Moderate drought tolerance; flower weight -38% at 60% FC (Riaz 2013).
     // Low waterlogging tolerance: Pythium root rot within 36-48h. Sources: NC State, UC IPM.
@@ -45,6 +53,7 @@ export const MARIGOLD_FRENCH: PlantSpecies = {
 
   phenology: {
     base_temp_f: 50,
+    ceiling_temp_f: 95,
     gdd_stages: { germinated: 40, vegetative: 100, flowering: 600, fruiting: 800, mature: 800 },
   },
 
