@@ -73,8 +73,8 @@
   <span class="value" id="heightVal">9"</span></label>
   <label>Baseline @4": <input type="range" id="baselineSlider" min="400" max="700" step="10" value="560">
   <span class="value" id="baselineVal">560</span></label>
-  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="5">
-  <span class="value" id="trayVal">5</span></label>
+  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="4">
+  <span class="value" id="trayVal">4</span></label>
 </div>
 
 <div class="layout">
@@ -146,9 +146,11 @@
 
 const CROPS = {
   tomato:   { label: 'Tomato',   color: '#ff5050', optimal: [200, 250], target: 21 },
-  marigold: { label: 'Marigold', color: '#ffd232', optimal: [150, 235], target: 52 },
   kale:     { label: 'Kale',     color: '#50c864', optimal: [140, 210], target: 123 },
 };
+// Marigold removed: direct sow after last frost (min_soil_temp 65F).
+// 34 plants derived from companion planting geometry (18" visual confusion radius,
+// 36" spacing along kale/potato zone borders + 2 internal interplant rows).
 const CROP_IDS = Object.keys(CROPS);
 
 // ── Tray geometry (measured) ────────────────────────────────────────────────
@@ -179,7 +181,7 @@ function defaultLights(nTrays) {
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-let trayCount = 5;
+let trayCount = 4;
 let blocks = [];
 
 function totalW() { return trayCount * TRAY_W; }

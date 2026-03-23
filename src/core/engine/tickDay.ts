@@ -39,15 +39,19 @@ function resolveConditions(
   return flat;
 }
 
-/** Check if plant dies from frost. avg_low < kill_temp = dead.
- *  No proxies, no probability. Requires daily temperature data. */
+/** Check if plant dies from frost.
+ *  Pre-emergence (seed/germinated): use soil temp — tubers/seeds are underground.
+ *  Post-emergence (vegetative+): use air temp — exposed foliage is vulnerable. */
 function checkFrost(
   species: PlantSpecies, date: Date, env: ConditionsResolver,
+  stage?: string,
 ): string | null {
   const kill_temp = species.layout?.kill_temp_f;
   if (kill_temp === undefined) return null;
   const cond = env.getConditions(date);
-  if (cond.avg_low_f < kill_temp) return 'frost';
+  const preEmergence = stage === 'seed' || stage === 'germinated';
+  const effectiveTemp = preEmergence ? cond.soil_temp_f : cond.avg_low_f;
+  if (effectiveTemp < kill_temp) return 'frost';
   return null;
 }
 
@@ -211,7 +215,7 @@ export function tickPlant(
   const conditions = resolveConditions(date, env);
 
   // 1. Frost kill
-  const frost_cause = checkFrost(species, date, env);
+  const frost_cause = checkFrost(species, date, env, plant.stage);
   if (frost_cause) {
     return {
       plant: { ...plant, stage: 'done', is_dead: true },

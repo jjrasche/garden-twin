@@ -58,7 +58,7 @@ All soil-blocked crops get 2 seeds per block to maximize germination success.
 | **Kale (Red Russian)** | **120** | **123** | **246** | **300 (with +2 pkt)** | **Soil blocks** | **Covered after cart update** |
 | Tomato (Amish Paste) | 11 | 12 | 24 | 250 | Soil blocks | 10x surplus |
 | Tomato (Sun Gold) | 8 | 9 | 18 | ~25 | Soil blocks | Covered |
-| Marigold (Bonanza) | ~50 | **52** | **104** | ~100 | **Soil blocks (CHANGED)** | **SHORT. Need ~4 more seeds or reduce to 48 plants** |
+| Marigold (Bonanza) | 34 | -- | 40 | ~100 | **Direct sow (REVERTED)** | Covered. 34 plants from companion geometry. |
 | Lettuce (BSS) | 280 | -- | 330 | 17,800 | Direct sow | 54x surplus |
 | Spinach (Bloomsdale) | 200 | -- | 236 | 1,000 | Direct sow | 4x surplus |
 | Corn (Nothstine Dent) | 234 | -- | 276 | 400 | Direct sow | 1.4x plan |
@@ -76,10 +76,11 @@ All soil-blocked crops get 2 seeds per block to maximize germination success.
 | Kale | 120 | 123 |
 | Amish Paste | 11 | 12 |
 | Sun Gold | 8 | 9 |
-| Marigold | ~50 | 52 |
-| **Total** | **~189** | **196** |
+| **Total** | **139** | **144** |
 
-196 blocks, well within 230 material capacity (+34 spare).
+Marigold reverted to direct sow (34 plants, min_soil_temp 65F, sow mid-May).
+144 blocks fits in 4 trays (4x10=40/tray at 9.5"x20" measured inner dims, 16 spare).
+Well within 230 material capacity (+86 spare).
 
 ---
 
@@ -115,18 +116,17 @@ Mix ratio: ~45% coir / 36% seed starter / 18% perlite.
 - 2" block: 8 in^3, compression 2.5x, loose mix per block: 20 in^3
 - 88 qt x 57.75 in^3/qt = 5,082 in^3
 - **Practical yield (~90%): ~230 blocks**
-- **Demand: 196 blocks. Covered with +34 spare.**
+- **Demand: 144 blocks. Covered with +86 spare.**
 
 ### Heat mat batching (104 blocks fit per cycle)
 
 | Cycle | What | Blocks | When |
 |-------|------|--------|------|
-| 1 | Kale batch A | 100 | Now (late March) |
-| 2 | Kale batch B + marigolds start | 23 + 52 = 75 | ~Mar 28 |
-| 3 | All tomatoes | 21 | ~Apr 5 |
+| 1 | Kale batch A + all tomatoes | 100 + 21 = 121 | Now (late March) |
+| 2 | Kale batch B | 23 | ~Mar 28 |
 
 Germination: 5-7 days on heat mat per cycle, then move to lights.
-All 196 blocks under lights by ~Apr 12.
+All 144 blocks under lights by ~Apr 5. Marigold direct sown mid-May.
 
 ---
 
@@ -262,20 +262,39 @@ Plug the measured value into the baseline slider in `docs/light-ppfd-heatmap.htm
 
 | Date | Action |
 |------|--------|
-| **Now (late March)** | Build conduit frame. Press kale batch A (100 blocks). Heat mat. |
-| ~Mar 28 | Move kale A to lights. Press kale B (23) + marigold (52). Heat mat. |
-| ~Apr 5 | Move kale B + marigold to lights. Press tomatoes (21). Heat mat. |
-| ~Apr 12 | All 196 blocks under lights. 16h/day. |
+| **Now (late March)** | Build conduit frame. Press kale batch A + all tomatoes (121 blocks). Heat mat. |
+| ~Mar 28 | Move batch A to lights. Press kale batch B (23 blocks). Heat mat. |
+| ~Apr 5 | All 144 blocks under lights. 16h/day. |
 | ~May 1-10 | Harden off kale. Transplant to garden after May 10 last frost. |
-| ~May 20-25 | Harden off tomatoes + marigolds. Transplant late May. |
+| ~May 15 | Direct sow 34 marigolds at zone borders (companion planting geometry). |
+| ~May 20-25 | Harden off tomatoes. Transplant late May. |
+
+---
+
+## Marigold Companion Planting Geometry (DECIDED: direct sow, 34 plants)
+
+Marigold's role is visual confusion for cabbage moth (kale zone) and CPB (potato zone).
+18" effective radius per plant = 36" spacing for full coverage.
+
+| Location | physY | Plants | Spacing |
+|----------|-------|--------|---------|
+| Kale south border | 240 | 9 | 36" along 300" E-W |
+| Kale internal row 1 | 320 | 8 | 36" along row |
+| Kale internal row 2 | 400 | 8 | 36" along row |
+| Kale/potato shared border | 480 | 9 | 36" along 300" E-W |
+| Potato north border | 600 | 9 | 36" along 300" E-W (for full coverage only if CPB pressure warrants) |
+| **Subtotal** | | **~34** | (drop potato north row to 25 if seeds tight) |
+
+Sow mid-May after last frost (min soil temp 65F). 40 seeds covers 34 plants at 85% germ.
+100 seeds on hand = 2.5x surplus. No blocks, no tray space, no indoor light time needed.
 
 ---
 
 ## Action Items
 
 - [x] Remove catnip from Johnny's cart #1 (-$6.40)
+- [x] Marigold: reverted to direct sow (34 plants from companion geometry, not 52 blocks)
 - [ ] Add 2 more Red Russian Kale packets to cart #1 (+$12.80) -- need 246 seeds, have 100
-- [ ] Decide: marigold soil blocks (52 blocks, need ~4 more seeds) or reduce to 48 plants
 - [ ] Decide on Sweet Alyssum -- keep as pollinator cover or drop?
 - [ ] Confirm Kennebec seed potato source (88 tubers)
 - [ ] Purchase 4x 1020 trays (~$12)
