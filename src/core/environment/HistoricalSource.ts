@@ -18,6 +18,7 @@ interface DailyRecord {
   low_f: number;
   precip_in: number;
   photoperiod_h: number;
+  sunshine_hours: number;
   soil_temp_f: number;
   et0_in: number;
 }
@@ -35,16 +36,17 @@ function buildDateIndex(records: DailyRecord[]): Map<string, DailyRecord> {
 
 /** Compute 365-day normals (mean per day-of-year across all years). */
 function buildNormals(records: DailyRecord[]): Map<number, DailyRecord> {
-  const accum = new Map<number, { sum_high: number; sum_low: number; sum_precip: number; sum_photo: number; sum_soil: number; sum_et0: number; count: number }>();
+  const accum = new Map<number, { sum_high: number; sum_low: number; sum_precip: number; sum_photo: number; sum_sun: number; sum_soil: number; sum_et0: number; count: number }>();
 
   for (const r of records) {
     const date = new Date(r.date);
     const doy = getDoy(date);
-    const entry = accum.get(doy) ?? { sum_high: 0, sum_low: 0, sum_precip: 0, sum_photo: 0, sum_soil: 0, sum_et0: 0, count: 0 };
+    const entry = accum.get(doy) ?? { sum_high: 0, sum_low: 0, sum_precip: 0, sum_photo: 0, sum_sun: 0, sum_soil: 0, sum_et0: 0, count: 0 };
     entry.sum_high += r.high_f;
     entry.sum_low += r.low_f;
     entry.sum_precip += r.precip_in;
     entry.sum_photo += r.photoperiod_h;
+    entry.sum_sun += r.sunshine_hours;
     entry.sum_soil += r.soil_temp_f;
     entry.sum_et0 += r.et0_in;
     entry.count++;
@@ -59,6 +61,7 @@ function buildNormals(records: DailyRecord[]): Map<number, DailyRecord> {
       low_f: a.sum_low / a.count,
       precip_in: a.sum_precip / a.count,
       photoperiod_h: a.sum_photo / a.count,
+      sunshine_hours: a.sum_sun / a.count,
       soil_temp_f: a.sum_soil / a.count,
       et0_in: a.sum_et0 / a.count,
     });
@@ -85,6 +88,7 @@ function lookupConditions(date: Date, year?: number): Omit<WeeklyConditions, 'we
         avg_low_f: record.low_f,
         soil_temp_f: record.soil_temp_f,
         photoperiod_h: record.photoperiod_h,
+        sunshine_hours: record.sunshine_hours,
       };
     }
   }
@@ -97,6 +101,7 @@ function lookupConditions(date: Date, year?: number): Omit<WeeklyConditions, 'we
     avg_low_f: normal.low_f,
     soil_temp_f: normal.soil_temp_f,
     photoperiod_h: normal.photoperiod_h,
+    sunshine_hours: normal.sunshine_hours,
   };
 }
 
