@@ -88,28 +88,13 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   // ── Spring/Fall greens ──────────────────────────────────────────────────
   // Consumption-derived: 7 lbs/week family + 7 distribution = 14 lbs/week greens.
 
-  // Spring lettuce → fall spinach succession in greens zone.
-  // Lettuce produces May-July, bolts from heat. Spinach needs BOTH:
-  //   - Photoperiod < 14.5h (bolt safety — ~July 28 every year)
-  //   - Temperature < 75°F (germination + establishment — no hot soil)
-  // In GR these align around July 30 - August 15 depending on year.
-  {
-    species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210,
-    planting_date: '2025-04-15', zone: 'shade', stagger_days: 14,
-    zone_id: 'greens',
-    successor: {
-      species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 200,
-      trigger: {
-        predecessor_death_pct: 0.8,
-        conditions: [
-          { factor: 'photoperiod_h', threshold: 14.5, direction: 'below' },
-          { factor: 'temperature_f', threshold: 75, direction: 'below' },
-        ],
-      },
-      delay_days: 0,
-      stagger_days: 10,
-    },
-  },
+  // Spring lettuce — greens zone. Bolts gradually from heat stress (growth drops, then stress kills).
+  { species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210, planting_date: '2025-04-15', zone: 'shade', stagger_days: 14 },
+
+  // Fall spinach — independent planting, same greens zone.
+  // Sow when photoperiod < 14.5h AND temp < 75°F. In GR this is ~July 28 - August 15.
+  // Not dependent on lettuce succession — sow based on conditions regardless of lettuce status.
+  { species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 200, planting_date: '2025-08-01', zone: 'shade', stagger_days: 10 },
 
   // Kale — 120 plants (60 family + 60 distribution). Biennial, no bolt year 1.
   // Staggered over 14 days (1 full regrowth cycle) so cuts interleave weekly.
@@ -124,7 +109,9 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2025-05-25', zone: 'full_sun' },
 
   // Potato — 88 plants (cellar only, buy store-bought Feb-Jun). Bulk harvest.
-  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-04-20', zone: 'full_sun' },
+  // Moved from Apr 20 to May 1 — late April frosts kill emerged foliage.
+  // At May 1, potato stays underground (350 GDD to emerge) through any remaining frost.
+  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-05-01', zone: 'full_sun' },
 
   // Corn — 234 plants (family only, 56 lbs dried grain). Bulk harvest.
   { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2025-05-25', zone: 'full_sun' },

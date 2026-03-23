@@ -16,9 +16,10 @@ export const LETTUCE_BSS: PlantSpecies = {
     { factor: 'temperature_f', curve: { 32: 0.0, 38: 0.1, 45: 0.5, 55: 0.8, 65: 1.0, 70: 1.0, 75: 0.7, 80: 0.3, 85: 0.0 }, effect: 'growth_rate' as const },
     { factor: 'soil_moisture_pct_fc', curve: { 20: 0.0, 40: 0.2, 60: 0.75, 80: 1.0, 95: 1.0, 110: 0.6, 130: 0.0 }, effect: 'growth_rate' as const },
     { factor: 'spacing_plants_per_sq_ft', curve: { 1.0: 1.1, 2.78: 1.0, 4.0: 0.8, 6.0: 0.5 }, effect: 'growth_rate' as const },
-    // Statistical bolting: temperature-driven. At 75°F some plants bolt, by 85°F all are gone.
-    // Per-plant bolt_resistance randomizes when each individual plant bolts.
-    { factor: 'temperature_f', curve: { 70: 1.0, 75: 0.85, 80: 0.4, 85: 0.0 }, effect: 'population_survival' as const },
+    // Lettuce bolting is gradual — driven by accumulated heat days, not a single-day threshold.
+    // The growth_rate temp curve already drops to 0 at 85°F (no useful production in heat).
+    // Actual plant death from heat is handled by stress_tolerances.heat (5 days above 85°F).
+    // No population_survival curve — bolting is a stress accumulation, not an instant kill.
     { factor: 'N_ppm', curve: { 10: 0.7, 30: 1.0, 60: 1.0, 120: 0.8 }, effect: 'growth_rate' as const },
     { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
     { factor: 'K_ppm', curve: { 40: 0.8, 100: 1.0, 180: 1.0 }, effect: 'growth_rate' as const },
