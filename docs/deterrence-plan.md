@@ -118,10 +118,14 @@ Two threats to corn ears: birds and raccoons. Raccoons will defeat the electric 
 
 Suspended bird netting on bamboo stake tent frame over corn rows. **Suspended, not draped.** The tent frame keeps netting taut and elevated so birds cannot land on it and raccoons cannot pull it down to reach ears.
 
-### Companion Plants — Biological Deterrence
+### Companion Plants — Biological Deterrence (all direct sow mid-May)
 
-- **Marigold** (Bonanza Harmony): Start indoors in soil blocks alongside kale/tomato. Transplant mid-May. Visual pest confusion for cabbage moth (kale) and Colorado potato beetle (potato). Nematode suppression in rhizosphere.
-- **Nasturtium** (Trailing Mix): Direct sow after last frost (~May 15). Aphid trap crop. Plant 72" from protected crops (closer causes aphid hopping to target crops).
+Counts derived from effective radii in pest model (`src/core/data/pests.ts`).
+
+- **Marigold** (34 plants): Direct sow. Visual confusion for cabbage moth (kale) and CPB (potato). 18" effective radius → 36" grid on kale/potato zone borders + 2 internal kale rows. Nematode suppression bonus in rhizosphere.
+- **Nasturtium** (22 plants): Direct sow. Aphid trap crop + predator attraction. 72" effective radius. Single line at channelX - 84" (72" west of cherry tomatoes), 36-48" spacing along trellis.
+- **Calendula** (10 plants): Direct sow. Predator attraction (ladybugs, hoverflies, lacewings, parasitic wasps). 120" radius — 4 anchor points cover entire garden.
+- **Sweet Alyssum** (12 plants): Direct sow. General pollinator attraction. 2-3 clusters near tomato/corn.
 
 ---
 
@@ -141,11 +145,10 @@ Suspended bird netting on bamboo stake tent frame over corn rows. **Suspended, n
 | When | Action |
 |------|--------|
 | Late March | Order fence + detection components |
-| March 22 | Start marigold blocks indoors (alongside kale/tomato) |
 | April 5-7 | Install posts (trees + T-posts), run wire |
 | April 8-10 | Connect charger, ground rod, indicator lights, switch, bait, test |
 | April 10+ | Deploy live trap if rabbit activity observed |
-| May 15 | Transplant marigolds, direct sow nasturtiums |
+| May 15 | Direct sow all companions: 34 marigold, 22 nasturtium, 10 calendula, 12 alyssum |
 | August | Install bird netting over corn (before ears form) |
 | As needed | Squirrel traps if damage observed |
 | Weekly | Walk fence line: clear vegetation, check charger, rebait |

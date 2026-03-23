@@ -63,11 +63,22 @@ All soil-blocked crops get 2 seeds per block to maximize germination success.
 | Spinach (Bloomsdale) | 200 | -- | 236 | 1,000 | Direct sow | 4x surplus |
 | Corn (Nothstine Dent) | 234 | -- | 276 | 400 | Direct sow | 1.4x plan |
 | Potato (Kennebec) | 88 | -- | -- | -- | Direct plant | Seed tubers TBD |
-| Calendula (Alpha) | ~50 | -- | ~59 | 200 | Direct sow | Covered |
-| Nasturtium (Trailing) | ~50 | -- | ~59 | 230 | Direct sow | Covered |
-| Sweet Alyssum | ~50 | -- | ~59 | 100 | Direct sow | Pollinator cover, not in PRODUCTION_PLAN |
+| Calendula (Alpha) | 10 | -- | 12 | 200 | Direct sow | 17x surplus. 4 anchor points + redundancy (120" predator radius). |
+| Nasturtium (Trailing) | 22 | -- | 26 | 230 | Direct sow | 9x surplus. Single line 72" W of trellis, 36-48" spacing. |
+| Sweet Alyssum | 12 | -- | 14 | 100 | Direct sow | 7x surplus. 2-3 pollinator clusters near tomato/corn. |
 
 **Dropped**: Catnip, Sweetie Tomato.
+
+### Companion plant spatial derivation (all direct sow mid-May)
+
+All counts derived from pest model effective radii (`src/core/data/pests.ts`), not guesswork.
+
+| Plant | Mechanism | Effective radius | Protects | Placement | Count |
+|-------|-----------|-----------------|----------|-----------|-------|
+| Marigold | Visual confusion | 18" | Kale (cabbage moth), Potato (CPB) | 36" grid on zone borders + 2 internal rows | 34 |
+| Nasturtium | Aphid trap crop + predator attraction | 72" | Tomatoes (trellis) | Line at channelX - 84", 36-48" spacing along 960" trellis | 22 |
+| Calendula | Predator attraction (ladybugs, hoverflies, lacewings) | 120" | Whole garden (aphids, CPB larvae) | 4 anchor points: kale center, potato center, corn center, greens/trellis | 10 |
+| Sweet Alyssum | Pollinator cover | Not modeled | General | 2-3 clusters near tomato + corn for pollination | 12 |
 
 ### Soil block summary
 

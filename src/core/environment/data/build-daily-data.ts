@@ -193,6 +193,16 @@ const SOIL_SMOOTHING_ALPHA = 1 / 7;
 const MULCH_BUFFER = 3;
 let soilTempEma: number | null = null;
 
+// Water balance model for soil moisture
+// Soil parameters from A&L Great Lakes soil test (Sep 2025, Falcon Food Forest)
+// HILLSIDE: OM 5.5%, CEC 11.9 → loam with high organic matter
+// VALLEY: OM 7.0%, CEC 13.9 → loam to clay loam
+const FIELD_CAPACITY_IN = 3.2;    // ~32% volumetric × 10" root zone = 3.2" water
+const WILTING_POINT_IN = 1.5;     // ~15% volumetric × 10" root zone
+const SATURATION_IN = 4.5;        // ~45% porosity × 10" root zone
+const DRAINAGE_RATE = 0.3;        // Fraction of excess above FC that drains per day
+let soilWater_in = FIELD_CAPACITY_IN; // Start at field capacity (spring snowmelt)
+
 interface DailyRecord {
   date: string;
   high_f: number;
@@ -201,6 +211,7 @@ interface DailyRecord {
   photoperiod_h: number;
   sunshine_hours: number;
   soil_temp_f: number;
+  soil_moisture_pct_fc: number;
   et0_in: number;
   // Data source flags
   sunshine_source: 'nsrdb' | 'estimated';
@@ -251,15 +262,42 @@ for (const [dateStr, day] of sorted) {
     sunshine_source = 'estimated';
   }
 
+  // Water balance: precip in, ET₀ out, drain excess
+  const et0 = computeET0(day.high_f, day.low_f, doy, LATITUDE);
+  const precip = day.precip_in ?? 0;
+
+  // Reset to field capacity at start of each year (spring snowmelt)
+  if (doy <= 2) soilWater_in = FIELD_CAPACITY_IN;
+
+  soilWater_in += precip;
+  soilWater_in -= et0;
+  // Drain excess above field capacity
+  if (soilWater_in > FIELD_CAPACITY_IN) {
+    const excess = soilWater_in - FIELD_CAPACITY_IN;
+    soilWater_in -= excess * DRAINAGE_RATE;
+  }
+  // Irrigation: gardener waters when soil drops below 60% FC during growing season (May-Oct)
+  const month = date.getMonth() + 1;
+  const isGrowingSeason = month >= 4 && month <= 10;
+  const IRRIGATION_TRIGGER_IN = FIELD_CAPACITY_IN * 0.6;  // Water when below 60% FC
+  const IRRIGATION_TARGET_IN = FIELD_CAPACITY_IN * 0.8;    // Top up to 80% FC
+  if (isGrowingSeason && soilWater_in < IRRIGATION_TRIGGER_IN) {
+    soilWater_in = IRRIGATION_TARGET_IN;
+  }
+  // Clamp: can't go below wilting point (deep roots find some water) or above saturation
+  soilWater_in = Math.max(WILTING_POINT_IN * 0.5, Math.min(SATURATION_IN, soilWater_in));
+  const soil_moisture_pct_fc = Math.round((soilWater_in / FIELD_CAPACITY_IN) * 100 * 10) / 10;
+
   records.push({
     date: dateStr,
     high_f: day.high_f,
     low_f: day.low_f,
-    precip_in: day.precip_in ?? 0,
+    precip_in: precip,
     photoperiod_h: Math.round(computePhotoperiod(LATITUDE, doy) * 100) / 100,
     sunshine_hours: Math.round(sunshine_hours * 10) / 10,
     soil_temp_f,
-    et0_in: Math.round(computeET0(day.high_f, day.low_f, doy, LATITUDE) * 1000) / 1000,
+    soil_moisture_pct_fc,
+    et0_in: Math.round(et0 * 1000) / 1000,
     sunshine_source,
     soil_temp_source,
   });

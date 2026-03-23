@@ -20,6 +20,7 @@ interface DailyRecord {
   photoperiod_h: number;
   sunshine_hours: number;
   soil_temp_f: number;
+  soil_moisture_pct_fc: number;
   et0_in: number;
 }
 
@@ -36,18 +37,19 @@ function buildDateIndex(records: DailyRecord[]): Map<string, DailyRecord> {
 
 /** Compute 365-day normals (mean per day-of-year across all years). */
 function buildNormals(records: DailyRecord[]): Map<number, DailyRecord> {
-  const accum = new Map<number, { sum_high: number; sum_low: number; sum_precip: number; sum_photo: number; sum_sun: number; sum_soil: number; sum_et0: number; count: number }>();
+  const accum = new Map<number, { sum_high: number; sum_low: number; sum_precip: number; sum_photo: number; sum_sun: number; sum_soil: number; sum_moisture: number; sum_et0: number; count: number }>();
 
   for (const r of records) {
     const date = new Date(r.date);
     const doy = getDoy(date);
-    const entry = accum.get(doy) ?? { sum_high: 0, sum_low: 0, sum_precip: 0, sum_photo: 0, sum_sun: 0, sum_soil: 0, sum_et0: 0, count: 0 };
+    const entry = accum.get(doy) ?? { sum_high: 0, sum_low: 0, sum_precip: 0, sum_photo: 0, sum_sun: 0, sum_soil: 0, sum_moisture: 0, sum_et0: 0, count: 0 };
     entry.sum_high += r.high_f;
     entry.sum_low += r.low_f;
     entry.sum_precip += r.precip_in;
     entry.sum_photo += r.photoperiod_h;
     entry.sum_sun += r.sunshine_hours;
     entry.sum_soil += r.soil_temp_f;
+    entry.sum_moisture += r.soil_moisture_pct_fc;
     entry.sum_et0 += r.et0_in;
     entry.count++;
     accum.set(doy, entry);
@@ -63,6 +65,7 @@ function buildNormals(records: DailyRecord[]): Map<number, DailyRecord> {
       photoperiod_h: a.sum_photo / a.count,
       sunshine_hours: a.sum_sun / a.count,
       soil_temp_f: a.sum_soil / a.count,
+      soil_moisture_pct_fc: a.sum_moisture / a.count,
       et0_in: a.sum_et0 / a.count,
     });
   }
@@ -89,6 +92,7 @@ function lookupConditions(date: Date, year?: number): Omit<WeeklyConditions, 'we
         soil_temp_f: record.soil_temp_f,
         photoperiod_h: record.photoperiod_h,
         sunshine_hours: record.sunshine_hours,
+        soil_moisture_pct_fc: record.soil_moisture_pct_fc,
       };
     }
   }
@@ -102,6 +106,7 @@ function lookupConditions(date: Date, year?: number): Omit<WeeklyConditions, 'we
     soil_temp_f: normal.soil_temp_f,
     photoperiod_h: normal.photoperiod_h,
     sunshine_hours: normal.sunshine_hours,
+    soil_moisture_pct_fc: normal.soil_moisture_pct_fc,
   };
 }
 
