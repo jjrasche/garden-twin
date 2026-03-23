@@ -11,15 +11,15 @@
 
   .layout { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
   .main-col { min-width: 0; }
-  .side-col { display: flex; flex-direction: column; gap: 12px; }
+  .side-col { display: flex; flex-direction: column; gap: 10px; }
 
-  .controls { margin-bottom: 10px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-  .controls label { font-size: 0.8rem; color: #bbb; display: flex; align-items: center; gap: 4px; }
-  .controls input[type=range] { width: 120px; }
-  .controls .value { font-weight: bold; color: #fff; min-width: 32px; }
+  .controls { margin-bottom: 10px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .controls label { font-size: 0.78rem; color: #bbb; display: flex; align-items: center; gap: 4px; }
+  .controls input[type=range] { width: 100px; }
+  .controls .value { font-weight: bold; color: #fff; min-width: 28px; font-size: 0.8rem; }
 
   .view-tabs { display: flex; gap: 0; margin-bottom: 10px; }
-  .view-tab { padding: 6px 14px; background: #2a2a3e; border: 1px solid #444; cursor: pointer; font-size: 0.8rem; color: #bbb; }
+  .view-tab { padding: 5px 12px; background: #2a2a3e; border: 1px solid #444; cursor: pointer; font-size: 0.78rem; color: #bbb; }
   .view-tab:first-child { border-radius: 4px 0 0 4px; }
   .view-tab:last-child { border-radius: 0 4px 4px 0; }
   .view-tab.active { background: #3a3a5e; color: #fff; border-color: #666; }
@@ -27,45 +27,54 @@
   canvas { display: block; border: 1px solid #333; border-radius: 4px; cursor: crosshair; }
 
   .panel { background: #222; border-radius: 6px; padding: 10px; }
-  .panel h3 { font-size: 0.85rem; margin-bottom: 6px; color: #ccc; }
-  .panel p { font-size: 0.8rem; line-height: 1.4; color: #aaa; }
+  .panel h3 { font-size: 0.82rem; margin-bottom: 5px; color: #ccc; }
+  .panel p { font-size: 0.75rem; line-height: 1.4; color: #aaa; }
 
-  .crop-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 2px solid transparent;
-    border-radius: 4px; cursor: pointer; font-size: 0.8rem; background: #2a2a3e; color: #ddd; width: 100%; margin-bottom: 4px; }
+  .crop-btn { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border: 2px solid transparent;
+    border-radius: 4px; cursor: pointer; font-size: 0.78rem; background: #2a2a3e; color: #ddd; width: 100%; margin-bottom: 3px; }
   .crop-btn.active { border-color: #fff; background: #3a3a5e; }
-  .crop-btn .swatch { width: 14px; height: 14px; border-radius: 2px; }
-  .crop-btn .info { font-size: 0.7rem; color: #999; margin-left: auto; }
+  .crop-btn .swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+  .crop-btn .info { font-size: 0.65rem; color: #999; margin-left: auto; white-space: nowrap; }
 
-  .stats-table { width: 100%; font-size: 0.75rem; border-collapse: collapse; }
-  .stats-table td { padding: 2px 4px; }
+  .stats-table { width: 100%; font-size: 0.72rem; border-collapse: collapse; }
+  .stats-table td { padding: 2px 3px; }
   .stats-table .num { text-align: right; font-variant-numeric: tabular-nums; }
   .stats-table .good { color: #6bcb77; }
   .stats-table .warn { color: #ffd93d; }
   .stats-table .bad { color: #ff6b6b; }
 
-  .btn { padding: 6px 12px; border: 1px solid #555; border-radius: 4px; background: #2a2a3e;
-    color: #ddd; cursor: pointer; font-size: 0.8rem; }
+  .btn { padding: 5px 10px; border: 1px solid #555; border-radius: 4px; background: #2a2a3e;
+    color: #ddd; cursor: pointer; font-size: 0.78rem; }
   .btn:hover { background: #3a3a5e; }
   .btn.primary { background: #3a5a8e; border-color: #5a8abe; }
   .btn.primary:hover { background: #4a6a9e; }
 
-  .legend { display: flex; gap: 0; margin-top: 8px; height: 20px; border-radius: 3px; overflow: hidden; }
-  .legend-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: #000; }
+  .legend { display: flex; gap: 0; margin-top: 8px; height: 18px; border-radius: 3px; overflow: hidden; }
+  .legend-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 600; color: #000; }
 
-  #tooltip { position: absolute; display: none; background: rgba(0,0,0,0.85); padding: 6px 10px;
-    border-radius: 4px; font-size: 0.75rem; pointer-events: none; z-index: 10; border: 1px solid #555; }
+  .tray-dims { font-size: 0.68rem; color: #777; margin-top: 4px; }
+
+  #tooltip { position: absolute; display: none; background: rgba(0,0,0,0.88); padding: 6px 10px;
+    border-radius: 4px; font-size: 0.72rem; pointer-events: none; z-index: 10; border: 1px solid #555; line-height: 1.4; }
 </style>
 </head>
 <body>
 
 <h1>Seed Block Placement Optimizer</h1>
-<div class="subtitle">Place crop blocks on the tray grid. Optimizer minimizes PPFD mismatch. | 2x Barrina TX36 @ adjustable height</div>
+<div class="subtitle">2x Barrina TX36 (24" each) | Real 1020 tray inner dims | Click/drag to paint, auto-optimize to minimize PPFD mismatch</div>
 
 <div class="controls">
   <label>Height: <input type="range" id="heightSlider" min="6" max="16" step="0.5" value="9">
   <span class="value" id="heightVal">9"</span></label>
+
   <label>Baseline PPFD @ 4": <input type="range" id="baselineSlider" min="400" max="700" step="10" value="560">
   <span class="value" id="baselineVal">560</span></label>
+
+  <label>Bar gap: <input type="range" id="gapSlider" min="0" max="12" step="0.5" value="0">
+  <span class="value" id="gapVal">0"</span></label>
+
+  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="4">
+  <span class="value" id="trayVal">4</span></label>
 </div>
 
 <div class="layout">
@@ -75,16 +84,17 @@
     <div class="view-tab" data-view="difference">PPFD Mismatch</div>
     <div class="view-tab" data-view="crop">Crop Assignment</div>
   </div>
-  <canvas id="grid" width="920" height="460"></canvas>
+  <canvas id="grid" width="980" height="480"></canvas>
   <div class="legend" id="legend"></div>
+  <div class="tray-dims" id="trayDims"></div>
 </div>
 
 <div class="side-col">
   <div class="panel">
     <h3>Paint Crop</h3>
-    <p style="margin-bottom:6px">Click a crop, then click blocks. Shift+click to fill a tray. Right-click to erase.</p>
+    <p style="margin-bottom:5px">Click or drag-paint blocks. Shift+click = fill tray. Right-click = erase. Ctrl+click = fill row.</p>
     <div id="cropButtons"></div>
-    <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+    <div style="margin-top:6px; display:flex; gap:5px; flex-wrap:wrap;">
       <button class="btn primary" id="optimizeBtn">Auto-Optimize</button>
       <button class="btn" id="clearBtn">Clear All</button>
     </div>
@@ -98,16 +108,18 @@
   <div class="panel">
     <h3>PPFD Fit Summary</h3>
     <table class="stats-table" id="fitTable"></table>
-    <p id="totalScore" style="margin-top:6px; font-weight:bold;"></p>
+    <p id="totalScore" style="margin-top:5px; font-weight:bold; font-size:0.75rem;"></p>
   </div>
 
   <div class="panel">
-    <h3>How it works</h3>
-    <p>Each crop has an optimal PPFD range. The <b>mismatch</b> view colors blocks by how far the
-    actual PPFD deviates from optimal. Green = within range, yellow = slightly off, red = poor fit.</p>
-    <p style="margin-top:4px"><b>Auto-Optimize</b> assigns blocks to minimize total mismatch across
-    all crops, respecting target block counts. It tries high-demand crops (tomato) in the hottest
-    spots first, then fills outward.</p>
+    <h3>Interaction</h3>
+    <p><b>Click</b> = assign active crop to block</p>
+    <p><b>Drag</b> = paint multiple blocks</p>
+    <p><b>Shift+click</b> = fill entire tray</p>
+    <p><b>Ctrl+click</b> = fill row across all trays</p>
+    <p><b>Right-click</b> = erase single block</p>
+    <p><b>No crop selected</b> = click cycles crops</p>
+    <p style="margin-top:4px"><b>Bar gap</b> = inches between the two 24" bars (0 = butted). Spreading reduces hotspot, evens distribution.</p>
   </div>
 </div>
 </div>
@@ -118,27 +130,57 @@
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const CROPS = {
-  tomato:   { label: 'Tomato',   color: '#ff5050', optimal: [200, 250], target: 21, seeds_per_block: 2 },
-  marigold: { label: 'Marigold', color: '#ffd232', optimal: [150, 235], target: 52, seeds_per_block: 2 },
-  kale:     { label: 'Kale',     color: '#50c864', optimal: [140, 210], target: 123, seeds_per_block: 2 },
+  tomato:   { label: 'Tomato',   color: '#ff5050', optimal: [200, 250], target: 21 },
+  marigold: { label: 'Marigold', color: '#ffd232', optimal: [150, 235], target: 52 },
+  kale:     { label: 'Kale',     color: '#50c864', optimal: [140, 210], target: 123 },
 };
 const CROP_IDS = Object.keys(CROPS);
 
-const TRAY_COUNT = 4;
-const TRAY_WIDTH_IN = 10;
-const TRAY_DEPTH_IN = 20;
-const TOTAL_LENGTH = TRAY_COUNT * TRAY_WIDTH_IN; // 40"
-const BLOCK_SIZE = 2;
-const BLOCK_GAP = 0.125;
-const BLOCK_STEP = BLOCK_SIZE + BLOCK_GAP;
-const COLS_PER_TRAY = Math.floor((TRAY_WIDTH_IN + BLOCK_GAP) / BLOCK_STEP); // 4
-const ROWS_PER_TRAY = Math.floor((TRAY_DEPTH_IN + BLOCK_GAP) / BLOCK_STEP); // 9
-const BLOCKS_PER_TRAY = COLS_PER_TRAY * ROWS_PER_TRAY; // 36
-const TOTAL_BLOCKS = BLOCKS_PER_TRAY * TRAY_COUNT; // 144
+// Real 1020 tray inner bottom dimensions (conservative: Bootstrap Farmer spec)
+// Top opening is wider due to taper but blocks sit on the bottom
+const TRAY_INNER_LENGTH = 20;  // ~19.625-20.39" depending on brand, using 20" usable
+const TRAY_INNER_WIDTH = 10;   // ~9.5-10.15" depending on brand, using 10" usable
 
-const BAR_LENGTH = 24;
-const TOTAL_BAR = BAR_LENGTH * 2;
-const BAR_OFFSET = (TOTAL_BAR - TOTAL_LENGTH) / 2; // 4"
+const BLOCK_SIZE = 2;  // 2" soil blocks, flush-touching (no gap needed for soil blocks)
+
+const BAR_LENGTH = 24; // each Barrina TX36 bar
+
+// ── Dynamic state (recalculated when sliders change) ────────────────────────
+
+let trayCount = 4;
+let barGap = 0;       // inches between the two bars
+let blocks = [];
+
+function colsPerTray() { return Math.floor(TRAY_INNER_WIDTH / BLOCK_SIZE); }   // 5
+function rowsPerTray() { return Math.floor(TRAY_INNER_LENGTH / BLOCK_SIZE); }   // 10
+function blocksPerTray() { return colsPerTray() * rowsPerTray(); }              // 50
+function totalBlocks() { return blocksPerTray() * trayCount; }
+
+function totalTrayLength() { return trayCount * TRAY_INNER_WIDTH; }
+// Bars centered over trays. With gap, total bar span = 2*24 + gap
+function barSpan() { return 2 * BAR_LENGTH + barGap; }
+
+function buildBlockPositions() {
+  const newBlocks = [];
+  const cols = colsPerTray();
+  const rows = rowsPerTray();
+  const xPad = (TRAY_INNER_WIDTH - cols * BLOCK_SIZE) / 2;
+  const yPad = (TRAY_INNER_LENGTH - rows * BLOCK_SIZE) / 2;
+
+  for (let tray = 0; tray < trayCount; tray++) {
+    const trayStartX = tray * TRAY_INNER_WIDTH;
+    for (let col = 0; col < cols; col++) {
+      for (let row = 0; row < rows; row++) {
+        const cx = trayStartX + xPad + col * BLOCK_SIZE + BLOCK_SIZE / 2;
+        const cy = yPad + row * BLOCK_SIZE + BLOCK_SIZE / 2;
+        // Preserve existing crop assignment if block index matches
+        const existing = blocks.find(b => b.tray === tray && b.col === col && b.row === row);
+        newBlocks.push({ tray, col, row, cx, cy, crop: existing ? existing.crop : null, ppfd: 0 });
+      }
+    }
+  }
+  return newBlocks;
+}
 
 // ── Canvas layout ───────────────────────────────────────────────────────────
 
@@ -146,32 +188,11 @@ const canvas = document.getElementById('grid');
 const ctx = canvas.getContext('2d');
 const tooltip = document.getElementById('tooltip');
 
-const ML = 50, MT = 36, MR = 10, MB = 40;
+const ML = 50, MT = 36, MR = 14, MB = 40;
 const PW = canvas.width - ML - MR;
 const PH = canvas.height - MT - MB;
 
-// ── Block geometry ──────────────────────────────────────────────────────────
-
-function buildBlockPositions() {
-  const blocks = [];
-  for (let tray = 0; tray < TRAY_COUNT; tray++) {
-    const trayStartX = tray * TRAY_WIDTH_IN;
-    const xPad = (TRAY_WIDTH_IN - COLS_PER_TRAY * BLOCK_SIZE - (COLS_PER_TRAY - 1) * BLOCK_GAP) / 2;
-    const yPad = (TRAY_DEPTH_IN - ROWS_PER_TRAY * BLOCK_SIZE - (ROWS_PER_TRAY - 1) * BLOCK_GAP) / 2;
-    for (let col = 0; col < COLS_PER_TRAY; col++) {
-      for (let row = 0; row < ROWS_PER_TRAY; row++) {
-        const cx = trayStartX + xPad + col * BLOCK_STEP + BLOCK_SIZE / 2;
-        const cy = yPad + row * BLOCK_STEP + BLOCK_SIZE / 2;
-        blocks.push({ tray, col, row, cx, cy, crop: null });
-      }
-    }
-  }
-  return blocks;
-}
-
-let blocks = buildBlockPositions();
-
-// ── PPFD physics (same model as light-ppfd-heatmap.html) ────────────────────
+// ── PPFD physics ────────────────────────────────────────────────────────────
 
 function ledProfile(angleDeg) {
   const a = Math.abs(angleDeg);
@@ -202,35 +223,44 @@ function calibrate(h, baseline) {
   calFactor = baseline / barIrradiance(0, 24, 12, 0, 4);
 }
 
-function computePPFD(px, py_offset, h) {
-  const aStart = -BAR_OFFSET;
-  const aEnd = BAR_LENGTH - BAR_OFFSET;
-  const bStart = aEnd;
-  const bEnd = 2 * BAR_LENGTH - BAR_OFFSET;
-  return (barIrradiance(aStart, aEnd, px, py_offset, h) +
-          barIrradiance(bStart, bEnd, px, py_offset, h)) * calFactor;
+// Bar positions relative to tray x-coordinate system
+// Bars are centered over the tray row. barA is left, barB is right, with barGap between.
+function barPositions() {
+  const trayLen = totalTrayLength();
+  const center = trayLen / 2;
+  const aStart = center - BAR_LENGTH - barGap / 2;
+  const aEnd = center - barGap / 2;
+  const bStart = center + barGap / 2;
+  const bEnd = center + BAR_LENGTH + barGap / 2;
+  return { aStart, aEnd, bStart, bEnd };
 }
 
-// Precompute PPFD for every block center
+function computePPFD(px, py_offset, h) {
+  const bp = barPositions();
+  return (barIrradiance(bp.aStart, bp.aEnd, px, py_offset, h) +
+          barIrradiance(bp.bStart, bp.bEnd, px, py_offset, h)) * calFactor;
+}
+
 function computeBlockPPFDs(height, baseline) {
   calibrate(height, baseline);
   for (const b of blocks) {
-    const py = b.cy - TRAY_DEPTH_IN / 2; // offset from centerline
+    const py = b.cy - TRAY_INNER_LENGTH / 2;
     b.ppfd = computePPFD(b.cx, py, height);
   }
 }
 
-// Also compute a background heatmap grid for the raw PPFD view
-const HM_NX = 80, HM_NY = 40;
+// Background heatmap grid
+const HM_NX = 100, HM_NY = 50;
 let heatmapGrid = [];
 function computeHeatmapGrid(height, baseline) {
   calibrate(height, baseline);
+  const trayLen = totalTrayLength();
   heatmapGrid = [];
   for (let iy = 0; iy < HM_NY; iy++) {
     heatmapGrid[iy] = [];
-    const py = (iy / (HM_NY - 1) - 0.5) * TRAY_DEPTH_IN;
+    const py = (iy / (HM_NY - 1) - 0.5) * TRAY_INNER_LENGTH;
     for (let ix = 0; ix < HM_NX; ix++) {
-      const px = (ix / (HM_NX - 1)) * TOTAL_LENGTH;
+      const px = (ix / (HM_NX - 1)) * trayLen;
       heatmapGrid[iy][ix] = computePPFD(px, py, height);
     }
   }
@@ -264,37 +294,32 @@ function totalMismatch() {
 // ── Optimizer ───────────────────────────────────────────────────────────────
 
 function optimize() {
-  // Strategy: sort blocks by PPFD descending. Assign crops by preference:
-  // highest PPFD blocks get tomato (wants 200-250), then marigold (150-235),
-  // then kale (140-210).
-  // Within each crop, pick the blocks whose PPFD is closest to the crop's midpoint.
-
-  // Reset all
   for (const b of blocks) b.crop = null;
 
-  // Sort blocks by PPFD descending
-  const sorted = [...blocks].sort((a, b) => b.ppfd - a.ppfd);
-
-  // For each crop, compute ideal PPFD midpoint and how many we need
-  const assignments = CROP_IDS.map(id => ({
-    id,
-    mid: (CROPS[id].optimal[0] + CROPS[id].optimal[1]) / 2,
-    count: CROPS[id].target,
-    assigned: 0,
-  }));
-
-  // Score each unassigned block for each crop, greedily assign
   // Sort crops by strictness (narrowest optimal range first)
-  assignments.sort((a, b) => {
-    const rangeA = CROPS[a.id].optimal[1] - CROPS[a.id].optimal[0];
-    const rangeB = CROPS[b.id].optimal[1] - CROPS[b.id].optimal[0];
-    return rangeA - rangeB;
-  });
+  const assignments = CROP_IDS
+    .map(id => ({
+      id,
+      mid: (CROPS[id].optimal[0] + CROPS[id].optimal[1]) / 2,
+      count: Math.min(CROPS[id].target, totalBlocks()),
+    }))
+    .sort((a, b) => {
+      const rA = CROPS[a.id].optimal[1] - CROPS[a.id].optimal[0];
+      const rB = CROPS[b.id].optimal[1] - CROPS[b.id].optimal[0];
+      return rA - rB;
+    });
 
+  // Cap total assigned to available blocks
+  let remaining = totalBlocks();
+  for (const crop of assignments) {
+    crop.count = Math.min(crop.count, remaining);
+    remaining -= crop.count;
+  }
+
+  const sorted = [...blocks].sort((a, b) => b.ppfd - a.ppfd);
   const used = new Set();
 
   for (const crop of assignments) {
-    // Score all unused blocks by closeness to this crop's midpoint
     const candidates = sorted
       .filter(b => !used.has(b))
       .map(b => ({ block: b, dist: Math.abs(b.ppfd - crop.mid) }))
@@ -307,7 +332,6 @@ function optimize() {
   }
 
   render();
-  updateStats();
 }
 
 // ── Rendering ───────────────────────────────────────────────────────────────
@@ -325,7 +349,6 @@ function ppfdColor(ppfd) {
 }
 
 function mismatchColor(pct) {
-  // 0% = green, 10% = yellow, 25%+ = red
   if (pct <= 0.05) return [60, 200, 100];
   if (pct <= 0.15) return lerp3([60, 200, 100], [240, 210, 50], (pct - 0.05) / 0.10);
   if (pct <= 0.30) return lerp3([240, 210, 50], [220, 60, 40], (pct - 0.15) / 0.15);
@@ -338,11 +361,12 @@ function lerp3(a, b, t) {
 }
 
 function inchToPixel(xIn, yIn) {
-  return [ML + (xIn / TOTAL_LENGTH) * PW, MT + (yIn / TRAY_DEPTH_IN) * PH];
+  const tl = totalTrayLength();
+  return [ML + (xIn / tl) * PW, MT + (yIn / TRAY_INNER_LENGTH) * PH];
 }
-
 function inchWToPixelW(wIn, hIn) {
-  return [(wIn / TOTAL_LENGTH) * PW, (hIn / TRAY_DEPTH_IN) * PH];
+  const tl = totalTrayLength();
+  return [(wIn / tl) * PW, (hIn / TRAY_INNER_LENGTH) * PH];
 }
 
 function render() {
@@ -357,9 +381,10 @@ function render() {
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Background heatmap (always shown, dimmed when in crop/mismatch view)
+  // Background heatmap
+  const tl = totalTrayLength();
   const cellW = PW / HM_NX, cellH = PH / HM_NY;
-  const dim = currentView !== 'ppfd' ? 0.3 : 1.0;
+  const dim = currentView !== 'ppfd' ? 0.25 : 1.0;
   for (let iy = 0; iy < HM_NY; iy++) {
     for (let ix = 0; ix < HM_NX; ix++) {
       const c = ppfdColor(heatmapGrid[iy][ix]);
@@ -371,9 +396,9 @@ function render() {
   // Tray outlines
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth = 1.5;
-  for (let i = 0; i < TRAY_COUNT; i++) {
-    const [tx, ty] = inchToPixel(i * TRAY_WIDTH_IN, 0);
-    const [tw, th] = inchWToPixelW(TRAY_WIDTH_IN, TRAY_DEPTH_IN);
+  for (let i = 0; i < trayCount; i++) {
+    const [tx, ty] = inchToPixel(i * TRAY_INNER_WIDTH, 0);
+    const [tw, th] = inchWToPixelW(TRAY_INNER_WIDTH, TRAY_INNER_LENGTH);
     ctx.strokeRect(tx, ty, tw, th);
   }
 
@@ -383,7 +408,6 @@ function render() {
     const [px, py] = inchToPixel(b.cx - BLOCK_SIZE / 2, b.cy - BLOCK_SIZE / 2);
 
     if (currentView === 'ppfd') {
-      // Raw PPFD color with crop outline
       const c = ppfdColor(b.ppfd);
       ctx.fillStyle = `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
       ctx.fillRect(px, py, bw, bh);
@@ -392,7 +416,7 @@ function render() {
         ctx.lineWidth = 2;
         ctx.strokeRect(px + 1, py + 1, bw - 2, bh - 2);
       } else {
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(px, py, bw, bh);
       }
@@ -406,13 +430,13 @@ function render() {
         ctx.lineWidth = 1.5;
         ctx.strokeRect(px + 1, py + 1, bw - 2, bh - 2);
       } else {
-        ctx.fillStyle = 'rgba(40,40,60,0.6)';
+        ctx.fillStyle = 'rgba(40,40,60,0.5)';
         ctx.fillRect(px, py, bw, bh);
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(px, py, bw, bh);
       }
-    } else { // crop view
+    } else {
       if (b.crop) {
         ctx.fillStyle = CROPS[b.crop].color;
         ctx.globalAlpha = 0.8;
@@ -422,58 +446,76 @@ function render() {
         ctx.lineWidth = 1;
         ctx.strokeRect(px, py, bw, bh);
       } else {
-        ctx.fillStyle = 'rgba(60,60,80,0.5)';
+        ctx.fillStyle = 'rgba(60,60,80,0.4)';
         ctx.fillRect(px, py, bw, bh);
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(px, py, bw, bh);
       }
     }
 
-    // PPFD value on block (raw + difference views)
-    if (currentView !== 'crop') {
-      ctx.font = '9px monospace';
+    // PPFD value on block
+    if (currentView !== 'crop' && bw > 20) {
+      ctx.font = bw > 30 ? '9px monospace' : '7px monospace';
       ctx.textAlign = 'center';
-      ctx.fillStyle = b.ppfd > 200 ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)';
+      ctx.fillStyle = b.ppfd > 200 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)';
       ctx.fillText(Math.round(b.ppfd), px + bw / 2, py + bh / 2 + 3);
     }
 
-    // Crop initial letter (all views)
-    if (b.crop) {
+    // Crop letter
+    if (b.crop && bw > 14) {
       const letter = b.crop[0].toUpperCase();
-      ctx.font = 'bold 10px Segoe UI, system-ui';
+      ctx.font = bw > 30 ? 'bold 9px Segoe UI' : 'bold 7px Segoe UI';
       ctx.textAlign = 'center';
       if (currentView === 'crop') {
         ctx.fillStyle = '#fff';
-        ctx.fillText(letter, px + bw / 2, py + bh / 2 + 4);
+        ctx.fillText(letter, px + bw / 2, py + bh / 2 + 3);
       } else {
         ctx.fillStyle = CROPS[b.crop].color;
-        ctx.fillText(letter, px + bw / 2, py + bh - 2);
+        ctx.fillText(letter, px + bw / 2, py + bh - 1);
       }
     }
   }
 
   // Bar indicators
+  const bp = barPositions();
   ctx.fillStyle = '#f0c040';
   ctx.font = 'bold 10px Segoe UI, system-ui';
   ctx.textAlign = 'center';
-  const barAStartPx = ML + (-BAR_OFFSET / TOTAL_LENGTH) * PW;
-  const barAEndPx = ML + ((BAR_LENGTH - BAR_OFFSET) / TOTAL_LENGTH) * PW;
-  const barBEndPx = ML + ((2 * BAR_LENGTH - BAR_OFFSET) / TOTAL_LENGTH) * PW;
-  ctx.fillRect(Math.max(ML, barAStartPx), MT - 6, barAEndPx - Math.max(ML, barAStartPx), 3);
-  ctx.fillRect(barAEndPx, MT - 6, Math.min(ML + PW, barBEndPx) - barAEndPx, 3);
-  ctx.fillText('BAR A', (Math.max(ML, barAStartPx) + barAEndPx) / 2, MT - 10);
-  ctx.fillText('BAR B', (barAEndPx + Math.min(ML + PW, barBEndPx)) / 2, MT - 10);
+
+  const barAStartPx = ML + (bp.aStart / tl) * PW;
+  const barAEndPx = ML + (bp.aEnd / tl) * PW;
+  const barBStartPx = ML + (bp.bStart / tl) * PW;
+  const barBEndPx = ML + (bp.bEnd / tl) * PW;
+
+  // Clamp to canvas area
+  const clampL = Math.max(ML, barAStartPx);
+  const clampR = Math.min(ML + PW, barBEndPx);
+
+  ctx.fillRect(clampL, MT - 6, Math.min(barAEndPx, ML + PW) - clampL, 3);
+  ctx.fillRect(Math.max(ML, barBStartPx), MT - 6, clampR - Math.max(ML, barBStartPx), 3);
+
+  if (barGap > 0) {
+    // Draw gap indicator
+    ctx.fillStyle = '#666';
+    ctx.font = '8px Segoe UI';
+    ctx.fillText(barGap + '" gap', (barAEndPx + barBStartPx) / 2, MT - 10);
+  }
+
+  ctx.fillStyle = '#f0c040';
+  ctx.font = 'bold 10px Segoe UI';
+  ctx.fillText('BAR A', (clampL + Math.min(barAEndPx, ML + PW)) / 2, MT - 12);
+  ctx.fillText('BAR B', (Math.max(ML, barBStartPx) + clampR) / 2, MT - 12);
 
   // Axes
   ctx.fillStyle = '#888';
-  ctx.font = '10px Segoe UI, system-ui';
+  ctx.font = '10px Segoe UI';
   ctx.textAlign = 'center';
-  for (let i = 0; i <= TRAY_COUNT; i++) {
-    const x = ML + (i * TRAY_WIDTH_IN / TOTAL_LENGTH) * PW;
-    ctx.fillText((i * TRAY_WIDTH_IN) + '"', x, MT + PH + 14);
-    if (i < TRAY_COUNT) {
-      const mid = x + (TRAY_WIDTH_IN / TOTAL_LENGTH) * PW / 2;
+  for (let i = 0; i <= trayCount; i++) {
+    const x = ML + (i * TRAY_INNER_WIDTH / tl) * PW;
+    ctx.fillText((i * TRAY_INNER_WIDTH) + '"', x, MT + PH + 14);
+    if (i < trayCount) {
+      const mid = x + (TRAY_INNER_WIDTH / tl) * PW / 2;
       ctx.fillText('Tray ' + (i + 1), mid, MT + PH + 28);
     }
   }
@@ -483,15 +525,20 @@ function render() {
     ctx.fillText((yl > 0 ? '+' : '') + yl + '"', ML - 4, yPx + 3);
   }
 
+  // Tray dims readout
+  const cols = colsPerTray(), rows = rowsPerTray();
+  document.getElementById('trayDims').textContent =
+    `Tray inner: ${TRAY_INNER_WIDTH}" x ${TRAY_INNER_LENGTH}" | ${cols} cols x ${rows} rows = ${blocksPerTray()}/tray | ` +
+    `${trayCount} trays = ${totalBlocks()} total blocks | Bars span ${barSpan().toFixed(0)}" (${BAR_LENGTH}" + ${barGap}" + ${BAR_LENGTH}")`;
+
   updateStats();
 }
 
-// ── Stats panel ─────────────────────────────────────────────────────────────
+// ── Stats ───────────────────────────────────────────────────────────────────
 
 function updateStats() {
-  // Count table
   const countTable = document.getElementById('countTable');
-  let html = '<tr><td><b>Crop</b></td><td class="num"><b>Placed</b></td><td class="num"><b>Target</b></td><td class="num"><b>Diff</b></td></tr>';
+  let html = '<tr><td><b>Crop</b></td><td class="num"><b>Placed</b></td><td class="num"><b>Target</b></td><td class="num"><b>+/-</b></td></tr>';
   let totalPlaced = 0, totalTarget = 0;
   for (const id of CROP_IDS) {
     const placed = blocks.filter(b => b.crop === id).length;
@@ -506,13 +553,12 @@ function updateStats() {
   }
   html += `<tr><td><b>Total</b></td><td class="num"><b>${totalPlaced}</b></td>
     <td class="num"><b>${totalTarget}</b></td><td class="num">${totalPlaced - totalTarget > 0 ? '+' : ''}${totalPlaced - totalTarget}</td></tr>`;
-  const empty = TOTAL_BLOCKS - totalPlaced;
-  html += `<tr><td style="color:#888">Empty</td><td class="num" style="color:#888">${empty}</td><td></td><td></td></tr>`;
+  const empty = totalBlocks() - totalPlaced;
+  html += `<tr><td style="color:#666">Empty</td><td class="num" style="color:#666">${empty}</td><td></td><td></td></tr>`;
   countTable.innerHTML = html;
 
-  // Fit table
   const fitTable = document.getElementById('fitTable');
-  let fhtml = '<tr><td><b>Crop</b></td><td class="num"><b>Avg PPFD</b></td><td class="num"><b>Optimal</b></td><td class="num"><b>Avg Miss</b></td></tr>';
+  let fhtml = '<tr><td><b>Crop</b></td><td class="num"><b>Avg</b></td><td class="num"><b>Opt</b></td><td class="num"><b>Miss</b></td></tr>';
   for (const id of CROP_IDS) {
     const assigned = blocks.filter(b => b.crop === id);
     if (assigned.length === 0) {
@@ -533,27 +579,28 @@ function updateStats() {
   const assignedCount = blocks.filter(b => b.crop).length;
   const score = document.getElementById('totalScore');
   if (assignedCount === 0) {
-    score.textContent = 'Place blocks to see mismatch score.';
+    score.textContent = 'Place blocks to see score.';
     score.style.color = '#888';
   } else {
     const avg = total / assignedCount;
-    score.textContent = `Total mismatch: ${Math.round(total)} | Avg: ${avg.toFixed(1)} PPFD/block`;
+    score.textContent = `Mismatch: ${Math.round(total)} total | ${avg.toFixed(1)} avg/block`;
     score.style.color = avg < 10 ? '#6bcb77' : avg < 25 ? '#ffd93d' : '#ff6b6b';
   }
 }
 
-// ── Crop paint buttons ──────────────────────────────────────────────────────
+// ── Crop buttons ────────────────────────────────────────────────────────────
 
 let activeCrop = null;
 
 function buildCropButtons() {
   const container = document.getElementById('cropButtons');
+  container.innerHTML = '';
   for (const id of CROP_IDS) {
     const btn = document.createElement('div');
     btn.className = 'crop-btn';
     btn.dataset.crop = id;
     btn.innerHTML = `<span class="swatch" style="background:${CROPS[id].color}"></span>
-      ${CROPS[id].label} <span class="info">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]} PPFD, ${CROPS[id].target} blocks</span>`;
+      ${CROPS[id].label} <span class="info">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}, ${CROPS[id].target}blk</span>`;
     btn.addEventListener('click', () => {
       activeCrop = activeCrop === id ? null : id;
       document.querySelectorAll('.crop-btn').forEach(b => b.classList.toggle('active', b.dataset.crop === activeCrop));
@@ -562,37 +609,80 @@ function buildCropButtons() {
   }
 }
 
-// ── Canvas interaction ──────────────────────────────────────────────────────
+// ── Canvas interaction (click + drag-paint) ─────────────────────────────────
 
 function pixelToBlock(mx, my) {
+  const [bw, bh] = inchWToPixelW(BLOCK_SIZE, BLOCK_SIZE);
   for (const b of blocks) {
     const [px, py] = inchToPixel(b.cx - BLOCK_SIZE / 2, b.cy - BLOCK_SIZE / 2);
-    const [bw, bh] = inchWToPixelW(BLOCK_SIZE, BLOCK_SIZE);
     if (mx >= px && mx <= px + bw && my >= py && my <= py + bh) return b;
   }
   return null;
 }
 
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-  const b = pixelToBlock(mx, my);
-  if (!b) return;
+let painting = false;
+let lastPaintedBlock = null;
+
+function applyPaint(b, e) {
+  if (!b || b === lastPaintedBlock) return;
+  lastPaintedBlock = b;
 
   if (e.shiftKey && activeCrop) {
-    // Fill entire tray with active crop
-    for (const ob of blocks) {
-      if (ob.tray === b.tray) ob.crop = activeCrop;
-    }
+    for (const ob of blocks) { if (ob.tray === b.tray) ob.crop = activeCrop; }
+  } else if (e.ctrlKey && activeCrop) {
+    // Fill row across all trays
+    for (const ob of blocks) { if (ob.row === b.row) ob.crop = activeCrop; }
   } else if (activeCrop) {
-    b.crop = b.crop === activeCrop ? null : activeCrop;
+    b.crop = activeCrop;
   } else {
-    // No crop selected — cycle through crops
     const idx = b.crop ? CROP_IDS.indexOf(b.crop) : -1;
     b.crop = idx < CROP_IDS.length - 1 ? CROP_IDS[idx + 1] : null;
   }
   render();
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (e.button === 0) {
+    painting = true;
+    lastPaintedBlock = null;
+    const rect = canvas.getBoundingClientRect();
+    const b = pixelToBlock(e.clientX - rect.left, e.clientY - rect.top);
+    applyPaint(b, e);
+  }
 });
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+  if (painting) {
+    const b = pixelToBlock(mx, my);
+    applyPaint(b, e);
+  }
+
+  // Tooltip
+  const b = pixelToBlock(mx, my);
+  if (b) {
+    const miss = b.crop ? mismatch(b.ppfd, b.crop) : null;
+    const opt = b.crop ? CROPS[b.crop].optimal : null;
+    let text = `<b>${Math.round(b.ppfd)} PPFD</b> | Tray ${b.tray + 1}, col ${b.col + 1}, row ${b.row + 1}`;
+    if (b.crop) {
+      text += `<br>${CROPS[b.crop].label} (opt ${opt[0]}-${opt[1]})`;
+      text += `<br>Miss: ${miss.toFixed(0)} (${(mismatchPct(b.ppfd, b.crop) * 100).toFixed(0)}%)`;
+    }
+    const dli = (b.ppfd * 16 * 3600 / 1e6).toFixed(1);
+    text += `<br>DLI @16h: ${dli} mol/m&sup2;/d`;
+    tooltip.innerHTML = text;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (mx + 14) + 'px';
+    tooltip.style.top = (my - 20) + 'px';
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+window.addEventListener('mouseup', () => { painting = false; lastPaintedBlock = null; });
+canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
 canvas.addEventListener('contextmenu', (e) => {
   e.preventDefault();
@@ -600,29 +690,6 @@ canvas.addEventListener('contextmenu', (e) => {
   const b = pixelToBlock(e.clientX - rect.left, e.clientY - rect.top);
   if (b) { b.crop = null; render(); }
 });
-
-canvas.addEventListener('mousemove', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const b = pixelToBlock(e.clientX - rect.left, e.clientY - rect.top);
-  if (b) {
-    const miss = b.crop ? mismatch(b.ppfd, b.crop) : null;
-    const opt = b.crop ? CROPS[b.crop].optimal : null;
-    let text = `<b>${Math.round(b.ppfd)} PPFD</b> | Tray ${b.tray + 1}, col ${b.col + 1}, row ${b.row + 1}`;
-    if (b.crop) {
-      text += `<br>Crop: ${CROPS[b.crop].label} (optimal ${opt[0]}-${opt[1]})`;
-      text += `<br>Mismatch: ${miss.toFixed(0)} PPFD (${(mismatchPct(b.ppfd, b.crop) * 100).toFixed(0)}%)`;
-    }
-    const dli = (b.ppfd * 16 * 3600 / 1e6).toFixed(1);
-    text += `<br>DLI @16h: ${dli} mol/m&sup2;/d`;
-    tooltip.innerHTML = text;
-    tooltip.style.display = 'block';
-    tooltip.style.left = (e.clientX - rect.left + 14) + 'px';
-    tooltip.style.top = (e.clientY - rect.top - 20) + 'px';
-  } else {
-    tooltip.style.display = 'none';
-  }
-});
-canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
 // ── View tabs ───────────────────────────────────────────────────────────────
 
@@ -634,7 +701,7 @@ document.querySelectorAll('.view-tab').forEach(tab => {
   });
 });
 
-// ── Buttons ─────────────────────────────────────────────────────────────────
+// ── Buttons + sliders ───────────────────────────────────────────────────────
 
 document.getElementById('optimizeBtn').addEventListener('click', optimize);
 document.getElementById('clearBtn').addEventListener('click', () => {
@@ -642,10 +709,21 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   render();
 });
 
-// ── Sliders ─────────────────────────────────────────────────────────────────
-
 document.getElementById('heightSlider').addEventListener('input', render);
 document.getElementById('baselineSlider').addEventListener('input', render);
+
+document.getElementById('gapSlider').addEventListener('input', () => {
+  barGap = parseFloat(document.getElementById('gapSlider').value);
+  document.getElementById('gapVal').textContent = barGap + '"';
+  render();
+});
+
+document.getElementById('traySlider').addEventListener('input', () => {
+  trayCount = parseInt(document.getElementById('traySlider').value);
+  document.getElementById('trayVal').textContent = trayCount;
+  blocks = buildBlockPositions();
+  render();
+});
 
 // ── Legend ───────────────────────────────────────────────────────────────────
 
@@ -672,6 +750,7 @@ function buildLegend() {
 
 buildCropButtons();
 buildLegend();
+blocks = buildBlockPositions();
 render();
 </script>
 </body>

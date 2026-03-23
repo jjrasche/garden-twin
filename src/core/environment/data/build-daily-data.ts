@@ -127,17 +127,27 @@ interface DailyRecord {
 
 const records: DailyRecord[] = [];
 
+// Soil temp at 4" depth: exponential moving average of daily mean air temp.
+// At 4" depth, soil responds to air temp changes with ~7-day smoothing.
+// Mulch buffer: soil is ~3°F warmer than bare soil model in winter.
+const SOIL_SMOOTHING_ALPHA = 1 / 7; // 7-day EMA
+const MULCH_BUFFER = 3;
+let soilTempEma: number | null = null;
+
 for (const [dateStr, day] of [...rawDays.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
   if (day.high_f === undefined || day.low_f === undefined) continue;
 
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const doy = getDoy(date);
-  const ym = yearMeans.get(year) ?? { mean: 50, amplitude: 9 };
+  const dailyMeanAir = (day.high_f + day.low_f) / 2;
+  if (soilTempEma === null) {
+    soilTempEma = dailyMeanAir;
+  } else {
+    soilTempEma = SOIL_SMOOTHING_ALPHA * dailyMeanAir + (1 - SOIL_SMOOTHING_ALPHA) * soilTempEma;
+  }
+  // Soil under mulch is buffered: warmer in cold, cooler in heat
+  const soilTemp = soilTempEma + (dailyMeanAir < 40 ? MULCH_BUFFER : dailyMeanAir > 80 ? -2 : 0);
 
-  const DEPTH_DAMPING = 0.6;
-  const LAG_DAYS = 30;
-  const soilTemp = ym.mean + ym.amplitude * DEPTH_DAMPING * Math.sin(2 * Math.PI * (doy - 101 - LAG_DAYS) / 365);
+  const date = new Date(dateStr);
+  const doy = getDoy(date);
 
   records.push({
     date: dateStr,
