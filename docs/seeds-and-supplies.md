@@ -70,7 +70,8 @@ All soil-blocked crops get 2 seeds per block to maximize germination success.
 | Marigold | 34 | 35 |
 | **Total** | **173** | **179** |
 
-179 blocks fits in 5 trays (4x10=40/tray at 9.5"x20" measured inner dims, 21 spare).
+179 blocks fits in 4 trays (5x10=50/tray, blocks flush-touching at taper height, knife-separate at transplant).
+4 trays x 50 = 200 capacity, 21 spare positions. 2 bars (48") covers 4 trays (40") with 4" overhang each side.
 Well within 230 material capacity (+51 spare).
 
 ---

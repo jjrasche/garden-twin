@@ -73,8 +73,8 @@
   <span class="value" id="heightVal">9"</span></label>
   <label>Baseline @4": <input type="range" id="baselineSlider" min="400" max="700" step="10" value="560">
   <span class="value" id="baselineVal">560</span></label>
-  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="5">
-  <span class="value" id="trayVal">5</span></label>
+  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="4">
+  <span class="value" id="trayVal">4</span></label>
 </div>
 
 <div class="layout">
@@ -155,12 +155,12 @@ const CROP_IDS = Object.keys(CROPS);
 
 // ── Tray geometry (measured) ────────────────────────────────────────────────
 
-const TRAY_W = 9.5;   // inner width (short side), measured
+const TRAY_W = 10;     // usable width at block height (~2" up taper), 5 blocks fit flush
 const TRAY_L = 20;     // inner length (long side), measured
-const BLOCK = 2;       // 2" soil blocks, flush
-const COLS = Math.floor(TRAY_W / BLOCK);  // 4
-const ROWS = Math.floor(TRAY_L / BLOCK);  // 10
-const BPT = COLS * ROWS;                   // 40 per tray
+const BLOCK = 2;       // 2" soil blocks, flush-touching (knife-separate at transplant)
+const COLS = 5;         // 5 × 2" = 10" — snug fit at taper height, blocks touch
+const ROWS = 10;        // 10 × 2" = 20" — full length
+const BPT = COLS * ROWS; // 50 per tray
 
 // ── Light bars ──────────────────────────────────────────────────────────────
 // Each bar: { cx, cy, angle, length }
@@ -181,7 +181,7 @@ function defaultLights(nTrays) {
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-let trayCount = 5;
+let trayCount = 4;
 let blocks = [];
 
 function totalW() { return trayCount * TRAY_W; }
