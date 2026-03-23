@@ -155,10 +155,12 @@ function HarvestTooltip({ active, payload, label }: any) {
 
 interface HarvestTimelineProps {
   actualData?: WeeklyHarvest[];
+  env?: import('@core/environment/types').ConditionsResolver;
 }
 
-export function HarvestTimeline({ actualData }: HarvestTimelineProps = {}) {
-  const { env } = useWeatherSource();
+export function HarvestTimeline({ actualData, env: envProp }: HarvestTimelineProps = {}) {
+  const { env: defaultEnv } = useWeatherSource();
+  const env = envProp ?? defaultEnv;
   const chartData = useMemo(() => buildChartData(PRODUCTION_PLAN, env, actualData), [env, actualData]);
   const sowingDots = useMemo(() => buildDefaultSowingDots(GROUP_COLORS), []);
   const { onLegendEnter, onLegendLeave, seriesOpacity } = useLegendHighlight();

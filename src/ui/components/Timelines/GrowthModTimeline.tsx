@@ -99,8 +99,9 @@ function GrowthModTooltip({ active, payload, label }: any) {
   );
 }
 
-export function GrowthModTimeline() {
-  const { env } = useWeatherSource();
+export function GrowthModTimeline({ env: envProp }: { env?: import('@core/environment/types').ConditionsResolver } = {}) {
+  const { env: defaultEnv } = useWeatherSource();
+  const env = envProp ?? defaultEnv;
   const chartData = useMemo(() => buildGrowthModData(env), [env]);
   const sowingDots = useMemo(() => buildDefaultSowingDots(SPECIES_COLOR_MAP), []);
   const { onLegendEnter, onLegendLeave, seriesOpacity } = useLegendHighlight();

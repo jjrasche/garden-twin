@@ -92,8 +92,9 @@ function FlavorTooltip({ active, payload, label }: any) {
   );
 }
 
-export function FlavorTimeline() {
-  const { env } = useWeatherSource();
+export function FlavorTimeline({ env: envProp }: { env?: import('@core/environment/types').ConditionsResolver } = {}) {
+  const { env: defaultEnv } = useWeatherSource();
+  const env = envProp ?? defaultEnv;
   const chartData = useMemo(() => buildFlavorData(env), [env]);
   const sowingDots = useMemo(() => buildDefaultSowingDots(SPECIES_COLOR_MAP), []);
   const { onLegendEnter, onLegendLeave, seriesOpacity } = useLegendHighlight();

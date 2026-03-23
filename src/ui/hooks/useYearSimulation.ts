@@ -21,14 +21,14 @@ import {
   createCompositeSource,
   buildObservedDateSet,
 } from '@core/environment';
-import { fetchYearWeather, remapToTargetYear, buildSource } from '@core/calculators/WeatherBacktest';
+import { AVAILABLE_YEARS } from '@core/environment/HistoricalSource';
 import { simulateFromState } from '@core/engine/simulate';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
 import { SEASON_RANGE } from '@core/calculators/ProductionTimeline';
 
-export type YearSelection = 'average' | 2020 | 2021 | 2022 | 2023 | 2024 | 2025;
+export type YearSelection = 'average' | number;
 
-export const SELECTABLE_YEARS: YearSelection[] = ['average', 2025, 2024, 2023, 2022, 2021, 2020];
+export const SELECTABLE_YEARS: YearSelection[] = ['average', ...([...AVAILABLE_YEARS].reverse())];
 
 export interface YearSimulationResult {
   selectedYear: YearSelection;
@@ -77,14 +77,14 @@ export function useYearSimulation(gardenState: GardenState | null): YearSimulati
         if (selectedYear === 'average') {
           env = historical;
         } else if (selectedYear === 2025) {
+          // 2025 live: fetch observed weather from Open-Meteo, composite with historical fallback
           const entries = await fetchSeasonWeather(SEASON_RANGE.start);
           const observed = createObservedSource(entries);
           const dates = buildObservedDateSet(entries);
           env = createCompositeSource(observed, historical, dates);
         } else {
-          const raw = await fetchYearWeather(selectedYear);
-          const entries = remapToTargetYear(raw, 2025);
-          env = buildSource(entries);
+          // Past years: use local GHCN-Daily data
+          env = createGrandRapidsHistorical(selectedYear as number);
         }
 
         if (cancelled) return;
@@ -106,13 +106,20 @@ export function useYearSimulation(gardenState: GardenState | null): YearSimulati
       }
     }
 
-    // "average" is synchronous — no fetch needed
+    // All years use local GHCN-Daily data — no fetch needed
     if (selectedYear === 'average') {
       const snapshots = runSimulation(historical, gardenState);
       const result = { snapshots, env: historical };
       cache.current.set(selectedYear, result);
       setCurrent(result);
+    } else if (typeof selectedYear === 'number' && AVAILABLE_YEARS.includes(selectedYear as any)) {
+      const yearEnv = createGrandRapidsHistorical(selectedYear);
+      const snapshots = runSimulation(yearEnv, gardenState);
+      const result = { snapshots, env: yearEnv };
+      cache.current.set(selectedYear, result);
+      setCurrent(result);
     } else {
+      // Future year (2025+) — try live fetch, fall back to historical
       loadAndSimulate();
     }
 

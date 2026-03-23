@@ -249,17 +249,17 @@ export function SeasonView() {
         </div>
         {bottomChart === 'production' && (
           <div className="h-64">
-            <HarvestTimeline />
+            <HarvestTimeline env={sim.env ?? undefined} />
           </div>
         )}
         {bottomChart === 'growth' && (
           <div className="h-64">
-            <GrowthModTimeline />
+            <GrowthModTimeline env={sim.env ?? undefined} />
           </div>
         )}
         {bottomChart === 'flavor' && (
           <div className="h-64">
-            <FlavorTimeline />
+            <FlavorTimeline env={sim.env ?? undefined} />
           </div>
         )}
       </div>
