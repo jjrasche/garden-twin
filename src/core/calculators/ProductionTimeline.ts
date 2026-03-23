@@ -109,9 +109,9 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2025-05-25', zone: 'full_sun' },
 
   // Potato — 88 plants (cellar only, buy store-bought Feb-Jun). Bulk harvest.
-  // Moved from Apr 20 to May 1 — late April frosts kill emerged foliage.
-  // At May 1, potato stays underground (350 GDD to emerge) through any remaining frost.
-  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-05-01', zone: 'full_sun' },
+  // Plant after last frost (May 15). Emerges ~June 5. No frost risk, only 4-7 days later
+  // maturity vs May 1 planting. GDD is abundant — 3400+ vs 1700 needed.
+  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-05-15', zone: 'full_sun' },
 
   // Corn — 234 plants (family only, 56 lbs dried grain). Bulk harvest.
   { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2025-05-25', zone: 'full_sun' },
