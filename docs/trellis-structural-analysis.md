@@ -82,24 +82,12 @@ With regular harvest (picking 2x/week): fruit drops to 4-6 lb, total ~7-8 lb.
 | Ground-supported portion | -0.5 lb | |
 | **Peak static total** | **~7 lb** | |
 
-### Sweetie OP (worst case design load = 8 lb)
-
-| Component | Weight | Notes |
-|-----------|--------|-------|
-| Active stem (upper 4.5ft) | 0.4 lb | |
-| Active leaves (~20) | 1.1 lb | |
-| Fruit on vine at peak | 4-6 lb | 5-7 trusses, slightly larger than Sun Gold |
-| Rain water | 0.25 lb | |
-| Ground-supported portion | -0.5 lb | |
-| **Peak static total** | **~8 lb** | |
-
 ### Fruit Details
 
 | Variety | Fruit weight | Fruits/truss | Truss weight | Active trusses |
 |---------|-------------|-------------|-------------|----------------|
 | Amish Paste | 170-340g (6-12 oz) | 2-4 | 1.0-2.0 lb | 4-5 |
 | Sun Gold | 13-15g (0.5 oz) | 10-20 | 0.3-0.7 lb | 5-7 |
-| Sweetie | 14-20g (0.5-0.75 oz) | 10-20 | 0.3-0.9 lb | 5-7 |
 
 Source: MyVegPatch (active truss count), variety-specific seed catalog data.
 
@@ -115,8 +103,8 @@ At 18" spacing on both sides:
 
 ### Design loads (accepted values)
 - Amish Paste peak: 12 lb static
-- Cherry (Sun Gold / Sweetie) peak: 8 lb static
-- Plant mix: 71% paste (12 lb) + 29% cherry (8 lb) = 10.84 lb avg
+- Cherry (Sun Gold) peak: 7 lb static
+- Plant mix: 58% paste (11 plants, 12 lb) + 42% cherry (8 plants, 7 lb) = 9.9 lb avg
 - w_static = 10.84/9 + 0.054 = 1.258 lb/in
 
 ### Wind lateral forces (per plant)

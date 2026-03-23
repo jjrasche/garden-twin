@@ -91,8 +91,6 @@ y_in = 360 - physX    (east-west → top-bottom)
 
 ## Garden Layout
 
-**Full layout reference: `docs/garden-layout.md`** — zones, spacing, area, channel, trellis, tomato placement.
-
 Layout driven by `ZONE_CONFIG` in `sampleGarden.ts`. Plant counts from `PRODUCTION_PLAN` in `ProductionTimeline.ts`.
 All spacings match species files (validated 2026-03-21). No overrides.
 
@@ -157,7 +155,6 @@ The `subcellSpecies` Map is built from all plants' `occupied_subcells` arrays, m
 
 These errors exist in the codebase but are NOT caused by the garden visualization work:
 
-- `research/*/config.ts` (11 files) -- `tasks` property not in PlantSpecies schema
 - `src/cli/validate.ts` -- References removed `Garden` and `Plan` types
 - `src/core/aggregators/utils.ts` -- References `plant` property on subcell (schema changed)
 - `src/core/data/sampleGardens/*.ts` -- References removed `Garden`, `Projection` types
