@@ -97,6 +97,8 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'food_crop',
     needs_containment: false,
+    thin_at_stage: 'germinated',  // ~2 weeks, when 2" tall
+    thin_at_height_in: 2,
   },
 
   seed_cost_per_plant: 0.02,

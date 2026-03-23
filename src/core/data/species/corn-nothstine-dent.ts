@@ -75,6 +75,8 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
     role: 'food_crop',
     needs_containment: false,
     access_type: 'block',
+    thin_at_stage: 'vegetative',  // V2-V3, ~2 weeks after emergence
+    thin_at_height_in: 4,
   },
 
   seed_cost_per_plant: 0.10,

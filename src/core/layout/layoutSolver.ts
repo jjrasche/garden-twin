@@ -206,12 +206,23 @@ function allocateZones(
       zoneHeightIn = maxZoneRows * (zoneWidth + pathWidth) + pathWidth;
     }
 
+    // Block species need minimum area for pollination/viability (~100 sqft for corn)
+    const MIN_BLOCK_AREA_SQFT = 100;
     const zoneTop = cursor;
     const zoneBottom = Math.max(region.physY[0], cursor - zoneHeightIn);
+    const allocatedHeight = zoneTop - zoneBottom;
 
-    if (zoneTop - zoneBottom < (isBlock ? eqSpacing : betweenRow)) {
-      warnings.push(`Insufficient space for ${group.species.name}: ${zoneTop - zoneBottom}" available`);
+    if (allocatedHeight < (isBlock ? eqSpacing : betweenRow)) {
+      warnings.push(`Insufficient space for ${group.species.name}: ${allocatedHeight}" available`);
       continue;
+    }
+
+    if (isBlock) {
+      const blockWidth = region.widthAtY((zoneTop + zoneBottom) / 2);
+      const blockAreaSqft = (allocatedHeight * blockWidth) / 144;
+      if (blockAreaSqft < MIN_BLOCK_AREA_SQFT) {
+        warnings.push(`${group.species.name}: block area ${blockAreaSqft.toFixed(0)} sqft < ${MIN_BLOCK_AREA_SQFT} sqft minimum`);
+      }
     }
 
     const speciesIds = [group.request.species_id];
@@ -271,10 +282,9 @@ function placePlantsInBand(
     let placed = 0;
 
     if (isBlock) {
-      for (let physX = eqSpacing; placed < req.plant_count; physX += eqSpacing) {
-        const eastX = region.widthAtY((zoneSouth + zoneNorth) / 2);
-        if (physX > eastX) break;
-        for (let physY = zoneSouth; physY <= zoneNorth && placed < req.plant_count; physY += eqSpacing) {
+      for (let physY = zoneSouth; physY <= zoneNorth && placed < req.plant_count; physY += eqSpacing) {
+        const eastX = region.widthAtY(physY);
+        for (let physX = eqSpacing; physX <= eastX && placed < req.plant_count; physX += eqSpacing) {
           placements.push({
             plant_id: `${idPrefix}_${placed}`,
             species_id: req.species_id,

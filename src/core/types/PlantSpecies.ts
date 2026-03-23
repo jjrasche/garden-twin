@@ -225,6 +225,10 @@ export const LayoutProfileSchema = z.object({
   // Zone access requirement: 'bordered' needs paths alongside (most crops),
   // 'block' needs only perimeter access (corn — no mid-season entry after canopy closure)
   access_type: z.enum(['bordered', 'block']).optional(), // default: bordered
+
+  // Thinning: for direct-sown crops that are overseeded, when to thin
+  thin_at_stage: z.enum(['germinated', 'vegetative']).optional(),
+  thin_at_height_in: z.number().min(0).optional(), // thin when seedlings reach this height
 });
 
 export type LayoutProfile = z.infer<typeof LayoutProfileSchema>;

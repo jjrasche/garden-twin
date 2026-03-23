@@ -98,6 +98,8 @@ export const LETTUCE_BSS: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'food_crop',
     needs_containment: false,
+    thin_at_stage: 'germinated',  // ~10-14 days, when 1-2" tall
+    thin_at_height_in: 1.5,
   },
 
   seed_cost_per_plant: 0.02,

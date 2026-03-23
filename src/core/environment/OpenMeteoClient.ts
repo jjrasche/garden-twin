@@ -14,7 +14,7 @@ import { WeatherEntry } from './types';
 const LAT = 42.9634;
 const LON = -85.6681;
 const TZ = 'America%2FNew_York';
-const BASE_PARAMS = 'temperature_2m_max,temperature_2m_min,precipitation_sum,sunshine_duration,shortwave_radiation_sum,et0_fao_evapotranspiration';
+const BASE_PARAMS = 'temperature_2m_max,temperature_2m_min,precipitation_sum,sunshine_duration,shortwave_radiation_sum,et0_fao_evapotranspiration,wind_speed_10m_max,wind_gusts_10m_max';
 const BASE_QS = `latitude=${LAT}&longitude=${LON}&temperature_unit=fahrenheit&timezone=${TZ}`;
 // soil_temperature_6cm_mean only available on forecast endpoint, not archive
 const ARCHIVE_QS = `${BASE_QS}&daily=${BASE_PARAMS}`;
@@ -29,6 +29,8 @@ interface OpenMeteoDaily {
   shortwave_radiation_sum?: number[];
   et0_fao_evapotranspiration?: number[];
   soil_temperature_6cm_mean?: number[];
+  wind_speed_10m_max?: number[];
+  wind_gusts_10m_max?: number[];
 }
 
 interface OpenMeteoResponse {
@@ -45,6 +47,8 @@ function parseEntries(data: OpenMeteoDaily, source: WeatherEntry['source']): Wea
     ...(data.shortwave_radiation_sum?.[i] != null ? { solar_radiation_mj: data.shortwave_radiation_sum[i]! } : {}),
     ...(data.et0_fao_evapotranspiration?.[i] != null ? { et0_in: data.et0_fao_evapotranspiration[i]! / 25.4 } : {}),
     ...(data.soil_temperature_6cm_mean?.[i] != null ? { soil_temp_f: data.soil_temperature_6cm_mean[i]! } : {}),
+    ...(data.wind_speed_10m_max?.[i] != null ? { wind_speed_mph: data.wind_speed_10m_max[i]! * 2.237 } : {}),
+    ...(data.wind_gusts_10m_max?.[i] != null ? { wind_gust_mph: data.wind_gusts_10m_max[i]! * 2.237 } : {}),
     source,
   }));
 }

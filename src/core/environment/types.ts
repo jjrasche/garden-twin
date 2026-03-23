@@ -20,6 +20,8 @@ export interface WeatherEntry {
   sunshine_hours?: number;   // Actual sunshine duration (hours)
   solar_radiation_mj?: number; // Shortwave radiation (MJ/m²/day)
   et0_in?: number;           // Reference evapotranspiration (inches)
+  wind_speed_mph?: number;   // Max daily wind speed (mph)
+  wind_gust_mph?: number;    // Max daily wind gust (mph)
   source: 'manual' | 'api' | 'sensor';
 }
 
