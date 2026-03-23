@@ -32,9 +32,10 @@ export function evaluateSuccessionTrigger(
 ): boolean {
   if (predecessorPlants.length === 0) return false;
 
-  const deadCount = predecessorPlants.filter(p => p.is_dead || p.stage === 'done').length;
-  const deathPct = deadCount / predecessorPlants.length;
-  if (deathPct < trigger.predecessor_death_pct) return false;
+  // Count plants that have freed their space: dead OR pulled (bolted + cleared)
+  const doneCount = predecessorPlants.filter(p => p.is_dead || p.is_pulled).length;
+  const donePct = doneCount / predecessorPlants.length;
+  if (donePct < trigger.predecessor_death_pct) return false;
 
   if (trigger.conditions) {
     for (const gate of trigger.conditions) {

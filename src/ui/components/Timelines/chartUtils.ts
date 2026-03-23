@@ -4,13 +4,6 @@
 
 import { PRODUCTION_PLAN, SEASON_RANGE, type CropPlanting } from '@core/calculators/ProductionTimeline';
 
-/** Chart range matches the full simulation range.
- *  Conditions-based charts (growth mod, flavor) show the same time span
- *  as the simulation so seasonal patterns are visible year-round. */
-export const CHART_RANGE = {
-  start: SEASON_RANGE.start,
-  end: SEASON_RANGE.end,
-};
 
 const MS_PER_DAY = 86_400_000;
 

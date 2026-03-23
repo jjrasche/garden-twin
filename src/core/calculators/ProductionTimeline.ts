@@ -89,8 +89,10 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   // Consumption-derived: 7 lbs/week family + 7 distribution = 14 lbs/week greens.
 
   // Spring lettuce → fall spinach succession in greens zone.
-  // Lettuce produces May-July, bolts from heat. When 80% dead AND temp < 80°F,
-  // pull dead lettuce and sow spinach same day.
+  // Lettuce produces May-July, bolts from heat. Spinach needs BOTH:
+  //   - Photoperiod < 14.5h (bolt safety — ~July 28 every year)
+  //   - Temperature < 75°F (germination + establishment — no hot soil)
+  // In GR these align around July 30 - August 15 depending on year.
   {
     species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210,
     planting_date: '2025-04-15', zone: 'shade', stagger_days: 14,
@@ -99,7 +101,10 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
       species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 200,
       trigger: {
         predecessor_death_pct: 0.8,
-        conditions: [{ factor: 'temperature_f', threshold: 80, direction: 'below' }],
+        conditions: [
+          { factor: 'photoperiod_h', threshold: 14.5, direction: 'below' },
+          { factor: 'temperature_f', threshold: 75, direction: 'below' },
+        ],
       },
       delay_days: 0,
       stagger_days: 10,

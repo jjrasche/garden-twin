@@ -145,7 +145,6 @@ export function initPlantStates(
     const seed = representative.species_id.length * 31 + instances.length;
     const deadIndices = selectDeadIndices(instances.length, dead_count, seed);
     const boltRng = mulberry32(seed ^ 0xBEEF);
-    const frostRng = mulberry32(seed ^ 0xDEAD);
 
     for (let i = 0; i < instances.length; i++) {
       const instance = instances[i]!;
@@ -165,8 +164,9 @@ export function initPlantStates(
         daily_potential,
         stress: createStressCounters(),
         bolt_resistance: boltRng(),
-        frost_resistance: frostRng(),
         is_harvestable: false,
+        is_bolted: false,
+        is_pulled: false,
         is_dead: !survived,
       });
     }

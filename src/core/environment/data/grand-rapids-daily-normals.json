@@ -1,0 +1,3287 @@
+[
+  {
+    "doy": 1,
+    "avg_high_f": 33.1,
+    "avg_low_f": 22.1,
+    "avg_precip_in": 0.073,
+    "photoperiod_h": 8.89,
+    "soil_temp_f": 46.1,
+    "et0_in": 0.041
+  },
+  {
+    "doy": 2,
+    "avg_high_f": 33.9,
+    "avg_low_f": 24.9,
+    "avg_precip_in": 0.067,
+    "photoperiod_h": 8.91,
+    "soil_temp_f": 46,
+    "et0_in": 0.04
+  },
+  {
+    "doy": 3,
+    "avg_high_f": 33.9,
+    "avg_low_f": 26.1,
+    "avg_precip_in": 0.098,
+    "photoperiod_h": 8.92,
+    "soil_temp_f": 46,
+    "et0_in": 0.038
+  },
+  {
+    "doy": 4,
+    "avg_high_f": 33.2,
+    "avg_low_f": 20.5,
+    "avg_precip_in": 0.037,
+    "photoperiod_h": 8.94,
+    "soil_temp_f": 45.9,
+    "et0_in": 0.044
+  },
+  {
+    "doy": 5,
+    "avg_high_f": 29.6,
+    "avg_low_f": 17.9,
+    "avg_precip_in": 0.069,
+    "photoperiod_h": 8.95,
+    "soil_temp_f": 45.9,
+    "et0_in": 0.037
+  },
+  {
+    "doy": 6,
+    "avg_high_f": 28.8,
+    "avg_low_f": 17.5,
+    "avg_precip_in": 0.05,
+    "photoperiod_h": 8.97,
+    "soil_temp_f": 45.8,
+    "et0_in": 0.036
+  },
+  {
+    "doy": 7,
+    "avg_high_f": 31.9,
+    "avg_low_f": 20.3,
+    "avg_precip_in": 0.054,
+    "photoperiod_h": 8.99,
+    "soil_temp_f": 45.8,
+    "et0_in": 0.041
+  },
+  {
+    "doy": 8,
+    "avg_high_f": 31.4,
+    "avg_low_f": 20.1,
+    "avg_precip_in": 0.069,
+    "photoperiod_h": 9.01,
+    "soil_temp_f": 45.7,
+    "et0_in": 0.041
+  },
+  {
+    "doy": 9,
+    "avg_high_f": 34.8,
+    "avg_low_f": 20.9,
+    "avg_precip_in": 0.173,
+    "photoperiod_h": 9.03,
+    "soil_temp_f": 45.7,
+    "et0_in": 0.049
+  },
+  {
+    "doy": 10,
+    "avg_high_f": 34.3,
+    "avg_low_f": 22.8,
+    "avg_precip_in": 0.1,
+    "photoperiod_h": 9.05,
+    "soil_temp_f": 45.6,
+    "et0_in": 0.046
+  },
+  {
+    "doy": 11,
+    "avg_high_f": 37.4,
+    "avg_low_f": 23.8,
+    "avg_precip_in": 0.295,
+    "photoperiod_h": 9.07,
+    "soil_temp_f": 45.6,
+    "et0_in": 0.054
+  },
+  {
+    "doy": 12,
+    "avg_high_f": 33.4,
+    "avg_low_f": 22.8,
+    "avg_precip_in": 0.102,
+    "photoperiod_h": 9.09,
+    "soil_temp_f": 45.5,
+    "et0_in": 0.044
+  },
+  {
+    "doy": 13,
+    "avg_high_f": 28.3,
+    "avg_low_f": 18.9,
+    "avg_precip_in": 0.033,
+    "photoperiod_h": 9.12,
+    "soil_temp_f": 45.5,
+    "et0_in": 0.035
+  },
+  {
+    "doy": 14,
+    "avg_high_f": 29.9,
+    "avg_low_f": 12.9,
+    "avg_precip_in": 0.065,
+    "photoperiod_h": 9.14,
+    "soil_temp_f": 45.5,
+    "et0_in": 0.043
+  },
+  {
+    "doy": 15,
+    "avg_high_f": 30.3,
+    "avg_low_f": 17.1,
+    "avg_precip_in": 0.056,
+    "photoperiod_h": 9.17,
+    "soil_temp_f": 45.4,
+    "et0_in": 0.043
+  },
+  {
+    "doy": 16,
+    "avg_high_f": 30.3,
+    "avg_low_f": 17,
+    "avg_precip_in": 0.087,
+    "photoperiod_h": 9.19,
+    "soil_temp_f": 45.4,
+    "et0_in": 0.043
+  },
+  {
+    "doy": 17,
+    "avg_high_f": 31.9,
+    "avg_low_f": 18.4,
+    "avg_precip_in": 0.097,
+    "photoperiod_h": 9.22,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.047
+  },
+  {
+    "doy": 18,
+    "avg_high_f": 32.3,
+    "avg_low_f": 24.8,
+    "avg_precip_in": 0.098,
+    "photoperiod_h": 9.25,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.04
+  },
+  {
+    "doy": 19,
+    "avg_high_f": 32.3,
+    "avg_low_f": 19.6,
+    "avg_precip_in": 0.076,
+    "photoperiod_h": 9.28,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.047
+  },
+  {
+    "doy": 20,
+    "avg_high_f": 28.3,
+    "avg_low_f": 18.1,
+    "avg_precip_in": 0.033,
+    "photoperiod_h": 9.31,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.039
+  },
+  {
+    "doy": 21,
+    "avg_high_f": 31,
+    "avg_low_f": 19.5,
+    "avg_precip_in": 0.022,
+    "photoperiod_h": 9.34,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.045
+  },
+  {
+    "doy": 22,
+    "avg_high_f": 34.5,
+    "avg_low_f": 20.9,
+    "avg_precip_in": 0.115,
+    "photoperiod_h": 9.37,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.054
+  },
+  {
+    "doy": 23,
+    "avg_high_f": 34.9,
+    "avg_low_f": 25.2,
+    "avg_precip_in": 0.128,
+    "photoperiod_h": 9.4,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.05
+  },
+  {
+    "doy": 24,
+    "avg_high_f": 32.5,
+    "avg_low_f": 25.7,
+    "avg_precip_in": 0.094,
+    "photoperiod_h": 9.43,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.041
+  },
+  {
+    "doy": 25,
+    "avg_high_f": 32.7,
+    "avg_low_f": 24.5,
+    "avg_precip_in": 0.066,
+    "photoperiod_h": 9.47,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.045
+  },
+  {
+    "doy": 26,
+    "avg_high_f": 32.5,
+    "avg_low_f": 20.7,
+    "avg_precip_in": 0.157,
+    "photoperiod_h": 9.5,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.05
+  },
+  {
+    "doy": 27,
+    "avg_high_f": 32.7,
+    "avg_low_f": 20.9,
+    "avg_precip_in": 0.024,
+    "photoperiod_h": 9.54,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.051
+  },
+  {
+    "doy": 28,
+    "avg_high_f": 30.5,
+    "avg_low_f": 20.1,
+    "avg_precip_in": 0.108,
+    "photoperiod_h": 9.57,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.046
+  },
+  {
+    "doy": 29,
+    "avg_high_f": 28.2,
+    "avg_low_f": 18.6,
+    "avg_precip_in": 0.058,
+    "photoperiod_h": 9.61,
+    "soil_temp_f": 45,
+    "et0_in": 0.042
+  },
+  {
+    "doy": 30,
+    "avg_high_f": 26.9,
+    "avg_low_f": 17.5,
+    "avg_precip_in": 0.04,
+    "photoperiod_h": 9.65,
+    "soil_temp_f": 45,
+    "et0_in": 0.039
+  },
+  {
+    "doy": 31,
+    "avg_high_f": 31,
+    "avg_low_f": 20.5,
+    "avg_precip_in": 0.076,
+    "photoperiod_h": 9.68,
+    "soil_temp_f": 45,
+    "et0_in": 0.049
+  },
+  {
+    "doy": 32,
+    "avg_high_f": 34.5,
+    "avg_low_f": 19.2,
+    "avg_precip_in": 0.102,
+    "photoperiod_h": 9.72,
+    "soil_temp_f": 45,
+    "et0_in": 0.062
+  },
+  {
+    "doy": 33,
+    "avg_high_f": 33,
+    "avg_low_f": 17.6,
+    "avg_precip_in": 0.211,
+    "photoperiod_h": 9.76,
+    "soil_temp_f": 45,
+    "et0_in": 0.059
+  },
+  {
+    "doy": 34,
+    "avg_high_f": 32,
+    "avg_low_f": 18.2,
+    "avg_precip_in": 0.045,
+    "photoperiod_h": 9.8,
+    "soil_temp_f": 45,
+    "et0_in": 0.056
+  },
+  {
+    "doy": 35,
+    "avg_high_f": 34.4,
+    "avg_low_f": 16.6,
+    "avg_precip_in": 0.072,
+    "photoperiod_h": 9.84,
+    "soil_temp_f": 45,
+    "et0_in": 0.066
+  },
+  {
+    "doy": 36,
+    "avg_high_f": 30.7,
+    "avg_low_f": 16.5,
+    "avg_precip_in": 0.046,
+    "photoperiod_h": 9.88,
+    "soil_temp_f": 45,
+    "et0_in": 0.055
+  },
+  {
+    "doy": 37,
+    "avg_high_f": 31.8,
+    "avg_low_f": 19.4,
+    "avg_precip_in": 0.096,
+    "photoperiod_h": 9.92,
+    "soil_temp_f": 45,
+    "et0_in": 0.056
+  },
+  {
+    "doy": 38,
+    "avg_high_f": 36.4,
+    "avg_low_f": 23.3,
+    "avg_precip_in": 0.103,
+    "photoperiod_h": 9.96,
+    "soil_temp_f": 44.9,
+    "et0_in": 0.068
+  },
+  {
+    "doy": 39,
+    "avg_high_f": 33.6,
+    "avg_low_f": 19.6,
+    "avg_precip_in": 0.039,
+    "photoperiod_h": 10,
+    "soil_temp_f": 44.9,
+    "et0_in": 0.064
+  },
+  {
+    "doy": 40,
+    "avg_high_f": 31.2,
+    "avg_low_f": 19.6,
+    "avg_precip_in": 0.181,
+    "photoperiod_h": 10.04,
+    "soil_temp_f": 44.9,
+    "et0_in": 0.056
+  },
+  {
+    "doy": 41,
+    "avg_high_f": 30,
+    "avg_low_f": 17.7,
+    "avg_precip_in": 0.018,
+    "photoperiod_h": 10.09,
+    "soil_temp_f": 44.9,
+    "et0_in": 0.055
+  },
+  {
+    "doy": 42,
+    "avg_high_f": 33.3,
+    "avg_low_f": 20.6,
+    "avg_precip_in": 0.088,
+    "photoperiod_h": 10.13,
+    "soil_temp_f": 44.9,
+    "et0_in": 0.064
+  },
+  {
+    "doy": 43,
+    "avg_high_f": 32.1,
+    "avg_low_f": 18.8,
+    "avg_precip_in": 0.091,
+    "photoperiod_h": 10.17,
+    "soil_temp_f": 45,
+    "et0_in": 0.063
+  },
+  {
+    "doy": 44,
+    "avg_high_f": 28.9,
+    "avg_low_f": 13.3,
+    "avg_precip_in": 0.042,
+    "photoperiod_h": 10.22,
+    "soil_temp_f": 45,
+    "et0_in": 0.057
+  },
+  {
+    "doy": 45,
+    "avg_high_f": 32.9,
+    "avg_low_f": 14.1,
+    "avg_precip_in": 0.019,
+    "photoperiod_h": 10.26,
+    "soil_temp_f": 45,
+    "et0_in": 0.071
+  },
+  {
+    "doy": 46,
+    "avg_high_f": 31.5,
+    "avg_low_f": 18.2,
+    "avg_precip_in": 0.119,
+    "photoperiod_h": 10.31,
+    "soil_temp_f": 45,
+    "et0_in": 0.063
+  },
+  {
+    "doy": 47,
+    "avg_high_f": 31.3,
+    "avg_low_f": 17.5,
+    "avg_precip_in": 0.195,
+    "photoperiod_h": 10.35,
+    "soil_temp_f": 45,
+    "et0_in": 0.064
+  },
+  {
+    "doy": 48,
+    "avg_high_f": 31.9,
+    "avg_low_f": 14.5,
+    "avg_precip_in": 0.109,
+    "photoperiod_h": 10.4,
+    "soil_temp_f": 45,
+    "et0_in": 0.069
+  },
+  {
+    "doy": 49,
+    "avg_high_f": 34,
+    "avg_low_f": 17.8,
+    "avg_precip_in": 0.029,
+    "photoperiod_h": 10.44,
+    "soil_temp_f": 45,
+    "et0_in": 0.076
+  },
+  {
+    "doy": 50,
+    "avg_high_f": 39.1,
+    "avg_low_f": 18.4,
+    "avg_precip_in": 0.059,
+    "photoperiod_h": 10.49,
+    "soil_temp_f": 45,
+    "et0_in": 0.096
+  },
+  {
+    "doy": 51,
+    "avg_high_f": 41.5,
+    "avg_low_f": 19.5,
+    "avg_precip_in": 0.26,
+    "photoperiod_h": 10.53,
+    "soil_temp_f": 45,
+    "et0_in": 0.106
+  },
+  {
+    "doy": 52,
+    "avg_high_f": 40.7,
+    "avg_low_f": 25.3,
+    "avg_precip_in": 0.047,
+    "photoperiod_h": 10.58,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.098
+  },
+  {
+    "doy": 53,
+    "avg_high_f": 41.7,
+    "avg_low_f": 25.9,
+    "avg_precip_in": 0.158,
+    "photoperiod_h": 10.63,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.103
+  },
+  {
+    "doy": 54,
+    "avg_high_f": 39.6,
+    "avg_low_f": 25.3,
+    "avg_precip_in": 0.055,
+    "photoperiod_h": 10.67,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.095
+  },
+  {
+    "doy": 55,
+    "avg_high_f": 37.2,
+    "avg_low_f": 23.6,
+    "avg_precip_in": 0.143,
+    "photoperiod_h": 10.72,
+    "soil_temp_f": 45.1,
+    "et0_in": 0.087
+  },
+  {
+    "doy": 56,
+    "avg_high_f": 35.3,
+    "avg_low_f": 21.8,
+    "avg_precip_in": 0.048,
+    "photoperiod_h": 10.77,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.083
+  },
+  {
+    "doy": 57,
+    "avg_high_f": 36.4,
+    "avg_low_f": 20.6,
+    "avg_precip_in": 0.019,
+    "photoperiod_h": 10.82,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.091
+  },
+  {
+    "doy": 58,
+    "avg_high_f": 41.5,
+    "avg_low_f": 24.6,
+    "avg_precip_in": 0.149,
+    "photoperiod_h": 10.86,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.11
+  },
+  {
+    "doy": 59,
+    "avg_high_f": 43.6,
+    "avg_low_f": 24.8,
+    "avg_precip_in": 0.102,
+    "photoperiod_h": 10.91,
+    "soil_temp_f": 45.2,
+    "et0_in": 0.122
+  },
+  {
+    "doy": 60,
+    "avg_high_f": 39.1,
+    "avg_low_f": 22.3,
+    "avg_precip_in": 0.034,
+    "photoperiod_h": 10.96,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.105
+  },
+  {
+    "doy": 61,
+    "avg_high_f": 38.5,
+    "avg_low_f": 21.6,
+    "avg_precip_in": 0.08,
+    "photoperiod_h": 11.01,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.104
+  },
+  {
+    "doy": 62,
+    "avg_high_f": 37.5,
+    "avg_low_f": 22.8,
+    "avg_precip_in": 0.055,
+    "photoperiod_h": 11.06,
+    "soil_temp_f": 45.3,
+    "et0_in": 0.098
+  },
+  {
+    "doy": 63,
+    "avg_high_f": 38.2,
+    "avg_low_f": 19.8,
+    "avg_precip_in": 0.01,
+    "photoperiod_h": 11.11,
+    "soil_temp_f": 45.4,
+    "et0_in": 0.107
+  },
+  {
+    "doy": 64,
+    "avg_high_f": 43.3,
+    "avg_low_f": 22.5,
+    "avg_precip_in": 0.022,
+    "photoperiod_h": 11.15,
+    "soil_temp_f": 45.4,
+    "et0_in": 0.131
+  },
+  {
+    "doy": 65,
+    "avg_high_f": 43.4,
+    "avg_low_f": 26.7,
+    "avg_precip_in": 0.179,
+    "photoperiod_h": 11.2,
+    "soil_temp_f": 45.4,
+    "et0_in": 0.126
+  },
+  {
+    "doy": 66,
+    "avg_high_f": 41.2,
+    "avg_low_f": 24.2,
+    "avg_precip_in": 0.067,
+    "photoperiod_h": 11.25,
+    "soil_temp_f": 45.5,
+    "et0_in": 0.12
+  },
+  {
+    "doy": 67,
+    "avg_high_f": 45.2,
+    "avg_low_f": 25.2,
+    "avg_precip_in": 0.004,
+    "photoperiod_h": 11.3,
+    "soil_temp_f": 45.5,
+    "et0_in": 0.142
+  },
+  {
+    "doy": 68,
+    "avg_high_f": 49.7,
+    "avg_low_f": 32.9,
+    "avg_precip_in": 0.187,
+    "photoperiod_h": 11.35,
+    "soil_temp_f": 45.6,
+    "et0_in": 0.154
+  },
+  {
+    "doy": 69,
+    "avg_high_f": 44.7,
+    "avg_low_f": 30.3,
+    "avg_precip_in": 0.087,
+    "photoperiod_h": 11.4,
+    "soil_temp_f": 45.6,
+    "et0_in": 0.131
+  },
+  {
+    "doy": 70,
+    "avg_high_f": 44.4,
+    "avg_low_f": 26.3,
+    "avg_precip_in": 0.015,
+    "photoperiod_h": 11.45,
+    "soil_temp_f": 45.7,
+    "et0_in": 0.14
+  },
+  {
+    "doy": 71,
+    "avg_high_f": 42.5,
+    "avg_low_f": 26.7,
+    "avg_precip_in": 0.061,
+    "photoperiod_h": 11.5,
+    "soil_temp_f": 45.7,
+    "et0_in": 0.129
+  },
+  {
+    "doy": 72,
+    "avg_high_f": 47.7,
+    "avg_low_f": 27.4,
+    "avg_precip_in": 0.047,
+    "photoperiod_h": 11.55,
+    "soil_temp_f": 45.7,
+    "et0_in": 0.161
+  },
+  {
+    "doy": 73,
+    "avg_high_f": 44.9,
+    "avg_low_f": 29.8,
+    "avg_precip_in": 0.143,
+    "photoperiod_h": 11.6,
+    "soil_temp_f": 45.8,
+    "et0_in": 0.139
+  },
+  {
+    "doy": 74,
+    "avg_high_f": 49.7,
+    "avg_low_f": 28.1,
+    "avg_precip_in": 0.036,
+    "photoperiod_h": 11.65,
+    "soil_temp_f": 45.8,
+    "et0_in": 0.175
+  },
+  {
+    "doy": 75,
+    "avg_high_f": 49.7,
+    "avg_low_f": 28.7,
+    "avg_precip_in": 0.087,
+    "photoperiod_h": 11.7,
+    "soil_temp_f": 45.9,
+    "et0_in": 0.176
+  },
+  {
+    "doy": 76,
+    "avg_high_f": 44.5,
+    "avg_low_f": 28.2,
+    "avg_precip_in": 0.053,
+    "photoperiod_h": 11.75,
+    "soil_temp_f": 45.9,
+    "et0_in": 0.145
+  },
+  {
+    "doy": 77,
+    "avg_high_f": 43.9,
+    "avg_low_f": 26.7,
+    "avg_precip_in": 0.009,
+    "photoperiod_h": 11.8,
+    "soil_temp_f": 46,
+    "et0_in": 0.146
+  },
+  {
+    "doy": 78,
+    "avg_high_f": 50,
+    "avg_low_f": 28.3,
+    "avg_precip_in": 0.079,
+    "photoperiod_h": 11.85,
+    "soil_temp_f": 46.1,
+    "et0_in": 0.184
+  },
+  {
+    "doy": 79,
+    "avg_high_f": 51,
+    "avg_low_f": 27.4,
+    "avg_precip_in": 0.02,
+    "photoperiod_h": 11.9,
+    "soil_temp_f": 46.1,
+    "et0_in": 0.195
+  },
+  {
+    "doy": 80,
+    "avg_high_f": 44.5,
+    "avg_low_f": 27.3,
+    "avg_precip_in": 0.016,
+    "photoperiod_h": 11.95,
+    "soil_temp_f": 46.2,
+    "et0_in": 0.154
+  },
+  {
+    "doy": 81,
+    "avg_high_f": 47.1,
+    "avg_low_f": 29,
+    "avg_precip_in": 0.104,
+    "photoperiod_h": 12,
+    "soil_temp_f": 46.2,
+    "et0_in": 0.169
+  },
+  {
+    "doy": 82,
+    "avg_high_f": 49.5,
+    "avg_low_f": 31,
+    "avg_precip_in": 0.06,
+    "photoperiod_h": 12.05,
+    "soil_temp_f": 46.3,
+    "et0_in": 0.182
+  },
+  {
+    "doy": 83,
+    "avg_high_f": 43.1,
+    "avg_low_f": 30.4,
+    "avg_precip_in": 0.321,
+    "photoperiod_h": 12.1,
+    "soil_temp_f": 46.4,
+    "et0_in": 0.139
+  },
+  {
+    "doy": 84,
+    "avg_high_f": 49.3,
+    "avg_low_f": 28.9,
+    "avg_precip_in": 0.162,
+    "photoperiod_h": 12.15,
+    "soil_temp_f": 46.4,
+    "et0_in": 0.189
+  },
+  {
+    "doy": 85,
+    "avg_high_f": 49,
+    "avg_low_f": 31.2,
+    "avg_precip_in": 0.106,
+    "photoperiod_h": 12.2,
+    "soil_temp_f": 46.5,
+    "et0_in": 0.183
+  },
+  {
+    "doy": 86,
+    "avg_high_f": 49,
+    "avg_low_f": 31.2,
+    "avg_precip_in": 0.046,
+    "photoperiod_h": 12.25,
+    "soil_temp_f": 46.5,
+    "et0_in": 0.185
+  },
+  {
+    "doy": 87,
+    "avg_high_f": 47.8,
+    "avg_low_f": 28.9,
+    "avg_precip_in": 0.186,
+    "photoperiod_h": 12.3,
+    "soil_temp_f": 46.6,
+    "et0_in": 0.184
+  },
+  {
+    "doy": 88,
+    "avg_high_f": 51.8,
+    "avg_low_f": 31.6,
+    "avg_precip_in": 0.262,
+    "photoperiod_h": 12.35,
+    "soil_temp_f": 46.7,
+    "et0_in": 0.208
+  },
+  {
+    "doy": 89,
+    "avg_high_f": 47.9,
+    "avg_low_f": 32.4,
+    "avg_precip_in": 0.317,
+    "photoperiod_h": 12.4,
+    "soil_temp_f": 46.7,
+    "et0_in": 0.177
+  },
+  {
+    "doy": 90,
+    "avg_high_f": 49.2,
+    "avg_low_f": 29.7,
+    "avg_precip_in": 0.082,
+    "photoperiod_h": 12.45,
+    "soil_temp_f": 46.8,
+    "et0_in": 0.197
+  },
+  {
+    "doy": 91,
+    "avg_high_f": 50.4,
+    "avg_low_f": 30.3,
+    "avg_precip_in": 0.066,
+    "photoperiod_h": 12.5,
+    "soil_temp_f": 46.9,
+    "et0_in": 0.206
+  },
+  {
+    "doy": 92,
+    "avg_high_f": 50.4,
+    "avg_low_f": 34.6,
+    "avg_precip_in": 0.202,
+    "photoperiod_h": 12.55,
+    "soil_temp_f": 47,
+    "et0_in": 0.194
+  },
+  {
+    "doy": 93,
+    "avg_high_f": 51.6,
+    "avg_low_f": 32.1,
+    "avg_precip_in": 0.143,
+    "photoperiod_h": 12.6,
+    "soil_temp_f": 47,
+    "et0_in": 0.214
+  },
+  {
+    "doy": 94,
+    "avg_high_f": 51.8,
+    "avg_low_f": 34.2,
+    "avg_precip_in": 0.213,
+    "photoperiod_h": 12.65,
+    "soil_temp_f": 47.1,
+    "et0_in": 0.211
+  },
+  {
+    "doy": 95,
+    "avg_high_f": 53.5,
+    "avg_low_f": 33.4,
+    "avg_precip_in": 0.167,
+    "photoperiod_h": 12.7,
+    "soil_temp_f": 47.2,
+    "et0_in": 0.23
+  },
+  {
+    "doy": 96,
+    "avg_high_f": 55.3,
+    "avg_low_f": 35.8,
+    "avg_precip_in": 0.073,
+    "photoperiod_h": 12.75,
+    "soil_temp_f": 47.3,
+    "et0_in": 0.239
+  },
+  {
+    "doy": 97,
+    "avg_high_f": 56.4,
+    "avg_low_f": 36.1,
+    "avg_precip_in": 0.139,
+    "photoperiod_h": 12.8,
+    "soil_temp_f": 47.3,
+    "et0_in": 0.25
+  },
+  {
+    "doy": 98,
+    "avg_high_f": 58.9,
+    "avg_low_f": 38.5,
+    "avg_precip_in": 0.282,
+    "photoperiod_h": 12.85,
+    "soil_temp_f": 47.4,
+    "et0_in": 0.266
+  },
+  {
+    "doy": 99,
+    "avg_high_f": 57.1,
+    "avg_low_f": 35.3,
+    "avg_precip_in": 0.287,
+    "photoperiod_h": 12.89,
+    "soil_temp_f": 47.5,
+    "et0_in": 0.262
+  },
+  {
+    "doy": 100,
+    "avg_high_f": 56.4,
+    "avg_low_f": 37.1,
+    "avg_precip_in": 0.093,
+    "photoperiod_h": 12.94,
+    "soil_temp_f": 47.6,
+    "et0_in": 0.251
+  },
+  {
+    "doy": 101,
+    "avg_high_f": 61.2,
+    "avg_low_f": 40.1,
+    "avg_precip_in": 0.206,
+    "photoperiod_h": 12.99,
+    "soil_temp_f": 47.6,
+    "et0_in": 0.287
+  },
+  {
+    "doy": 102,
+    "avg_high_f": 57.4,
+    "avg_low_f": 41.7,
+    "avg_precip_in": 0.115,
+    "photoperiod_h": 13.04,
+    "soil_temp_f": 47.7,
+    "et0_in": 0.244
+  },
+  {
+    "doy": 103,
+    "avg_high_f": 55.2,
+    "avg_low_f": 35.2,
+    "avg_precip_in": 0.188,
+    "photoperiod_h": 13.09,
+    "soil_temp_f": 47.8,
+    "et0_in": 0.253
+  },
+  {
+    "doy": 104,
+    "avg_high_f": 57.6,
+    "avg_low_f": 38.9,
+    "avg_precip_in": 0.092,
+    "photoperiod_h": 13.14,
+    "soil_temp_f": 47.9,
+    "et0_in": 0.263
+  },
+  {
+    "doy": 105,
+    "avg_high_f": 57.5,
+    "avg_low_f": 37.5,
+    "avg_precip_in": 0.042,
+    "photoperiod_h": 13.18,
+    "soil_temp_f": 48,
+    "et0_in": 0.27
+  },
+  {
+    "doy": 106,
+    "avg_high_f": 57.5,
+    "avg_low_f": 35.4,
+    "avg_precip_in": 0.028,
+    "photoperiod_h": 13.23,
+    "soil_temp_f": 48,
+    "et0_in": 0.279
+  },
+  {
+    "doy": 107,
+    "avg_high_f": 58.4,
+    "avg_low_f": 38,
+    "avg_precip_in": 0.123,
+    "photoperiod_h": 13.28,
+    "soil_temp_f": 48.1,
+    "et0_in": 0.28
+  },
+  {
+    "doy": 108,
+    "avg_high_f": 58.7,
+    "avg_low_f": 38.7,
+    "avg_precip_in": 0.088,
+    "photoperiod_h": 13.33,
+    "soil_temp_f": 48.2,
+    "et0_in": 0.282
+  },
+  {
+    "doy": 109,
+    "avg_high_f": 58.7,
+    "avg_low_f": 38.2,
+    "avg_precip_in": 0.144,
+    "photoperiod_h": 13.37,
+    "soil_temp_f": 48.3,
+    "et0_in": 0.286
+  },
+  {
+    "doy": 110,
+    "avg_high_f": 56.3,
+    "avg_low_f": 37.2,
+    "avg_precip_in": 0.046,
+    "photoperiod_h": 13.42,
+    "soil_temp_f": 48.4,
+    "et0_in": 0.268
+  },
+  {
+    "doy": 111,
+    "avg_high_f": 55,
+    "avg_low_f": 36.4,
+    "avg_precip_in": 0.133,
+    "photoperiod_h": 13.47,
+    "soil_temp_f": 48.5,
+    "et0_in": 0.26
+  },
+  {
+    "doy": 112,
+    "avg_high_f": 61.1,
+    "avg_low_f": 36.4,
+    "avg_precip_in": 0.013,
+    "photoperiod_h": 13.51,
+    "soil_temp_f": 48.6,
+    "et0_in": 0.322
+  },
+  {
+    "doy": 113,
+    "avg_high_f": 60.1,
+    "avg_low_f": 40,
+    "avg_precip_in": 0.05,
+    "photoperiod_h": 13.56,
+    "soil_temp_f": 48.6,
+    "et0_in": 0.3
+  },
+  {
+    "doy": 114,
+    "avg_high_f": 59.7,
+    "avg_low_f": 39.7,
+    "avg_precip_in": 0.016,
+    "photoperiod_h": 13.6,
+    "soil_temp_f": 48.7,
+    "et0_in": 0.299
+  },
+  {
+    "doy": 115,
+    "avg_high_f": 61.7,
+    "avg_low_f": 38.7,
+    "avg_precip_in": 0.066,
+    "photoperiod_h": 13.65,
+    "soil_temp_f": 48.8,
+    "et0_in": 0.325
+  },
+  {
+    "doy": 116,
+    "avg_high_f": 59.8,
+    "avg_low_f": 38.2,
+    "avg_precip_in": 0.043,
+    "photoperiod_h": 13.69,
+    "soil_temp_f": 48.9,
+    "et0_in": 0.31
+  },
+  {
+    "doy": 117,
+    "avg_high_f": 61.4,
+    "avg_low_f": 39.3,
+    "avg_precip_in": 0.027,
+    "photoperiod_h": 13.74,
+    "soil_temp_f": 49,
+    "et0_in": 0.324
+  },
+  {
+    "doy": 118,
+    "avg_high_f": 61.4,
+    "avg_low_f": 41.2,
+    "avg_precip_in": 0.335,
+    "photoperiod_h": 13.78,
+    "soil_temp_f": 49.1,
+    "et0_in": 0.317
+  },
+  {
+    "doy": 119,
+    "avg_high_f": 57.1,
+    "avg_low_f": 40.7,
+    "avg_precip_in": 0.34,
+    "photoperiod_h": 13.83,
+    "soil_temp_f": 49.2,
+    "et0_in": 0.273
+  },
+  {
+    "doy": 120,
+    "avg_high_f": 62.7,
+    "avg_low_f": 42.7,
+    "avg_precip_in": 0.288,
+    "photoperiod_h": 13.87,
+    "soil_temp_f": 49.3,
+    "et0_in": 0.327
+  },
+  {
+    "doy": 121,
+    "avg_high_f": 62.1,
+    "avg_low_f": 47,
+    "avg_precip_in": 0.063,
+    "photoperiod_h": 13.91,
+    "soil_temp_f": 49.4,
+    "et0_in": 0.296
+  },
+  {
+    "doy": 122,
+    "avg_high_f": 64.6,
+    "avg_low_f": 46.9,
+    "avg_precip_in": 0.163,
+    "photoperiod_h": 13.96,
+    "soil_temp_f": 49.4,
+    "et0_in": 0.329
+  },
+  {
+    "doy": 123,
+    "avg_high_f": 65.2,
+    "avg_low_f": 44.8,
+    "avg_precip_in": 0.116,
+    "photoperiod_h": 14,
+    "soil_temp_f": 49.5,
+    "et0_in": 0.35
+  },
+  {
+    "doy": 124,
+    "avg_high_f": 65.8,
+    "avg_low_f": 44,
+    "avg_precip_in": 0.123,
+    "photoperiod_h": 14.04,
+    "soil_temp_f": 49.6,
+    "et0_in": 0.363
+  },
+  {
+    "doy": 125,
+    "avg_high_f": 64.2,
+    "avg_low_f": 46.8,
+    "avg_precip_in": 0.057,
+    "photoperiod_h": 14.08,
+    "soil_temp_f": 49.7,
+    "et0_in": 0.33
+  },
+  {
+    "doy": 126,
+    "avg_high_f": 67.2,
+    "avg_low_f": 43.5,
+    "avg_precip_in": 0.042,
+    "photoperiod_h": 14.12,
+    "soil_temp_f": 49.8,
+    "et0_in": 0.385
+  },
+  {
+    "doy": 127,
+    "avg_high_f": 66,
+    "avg_low_f": 44.4,
+    "avg_precip_in": 0.042,
+    "photoperiod_h": 14.16,
+    "soil_temp_f": 49.9,
+    "et0_in": 0.368
+  },
+  {
+    "doy": 128,
+    "avg_high_f": 68.3,
+    "avg_low_f": 43.4,
+    "avg_precip_in": 0.098,
+    "photoperiod_h": 14.2,
+    "soil_temp_f": 50,
+    "et0_in": 0.402
+  },
+  {
+    "doy": 129,
+    "avg_high_f": 65.1,
+    "avg_low_f": 44.9,
+    "avg_precip_in": 0.056,
+    "photoperiod_h": 14.24,
+    "soil_temp_f": 50.1,
+    "et0_in": 0.357
+  },
+  {
+    "doy": 130,
+    "avg_high_f": 64,
+    "avg_low_f": 44.9,
+    "avg_precip_in": 0.179,
+    "photoperiod_h": 14.28,
+    "soil_temp_f": 50.2,
+    "et0_in": 0.346
+  },
+  {
+    "doy": 131,
+    "avg_high_f": 64.9,
+    "avg_low_f": 46,
+    "avg_precip_in": 0.069,
+    "photoperiod_h": 14.32,
+    "soil_temp_f": 50.3,
+    "et0_in": 0.352
+  },
+  {
+    "doy": 132,
+    "avg_high_f": 68.1,
+    "avg_low_f": 45.2,
+    "avg_precip_in": 0.056,
+    "photoperiod_h": 14.35,
+    "soil_temp_f": 50.4,
+    "et0_in": 0.397
+  },
+  {
+    "doy": 133,
+    "avg_high_f": 71.1,
+    "avg_low_f": 46.3,
+    "avg_precip_in": 0.058,
+    "photoperiod_h": 14.39,
+    "soil_temp_f": 50.5,
+    "et0_in": 0.429
+  },
+  {
+    "doy": 134,
+    "avg_high_f": 69.2,
+    "avg_low_f": 46.6,
+    "avg_precip_in": 0.19,
+    "photoperiod_h": 14.43,
+    "soil_temp_f": 50.5,
+    "et0_in": 0.406
+  },
+  {
+    "doy": 135,
+    "avg_high_f": 73.5,
+    "avg_low_f": 49.6,
+    "avg_precip_in": 0.067,
+    "photoperiod_h": 14.46,
+    "soil_temp_f": 50.6,
+    "et0_in": 0.445
+  },
+  {
+    "doy": 136,
+    "avg_high_f": 73.2,
+    "avg_low_f": 50.8,
+    "avg_precip_in": 0.044,
+    "photoperiod_h": 14.5,
+    "soil_temp_f": 50.7,
+    "et0_in": 0.436
+  },
+  {
+    "doy": 137,
+    "avg_high_f": 71.9,
+    "avg_low_f": 48.1,
+    "avg_precip_in": 0.256,
+    "photoperiod_h": 14.53,
+    "soil_temp_f": 50.8,
+    "et0_in": 0.436
+  },
+  {
+    "doy": 138,
+    "avg_high_f": 68,
+    "avg_low_f": 49.7,
+    "avg_precip_in": 0.173,
+    "photoperiod_h": 14.57,
+    "soil_temp_f": 50.9,
+    "et0_in": 0.376
+  },
+  {
+    "doy": 139,
+    "avg_high_f": 70.2,
+    "avg_low_f": 49.8,
+    "avg_precip_in": 0.034,
+    "photoperiod_h": 14.6,
+    "soil_temp_f": 51,
+    "et0_in": 0.406
+  },
+  {
+    "doy": 140,
+    "avg_high_f": 70.9,
+    "avg_low_f": 48.8,
+    "avg_precip_in": 0.198,
+    "photoperiod_h": 14.63,
+    "soil_temp_f": 51.1,
+    "et0_in": 0.422
+  },
+  {
+    "doy": 141,
+    "avg_high_f": 73.8,
+    "avg_low_f": 51.3,
+    "avg_precip_in": 0.023,
+    "photoperiod_h": 14.66,
+    "soil_temp_f": 51.2,
+    "et0_in": 0.447
+  },
+  {
+    "doy": 142,
+    "avg_high_f": 74.1,
+    "avg_low_f": 51.1,
+    "avg_precip_in": 0.04,
+    "photoperiod_h": 14.69,
+    "soil_temp_f": 51.3,
+    "et0_in": 0.455
+  },
+  {
+    "doy": 143,
+    "avg_high_f": 74.9,
+    "avg_low_f": 50.8,
+    "avg_precip_in": 0.082,
+    "photoperiod_h": 14.72,
+    "soil_temp_f": 51.4,
+    "et0_in": 0.468
+  },
+  {
+    "doy": 144,
+    "avg_high_f": 78.3,
+    "avg_low_f": 56,
+    "avg_precip_in": 0.115,
+    "photoperiod_h": 14.75,
+    "soil_temp_f": 51.4,
+    "et0_in": 0.482
+  },
+  {
+    "doy": 145,
+    "avg_high_f": 78.6,
+    "avg_low_f": 57.1,
+    "avg_precip_in": 0.299,
+    "photoperiod_h": 14.78,
+    "soil_temp_f": 51.5,
+    "et0_in": 0.48
+  },
+  {
+    "doy": 146,
+    "avg_high_f": 77.7,
+    "avg_low_f": 54.1,
+    "avg_precip_in": 0.123,
+    "photoperiod_h": 14.81,
+    "soil_temp_f": 51.6,
+    "et0_in": 0.489
+  },
+  {
+    "doy": 147,
+    "avg_high_f": 75.8,
+    "avg_low_f": 54.9,
+    "avg_precip_in": 0.055,
+    "photoperiod_h": 14.83,
+    "soil_temp_f": 51.7,
+    "et0_in": 0.458
+  },
+  {
+    "doy": 148,
+    "avg_high_f": 78.3,
+    "avg_low_f": 57,
+    "avg_precip_in": 0.075,
+    "photoperiod_h": 14.86,
+    "soil_temp_f": 51.8,
+    "et0_in": 0.479
+  },
+  {
+    "doy": 149,
+    "avg_high_f": 76.6,
+    "avg_low_f": 55.1,
+    "avg_precip_in": 0.232,
+    "photoperiod_h": 14.88,
+    "soil_temp_f": 51.9,
+    "et0_in": 0.47
+  },
+  {
+    "doy": 150,
+    "avg_high_f": 76.1,
+    "avg_low_f": 54.4,
+    "avg_precip_in": 0.013,
+    "photoperiod_h": 14.91,
+    "soil_temp_f": 52,
+    "et0_in": 0.468
+  },
+  {
+    "doy": 151,
+    "avg_high_f": 77.2,
+    "avg_low_f": 51.9,
+    "avg_precip_in": 0.051,
+    "photoperiod_h": 14.93,
+    "soil_temp_f": 52.1,
+    "et0_in": 0.501
+  },
+  {
+    "doy": 152,
+    "avg_high_f": 75.6,
+    "avg_low_f": 51.4,
+    "avg_precip_in": 0.03,
+    "photoperiod_h": 14.95,
+    "soil_temp_f": 52.2,
+    "et0_in": 0.483
+  },
+  {
+    "doy": 153,
+    "avg_high_f": 78.4,
+    "avg_low_f": 53.9,
+    "avg_precip_in": 0.056,
+    "photoperiod_h": 14.97,
+    "soil_temp_f": 52.2,
+    "et0_in": 0.507
+  },
+  {
+    "doy": 154,
+    "avg_high_f": 79.7,
+    "avg_low_f": 55.1,
+    "avg_precip_in": 0.075,
+    "photoperiod_h": 14.99,
+    "soil_temp_f": 52.3,
+    "et0_in": 0.519
+  },
+  {
+    "doy": 155,
+    "avg_high_f": 79.3,
+    "avg_low_f": 58.8,
+    "avg_precip_in": 0.036,
+    "photoperiod_h": 15.01,
+    "soil_temp_f": 52.4,
+    "et0_in": 0.486
+  },
+  {
+    "doy": 156,
+    "avg_high_f": 78.3,
+    "avg_low_f": 56.9,
+    "avg_precip_in": 0.038,
+    "photoperiod_h": 15.03,
+    "soil_temp_f": 52.5,
+    "et0_in": 0.487
+  },
+  {
+    "doy": 157,
+    "avg_high_f": 78.6,
+    "avg_low_f": 56.2,
+    "avg_precip_in": 0.065,
+    "photoperiod_h": 15.05,
+    "soil_temp_f": 52.6,
+    "et0_in": 0.498
+  },
+  {
+    "doy": 158,
+    "avg_high_f": 76.7,
+    "avg_low_f": 54.8,
+    "avg_precip_in": 0.033,
+    "photoperiod_h": 15.06,
+    "soil_temp_f": 52.7,
+    "et0_in": 0.481
+  },
+  {
+    "doy": 159,
+    "avg_high_f": 76.7,
+    "avg_low_f": 55.9,
+    "avg_precip_in": 0.185,
+    "photoperiod_h": 15.08,
+    "soil_temp_f": 52.7,
+    "et0_in": 0.473
+  },
+  {
+    "doy": 160,
+    "avg_high_f": 79.7,
+    "avg_low_f": 55.5,
+    "avg_precip_in": 0.089,
+    "photoperiod_h": 15.09,
+    "soil_temp_f": 52.8,
+    "et0_in": 0.52
+  },
+  {
+    "doy": 161,
+    "avg_high_f": 80,
+    "avg_low_f": 58.3,
+    "avg_precip_in": 0.077,
+    "photoperiod_h": 15.11,
+    "soil_temp_f": 52.9,
+    "et0_in": 0.504
+  },
+  {
+    "doy": 162,
+    "avg_high_f": 78.7,
+    "avg_low_f": 58.5,
+    "avg_precip_in": 0.163,
+    "photoperiod_h": 15.12,
+    "soil_temp_f": 53,
+    "et0_in": 0.483
+  },
+  {
+    "doy": 163,
+    "avg_high_f": 78.6,
+    "avg_low_f": 57.4,
+    "avg_precip_in": 0.099,
+    "photoperiod_h": 15.13,
+    "soil_temp_f": 53.1,
+    "et0_in": 0.491
+  },
+  {
+    "doy": 164,
+    "avg_high_f": 80.5,
+    "avg_low_f": 58.1,
+    "avg_precip_in": 0.125,
+    "photoperiod_h": 15.14,
+    "soil_temp_f": 53.1,
+    "et0_in": 0.515
+  },
+  {
+    "doy": 165,
+    "avg_high_f": 80.4,
+    "avg_low_f": 59.6,
+    "avg_precip_in": 0.021,
+    "photoperiod_h": 15.15,
+    "soil_temp_f": 53.2,
+    "et0_in": 0.501
+  },
+  {
+    "doy": 166,
+    "avg_high_f": 79.7,
+    "avg_low_f": 59.1,
+    "avg_precip_in": 0.092,
+    "photoperiod_h": 15.15,
+    "soil_temp_f": 53.3,
+    "et0_in": 0.495
+  },
+  {
+    "doy": 167,
+    "avg_high_f": 81.7,
+    "avg_low_f": 58.9,
+    "avg_precip_in": 0.178,
+    "photoperiod_h": 15.16,
+    "soil_temp_f": 53.4,
+    "et0_in": 0.527
+  },
+  {
+    "doy": 168,
+    "avg_high_f": 84.1,
+    "avg_low_f": 60.2,
+    "avg_precip_in": 0.134,
+    "photoperiod_h": 15.17,
+    "soil_temp_f": 53.4,
+    "et0_in": 0.554
+  },
+  {
+    "doy": 169,
+    "avg_high_f": 81.3,
+    "avg_low_f": 60.2,
+    "avg_precip_in": 0.025,
+    "photoperiod_h": 15.17,
+    "soil_temp_f": 53.5,
+    "et0_in": 0.511
+  },
+  {
+    "doy": 170,
+    "avg_high_f": 83.5,
+    "avg_low_f": 60.7,
+    "avg_precip_in": 0.211,
+    "photoperiod_h": 15.17,
+    "soil_temp_f": 53.6,
+    "et0_in": 0.541
+  },
+  {
+    "doy": 171,
+    "avg_high_f": 83.7,
+    "avg_low_f": 61.4,
+    "avg_precip_in": 0.058,
+    "photoperiod_h": 15.18,
+    "soil_temp_f": 53.7,
+    "et0_in": 0.539
+  },
+  {
+    "doy": 172,
+    "avg_high_f": 81.8,
+    "avg_low_f": 59.7,
+    "avg_precip_in": 0.113,
+    "photoperiod_h": 15.18,
+    "soil_temp_f": 53.7,
+    "et0_in": 0.523
+  },
+  {
+    "doy": 173,
+    "avg_high_f": 81,
+    "avg_low_f": 59.9,
+    "avg_precip_in": 0.171,
+    "photoperiod_h": 15.18,
+    "soil_temp_f": 53.8,
+    "et0_in": 0.509
+  },
+  {
+    "doy": 174,
+    "avg_high_f": 78.7,
+    "avg_low_f": 60.4,
+    "avg_precip_in": 0.214,
+    "photoperiod_h": 15.17,
+    "soil_temp_f": 53.9,
+    "et0_in": 0.468
+  },
+  {
+    "doy": 175,
+    "avg_high_f": 79.2,
+    "avg_low_f": 59.7,
+    "avg_precip_in": 0.303,
+    "photoperiod_h": 15.17,
+    "soil_temp_f": 53.9,
+    "et0_in": 0.482
+  },
+  {
+    "doy": 176,
+    "avg_high_f": 78.9,
+    "avg_low_f": 60.4,
+    "avg_precip_in": 0.458,
+    "photoperiod_h": 15.17,
+    "soil_temp_f": 54,
+    "et0_in": 0.471
+  },
+  {
+    "doy": 177,
+    "avg_high_f": 79.7,
+    "avg_low_f": 60.2,
+    "avg_precip_in": 0.139,
+    "photoperiod_h": 15.16,
+    "soil_temp_f": 54.1,
+    "et0_in": 0.485
+  },
+  {
+    "doy": 178,
+    "avg_high_f": 81.8,
+    "avg_low_f": 58.4,
+    "avg_precip_in": 0.049,
+    "photoperiod_h": 15.16,
+    "soil_temp_f": 54.1,
+    "et0_in": 0.532
+  },
+  {
+    "doy": 179,
+    "avg_high_f": 82,
+    "avg_low_f": 62.5,
+    "avg_precip_in": 0.186,
+    "photoperiod_h": 15.15,
+    "soil_temp_f": 54.2,
+    "et0_in": 0.5
+  },
+  {
+    "doy": 180,
+    "avg_high_f": 84.6,
+    "avg_low_f": 64.3,
+    "avg_precip_in": 0.148,
+    "photoperiod_h": 15.14,
+    "soil_temp_f": 54.2,
+    "et0_in": 0.525
+  },
+  {
+    "doy": 181,
+    "avg_high_f": 82.4,
+    "avg_low_f": 62.6,
+    "avg_precip_in": 0.052,
+    "photoperiod_h": 15.13,
+    "soil_temp_f": 54.3,
+    "et0_in": 0.504
+  },
+  {
+    "doy": 182,
+    "avg_high_f": 80.8,
+    "avg_low_f": 60.4,
+    "avg_precip_in": 0.116,
+    "photoperiod_h": 15.12,
+    "soil_temp_f": 54.4,
+    "et0_in": 0.499
+  },
+  {
+    "doy": 183,
+    "avg_high_f": 84.2,
+    "avg_low_f": 60.1,
+    "avg_precip_in": 0.001,
+    "photoperiod_h": 15.11,
+    "soil_temp_f": 54.4,
+    "et0_in": 0.553
+  },
+  {
+    "doy": 184,
+    "avg_high_f": 87.4,
+    "avg_low_f": 63.7,
+    "avg_precip_in": 0.208,
+    "photoperiod_h": 15.1,
+    "soil_temp_f": 54.5,
+    "et0_in": 0.573
+  },
+  {
+    "doy": 185,
+    "avg_high_f": 87.3,
+    "avg_low_f": 65.8,
+    "avg_precip_in": 0.078,
+    "photoperiod_h": 15.09,
+    "soil_temp_f": 54.5,
+    "et0_in": 0.554
+  },
+  {
+    "doy": 186,
+    "avg_high_f": 85.1,
+    "avg_low_f": 64.5,
+    "avg_precip_in": 0.085,
+    "photoperiod_h": 15.07,
+    "soil_temp_f": 54.6,
+    "et0_in": 0.529
+  },
+  {
+    "doy": 187,
+    "avg_high_f": 83.6,
+    "avg_low_f": 61.7,
+    "avg_precip_in": 0.06,
+    "photoperiod_h": 15.06,
+    "soil_temp_f": 54.6,
+    "et0_in": 0.529
+  },
+  {
+    "doy": 188,
+    "avg_high_f": 80.9,
+    "avg_low_f": 59.4,
+    "avg_precip_in": 0.012,
+    "photoperiod_h": 15.04,
+    "soil_temp_f": 54.7,
+    "et0_in": 0.504
+  },
+  {
+    "doy": 189,
+    "avg_high_f": 83.5,
+    "avg_low_f": 60.8,
+    "avg_precip_in": 0.162,
+    "photoperiod_h": 15.02,
+    "soil_temp_f": 54.7,
+    "et0_in": 0.532
+  },
+  {
+    "doy": 190,
+    "avg_high_f": 84.4,
+    "avg_low_f": 62.3,
+    "avg_precip_in": 0.207,
+    "photoperiod_h": 15,
+    "soil_temp_f": 54.8,
+    "et0_in": 0.533
+  },
+  {
+    "doy": 191,
+    "avg_high_f": 81.9,
+    "avg_low_f": 62.2,
+    "avg_precip_in": 0.202,
+    "photoperiod_h": 14.98,
+    "soil_temp_f": 54.8,
+    "et0_in": 0.493
+  },
+  {
+    "doy": 192,
+    "avg_high_f": 82.2,
+    "avg_low_f": 62.2,
+    "avg_precip_in": 0.257,
+    "photoperiod_h": 14.96,
+    "soil_temp_f": 54.9,
+    "et0_in": 0.497
+  },
+  {
+    "doy": 193,
+    "avg_high_f": 83.4,
+    "avg_low_f": 64.9,
+    "avg_precip_in": 0.27,
+    "photoperiod_h": 14.94,
+    "soil_temp_f": 54.9,
+    "et0_in": 0.491
+  },
+  {
+    "doy": 194,
+    "avg_high_f": 83,
+    "avg_low_f": 63.4,
+    "avg_precip_in": 0.093,
+    "photoperiod_h": 14.92,
+    "soil_temp_f": 55,
+    "et0_in": 0.497
+  },
+  {
+    "doy": 195,
+    "avg_high_f": 81.9,
+    "avg_low_f": 63,
+    "avg_precip_in": 0.095,
+    "photoperiod_h": 14.9,
+    "soil_temp_f": 55,
+    "et0_in": 0.482
+  },
+  {
+    "doy": 196,
+    "avg_high_f": 80.8,
+    "avg_low_f": 64.1,
+    "avg_precip_in": 0.247,
+    "photoperiod_h": 14.87,
+    "soil_temp_f": 55.1,
+    "et0_in": 0.452
+  },
+  {
+    "doy": 197,
+    "avg_high_f": 81.3,
+    "avg_low_f": 63.5,
+    "avg_precip_in": 0.086,
+    "photoperiod_h": 14.85,
+    "soil_temp_f": 55.1,
+    "et0_in": 0.466
+  },
+  {
+    "doy": 198,
+    "avg_high_f": 84.4,
+    "avg_low_f": 61.1,
+    "avg_precip_in": 0.069,
+    "photoperiod_h": 14.82,
+    "soil_temp_f": 55.1,
+    "et0_in": 0.534
+  },
+  {
+    "doy": 199,
+    "avg_high_f": 85.8,
+    "avg_low_f": 64.8,
+    "avg_precip_in": 0,
+    "photoperiod_h": 14.79,
+    "soil_temp_f": 55.2,
+    "et0_in": 0.523
+  },
+  {
+    "doy": 200,
+    "avg_high_f": 85,
+    "avg_low_f": 65.2,
+    "avg_precip_in": 0.282,
+    "photoperiod_h": 14.77,
+    "soil_temp_f": 55.2,
+    "et0_in": 0.505
+  },
+  {
+    "doy": 201,
+    "avg_high_f": 82.7,
+    "avg_low_f": 63.6,
+    "avg_precip_in": 0.122,
+    "photoperiod_h": 14.74,
+    "soil_temp_f": 55.2,
+    "et0_in": 0.482
+  },
+  {
+    "doy": 202,
+    "avg_high_f": 82.4,
+    "avg_low_f": 63.1,
+    "avg_precip_in": 0.063,
+    "photoperiod_h": 14.71,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.48
+  },
+  {
+    "doy": 203,
+    "avg_high_f": 82.5,
+    "avg_low_f": 65.6,
+    "avg_precip_in": 0.377,
+    "photoperiod_h": 14.68,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.456
+  },
+  {
+    "doy": 204,
+    "avg_high_f": 84.2,
+    "avg_low_f": 62.4,
+    "avg_precip_in": 0.133,
+    "photoperiod_h": 14.65,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.511
+  },
+  {
+    "doy": 205,
+    "avg_high_f": 83.6,
+    "avg_low_f": 63,
+    "avg_precip_in": 0.153,
+    "photoperiod_h": 14.61,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.495
+  },
+  {
+    "doy": 206,
+    "avg_high_f": 83,
+    "avg_low_f": 62.3,
+    "avg_precip_in": 0.115,
+    "photoperiod_h": 14.58,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.491
+  },
+  {
+    "doy": 207,
+    "avg_high_f": 84.7,
+    "avg_low_f": 65.4,
+    "avg_precip_in": 0.007,
+    "photoperiod_h": 14.55,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.488
+  },
+  {
+    "doy": 208,
+    "avg_high_f": 84.3,
+    "avg_low_f": 63.8,
+    "avg_precip_in": 0,
+    "photoperiod_h": 14.52,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.494
+  },
+  {
+    "doy": 209,
+    "avg_high_f": 83.1,
+    "avg_low_f": 63.3,
+    "avg_precip_in": 0.143,
+    "photoperiod_h": 14.48,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.479
+  },
+  {
+    "doy": 210,
+    "avg_high_f": 82.4,
+    "avg_low_f": 62,
+    "avg_precip_in": 0.023,
+    "photoperiod_h": 14.45,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.477
+  },
+  {
+    "doy": 211,
+    "avg_high_f": 81.4,
+    "avg_low_f": 59.6,
+    "avg_precip_in": 0.151,
+    "photoperiod_h": 14.41,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.48
+  },
+  {
+    "doy": 212,
+    "avg_high_f": 82.3,
+    "avg_low_f": 61.3,
+    "avg_precip_in": 0.031,
+    "photoperiod_h": 14.37,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.478
+  },
+  {
+    "doy": 213,
+    "avg_high_f": 83.9,
+    "avg_low_f": 61.6,
+    "avg_precip_in": 0.151,
+    "photoperiod_h": 14.34,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.497
+  },
+  {
+    "doy": 214,
+    "avg_high_f": 83.5,
+    "avg_low_f": 63,
+    "avg_precip_in": 0.2,
+    "photoperiod_h": 14.3,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.478
+  },
+  {
+    "doy": 215,
+    "avg_high_f": 83.7,
+    "avg_low_f": 62.1,
+    "avg_precip_in": 0.019,
+    "photoperiod_h": 14.26,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.486
+  },
+  {
+    "doy": 216,
+    "avg_high_f": 83.2,
+    "avg_low_f": 62.2,
+    "avg_precip_in": 0.007,
+    "photoperiod_h": 14.22,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.476
+  },
+  {
+    "doy": 217,
+    "avg_high_f": 79.6,
+    "avg_low_f": 63.1,
+    "avg_precip_in": 0.153,
+    "photoperiod_h": 14.18,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.412
+  },
+  {
+    "doy": 218,
+    "avg_high_f": 81.1,
+    "avg_low_f": 62.5,
+    "avg_precip_in": 0.091,
+    "photoperiod_h": 14.14,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.439
+  },
+  {
+    "doy": 219,
+    "avg_high_f": 80.9,
+    "avg_low_f": 61.5,
+    "avg_precip_in": 0.043,
+    "photoperiod_h": 14.1,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.442
+  },
+  {
+    "doy": 220,
+    "avg_high_f": 81.5,
+    "avg_low_f": 60.5,
+    "avg_precip_in": 0.046,
+    "photoperiod_h": 14.06,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.456
+  },
+  {
+    "doy": 221,
+    "avg_high_f": 83.2,
+    "avg_low_f": 62.6,
+    "avg_precip_in": 0.127,
+    "photoperiod_h": 14.02,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.462
+  },
+  {
+    "doy": 222,
+    "avg_high_f": 83.3,
+    "avg_low_f": 61.5,
+    "avg_precip_in": 0.159,
+    "photoperiod_h": 13.98,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.469
+  },
+  {
+    "doy": 223,
+    "avg_high_f": 82.8,
+    "avg_low_f": 63.1,
+    "avg_precip_in": 0.018,
+    "photoperiod_h": 13.93,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.448
+  },
+  {
+    "doy": 224,
+    "avg_high_f": 80.8,
+    "avg_low_f": 61.4,
+    "avg_precip_in": 0.446,
+    "photoperiod_h": 13.89,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.431
+  },
+  {
+    "doy": 225,
+    "avg_high_f": 82.1,
+    "avg_low_f": 61.6,
+    "avg_precip_in": 0.196,
+    "photoperiod_h": 13.85,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.445
+  },
+  {
+    "doy": 226,
+    "avg_high_f": 82.3,
+    "avg_low_f": 61.6,
+    "avg_precip_in": 0.109,
+    "photoperiod_h": 13.8,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.446
+  },
+  {
+    "doy": 227,
+    "avg_high_f": 82.9,
+    "avg_low_f": 60.1,
+    "avg_precip_in": 0.152,
+    "photoperiod_h": 13.76,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.462
+  },
+  {
+    "doy": 228,
+    "avg_high_f": 82.5,
+    "avg_low_f": 64,
+    "avg_precip_in": 0.39,
+    "photoperiod_h": 13.72,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.424
+  },
+  {
+    "doy": 229,
+    "avg_high_f": 80.7,
+    "avg_low_f": 63.3,
+    "avg_precip_in": 0.089,
+    "photoperiod_h": 13.67,
+    "soil_temp_f": 55.6,
+    "et0_in": 0.401
+  },
+  {
+    "doy": 230,
+    "avg_high_f": 82.2,
+    "avg_low_f": 61.1,
+    "avg_precip_in": 0.035,
+    "photoperiod_h": 13.63,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.437
+  },
+  {
+    "doy": 231,
+    "avg_high_f": 80.5,
+    "avg_low_f": 61.4,
+    "avg_precip_in": 0.071,
+    "photoperiod_h": 13.58,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.41
+  },
+  {
+    "doy": 232,
+    "avg_high_f": 81.2,
+    "avg_low_f": 61.3,
+    "avg_precip_in": 0.092,
+    "photoperiod_h": 13.54,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.418
+  },
+  {
+    "doy": 233,
+    "avg_high_f": 79.2,
+    "avg_low_f": 60.1,
+    "avg_precip_in": 0.019,
+    "photoperiod_h": 13.49,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.398
+  },
+  {
+    "doy": 234,
+    "avg_high_f": 80.8,
+    "avg_low_f": 57.1,
+    "avg_precip_in": 0.059,
+    "photoperiod_h": 13.44,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.435
+  },
+  {
+    "doy": 235,
+    "avg_high_f": 80.6,
+    "avg_low_f": 58.8,
+    "avg_precip_in": 0.018,
+    "photoperiod_h": 13.4,
+    "soil_temp_f": 55.5,
+    "et0_in": 0.42
+  },
+  {
+    "doy": 236,
+    "avg_high_f": 79.3,
+    "avg_low_f": 60.5,
+    "avg_precip_in": 0.021,
+    "photoperiod_h": 13.35,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.389
+  },
+  {
+    "doy": 237,
+    "avg_high_f": 80.1,
+    "avg_low_f": 62.9,
+    "avg_precip_in": 0.123,
+    "photoperiod_h": 13.3,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.377
+  },
+  {
+    "doy": 238,
+    "avg_high_f": 81.8,
+    "avg_low_f": 62.6,
+    "avg_precip_in": 0.056,
+    "photoperiod_h": 13.26,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.4
+  },
+  {
+    "doy": 239,
+    "avg_high_f": 82.2,
+    "avg_low_f": 62.6,
+    "avg_precip_in": 0.595,
+    "photoperiod_h": 13.21,
+    "soil_temp_f": 55.4,
+    "et0_in": 0.402
+  },
+  {
+    "doy": 240,
+    "avg_high_f": 81.2,
+    "avg_low_f": 63,
+    "avg_precip_in": 0.338,
+    "photoperiod_h": 13.16,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.383
+  },
+  {
+    "doy": 241,
+    "avg_high_f": 78.1,
+    "avg_low_f": 59.6,
+    "avg_precip_in": 0.002,
+    "photoperiod_h": 13.11,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.367
+  },
+  {
+    "doy": 242,
+    "avg_high_f": 78.6,
+    "avg_low_f": 57.7,
+    "avg_precip_in": 0.002,
+    "photoperiod_h": 13.06,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.383
+  },
+  {
+    "doy": 243,
+    "avg_high_f": 79.1,
+    "avg_low_f": 57.9,
+    "avg_precip_in": 0.084,
+    "photoperiod_h": 13.02,
+    "soil_temp_f": 55.3,
+    "et0_in": 0.385
+  },
+  {
+    "doy": 244,
+    "avg_high_f": 80.8,
+    "avg_low_f": 59.7,
+    "avg_precip_in": 0.136,
+    "photoperiod_h": 12.97,
+    "soil_temp_f": 55.2,
+    "et0_in": 0.391
+  },
+  {
+    "doy": 245,
+    "avg_high_f": 80.5,
+    "avg_low_f": 59.5,
+    "avg_precip_in": 0.089,
+    "photoperiod_h": 12.92,
+    "soil_temp_f": 55.2,
+    "et0_in": 0.385
+  },
+  {
+    "doy": 246,
+    "avg_high_f": 79.1,
+    "avg_low_f": 60,
+    "avg_precip_in": 0.009,
+    "photoperiod_h": 12.87,
+    "soil_temp_f": 55.2,
+    "et0_in": 0.362
+  },
+  {
+    "doy": 247,
+    "avg_high_f": 79.1,
+    "avg_low_f": 57.5,
+    "avg_precip_in": 0.062,
+    "photoperiod_h": 12.82,
+    "soil_temp_f": 55.1,
+    "et0_in": 0.376
+  },
+  {
+    "doy": 248,
+    "avg_high_f": 78.3,
+    "avg_low_f": 57.6,
+    "avg_precip_in": 0.048,
+    "photoperiod_h": 12.77,
+    "soil_temp_f": 55.1,
+    "et0_in": 0.363
+  },
+  {
+    "doy": 249,
+    "avg_high_f": 76,
+    "avg_low_f": 56.9,
+    "avg_precip_in": 0.106,
+    "photoperiod_h": 12.72,
+    "soil_temp_f": 55,
+    "et0_in": 0.338
+  },
+  {
+    "doy": 250,
+    "avg_high_f": 73.6,
+    "avg_low_f": 57.1,
+    "avg_precip_in": 0.087,
+    "photoperiod_h": 12.67,
+    "soil_temp_f": 55,
+    "et0_in": 0.306
+  },
+  {
+    "doy": 251,
+    "avg_high_f": 72,
+    "avg_low_f": 52.6,
+    "avg_precip_in": 0.116,
+    "photoperiod_h": 12.62,
+    "soil_temp_f": 55,
+    "et0_in": 0.315
+  },
+  {
+    "doy": 252,
+    "avg_high_f": 76,
+    "avg_low_f": 55,
+    "avg_precip_in": 0.072,
+    "photoperiod_h": 12.57,
+    "soil_temp_f": 54.9,
+    "et0_in": 0.341
+  },
+  {
+    "doy": 253,
+    "avg_high_f": 74.2,
+    "avg_low_f": 55,
+    "avg_precip_in": 0.281,
+    "photoperiod_h": 12.52,
+    "soil_temp_f": 54.9,
+    "et0_in": 0.319
+  },
+  {
+    "doy": 254,
+    "avg_high_f": 74.1,
+    "avg_low_f": 53.4,
+    "avg_precip_in": 0.031,
+    "photoperiod_h": 12.48,
+    "soil_temp_f": 54.8,
+    "et0_in": 0.324
+  },
+  {
+    "doy": 255,
+    "avg_high_f": 74.6,
+    "avg_low_f": 53.8,
+    "avg_precip_in": 0.17,
+    "photoperiod_h": 12.43,
+    "soil_temp_f": 54.8,
+    "et0_in": 0.324
+  },
+  {
+    "doy": 256,
+    "avg_high_f": 78.2,
+    "avg_low_f": 54.9,
+    "avg_precip_in": 0.002,
+    "photoperiod_h": 12.38,
+    "soil_temp_f": 54.7,
+    "et0_in": 0.353
+  },
+  {
+    "doy": 257,
+    "avg_high_f": 77.2,
+    "avg_low_f": 55.2,
+    "avg_precip_in": 0,
+    "photoperiod_h": 12.33,
+    "soil_temp_f": 54.7,
+    "et0_in": 0.338
+  },
+  {
+    "doy": 258,
+    "avg_high_f": 80,
+    "avg_low_f": 55.7,
+    "avg_precip_in": 0,
+    "photoperiod_h": 12.28,
+    "soil_temp_f": 54.6,
+    "et0_in": 0.361
+  },
+  {
+    "doy": 259,
+    "avg_high_f": 81.3,
+    "avg_low_f": 57.5,
+    "avg_precip_in": 0,
+    "photoperiod_h": 12.23,
+    "soil_temp_f": 54.6,
+    "et0_in": 0.362
+  },
+  {
+    "doy": 260,
+    "avg_high_f": 77.9,
+    "avg_low_f": 58.1,
+    "avg_precip_in": 0.097,
+    "photoperiod_h": 12.18,
+    "soil_temp_f": 54.5,
+    "et0_in": 0.32
+  },
+  {
+    "doy": 261,
+    "avg_high_f": 75.9,
+    "avg_low_f": 53.3,
+    "avg_precip_in": 0.007,
+    "photoperiod_h": 12.13,
+    "soil_temp_f": 54.4,
+    "et0_in": 0.322
+  },
+  {
+    "doy": 262,
+    "avg_high_f": 78.7,
+    "avg_low_f": 56.4,
+    "avg_precip_in": 0.304,
+    "photoperiod_h": 12.08,
+    "soil_temp_f": 54.4,
+    "et0_in": 0.331
+  },
+  {
+    "doy": 263,
+    "avg_high_f": 80.3,
+    "avg_low_f": 56.7,
+    "avg_precip_in": 0.069,
+    "photoperiod_h": 12.03,
+    "soil_temp_f": 54.3,
+    "et0_in": 0.342
+  },
+  {
+    "doy": 264,
+    "avg_high_f": 76.2,
+    "avg_low_f": 54.1,
+    "avg_precip_in": 0.3,
+    "photoperiod_h": 11.97,
+    "soil_temp_f": 54.3,
+    "et0_in": 0.312
+  },
+  {
+    "doy": 265,
+    "avg_high_f": 74.7,
+    "avg_low_f": 52.6,
+    "avg_precip_in": 0.169,
+    "photoperiod_h": 11.92,
+    "soil_temp_f": 54.2,
+    "et0_in": 0.302
+  },
+  {
+    "doy": 266,
+    "avg_high_f": 74.3,
+    "avg_low_f": 52.9,
+    "avg_precip_in": 0.003,
+    "photoperiod_h": 11.87,
+    "soil_temp_f": 54.2,
+    "et0_in": 0.294
+  },
+  {
+    "doy": 267,
+    "avg_high_f": 73.8,
+    "avg_low_f": 57,
+    "avg_precip_in": 0.118,
+    "photoperiod_h": 11.82,
+    "soil_temp_f": 54.1,
+    "et0_in": 0.265
+  },
+  {
+    "doy": 268,
+    "avg_high_f": 73.9,
+    "avg_low_f": 52.9,
+    "avg_precip_in": 0.004,
+    "photoperiod_h": 11.77,
+    "soil_temp_f": 54,
+    "et0_in": 0.284
+  },
+  {
+    "doy": 269,
+    "avg_high_f": 70.6,
+    "avg_low_f": 53.4,
+    "avg_precip_in": 0.134,
+    "photoperiod_h": 11.72,
+    "soil_temp_f": 54,
+    "et0_in": 0.249
+  },
+  {
+    "doy": 270,
+    "avg_high_f": 68.5,
+    "avg_low_f": 53,
+    "avg_precip_in": 0.031,
+    "photoperiod_h": 11.67,
+    "soil_temp_f": 53.9,
+    "et0_in": 0.229
+  },
+  {
+    "doy": 271,
+    "avg_high_f": 67.2,
+    "avg_low_f": 50.4,
+    "avg_precip_in": 0.18,
+    "photoperiod_h": 11.62,
+    "soil_temp_f": 53.8,
+    "et0_in": 0.229
+  },
+  {
+    "doy": 272,
+    "avg_high_f": 69.3,
+    "avg_low_f": 48.8,
+    "avg_precip_in": 0.088,
+    "photoperiod_h": 11.57,
+    "soil_temp_f": 53.8,
+    "et0_in": 0.251
+  },
+  {
+    "doy": 273,
+    "avg_high_f": 70.2,
+    "avg_low_f": 50.8,
+    "avg_precip_in": 0.321,
+    "photoperiod_h": 11.52,
+    "soil_temp_f": 53.7,
+    "et0_in": 0.247
+  },
+  {
+    "doy": 274,
+    "avg_high_f": 69.7,
+    "avg_low_f": 49.4,
+    "avg_precip_in": 0.334,
+    "photoperiod_h": 11.48,
+    "soil_temp_f": 53.6,
+    "et0_in": 0.246
+  },
+  {
+    "doy": 275,
+    "avg_high_f": 69.8,
+    "avg_low_f": 49,
+    "avg_precip_in": 0.146,
+    "photoperiod_h": 11.43,
+    "soil_temp_f": 53.5,
+    "et0_in": 0.246
+  },
+  {
+    "doy": 276,
+    "avg_high_f": 68.5,
+    "avg_low_f": 48.3,
+    "avg_precip_in": 0.011,
+    "photoperiod_h": 11.38,
+    "soil_temp_f": 53.5,
+    "et0_in": 0.236
+  },
+  {
+    "doy": 277,
+    "avg_high_f": 67.2,
+    "avg_low_f": 48.5,
+    "avg_precip_in": 0.148,
+    "photoperiod_h": 11.33,
+    "soil_temp_f": 53.4,
+    "et0_in": 0.222
+  },
+  {
+    "doy": 278,
+    "avg_high_f": 68.7,
+    "avg_low_f": 48.9,
+    "avg_precip_in": 0.235,
+    "photoperiod_h": 11.28,
+    "soil_temp_f": 53.3,
+    "et0_in": 0.23
+  },
+  {
+    "doy": 279,
+    "avg_high_f": 66.1,
+    "avg_low_f": 50.3,
+    "avg_precip_in": 0.224,
+    "photoperiod_h": 11.23,
+    "soil_temp_f": 53.2,
+    "et0_in": 0.201
+  },
+  {
+    "doy": 280,
+    "avg_high_f": 69.9,
+    "avg_low_f": 45.4,
+    "avg_precip_in": 0.142,
+    "photoperiod_h": 11.18,
+    "soil_temp_f": 53.2,
+    "et0_in": 0.245
+  },
+  {
+    "doy": 281,
+    "avg_high_f": 67.9,
+    "avg_low_f": 45.8,
+    "avg_precip_in": 0,
+    "photoperiod_h": 11.13,
+    "soil_temp_f": 53.1,
+    "et0_in": 0.227
+  },
+  {
+    "doy": 282,
+    "avg_high_f": 67.2,
+    "avg_low_f": 46.5,
+    "avg_precip_in": 0.11,
+    "photoperiod_h": 11.08,
+    "soil_temp_f": 53,
+    "et0_in": 0.217
+  },
+  {
+    "doy": 283,
+    "avg_high_f": 67.6,
+    "avg_low_f": 46.4,
+    "avg_precip_in": 0.329,
+    "photoperiod_h": 11.03,
+    "soil_temp_f": 52.9,
+    "et0_in": 0.218
+  },
+  {
+    "doy": 284,
+    "avg_high_f": 63.6,
+    "avg_low_f": 47.1,
+    "avg_precip_in": 0.104,
+    "photoperiod_h": 10.98,
+    "soil_temp_f": 52.9,
+    "et0_in": 0.185
+  },
+  {
+    "doy": 285,
+    "avg_high_f": 60.5,
+    "avg_low_f": 47.3,
+    "avg_precip_in": 0.211,
+    "photoperiod_h": 10.94,
+    "soil_temp_f": 52.8,
+    "et0_in": 0.159
+  },
+  {
+    "doy": 286,
+    "avg_high_f": 59,
+    "avg_low_f": 43.2,
+    "avg_precip_in": 0.321,
+    "photoperiod_h": 10.89,
+    "soil_temp_f": 52.7,
+    "et0_in": 0.163
+  },
+  {
+    "doy": 287,
+    "avg_high_f": 59.7,
+    "avg_low_f": 40.5,
+    "avg_precip_in": 0.116,
+    "photoperiod_h": 10.84,
+    "soil_temp_f": 52.6,
+    "et0_in": 0.174
+  },
+  {
+    "doy": 288,
+    "avg_high_f": 55.5,
+    "avg_low_f": 40.7,
+    "avg_precip_in": 0.023,
+    "photoperiod_h": 10.79,
+    "soil_temp_f": 52.5,
+    "et0_in": 0.145
+  },
+  {
+    "doy": 289,
+    "avg_high_f": 56.1,
+    "avg_low_f": 39.9,
+    "avg_precip_in": 0.24,
+    "photoperiod_h": 10.74,
+    "soil_temp_f": 52.4,
+    "et0_in": 0.149
+  },
+  {
+    "doy": 290,
+    "avg_high_f": 60,
+    "avg_low_f": 37.5,
+    "avg_precip_in": 0.01,
+    "photoperiod_h": 10.7,
+    "soil_temp_f": 52.4,
+    "et0_in": 0.177
+  },
+  {
+    "doy": 291,
+    "avg_high_f": 62.5,
+    "avg_low_f": 41,
+    "avg_precip_in": 0.054,
+    "photoperiod_h": 10.65,
+    "soil_temp_f": 52.3,
+    "et0_in": 0.181
+  },
+  {
+    "doy": 292,
+    "avg_high_f": 64.1,
+    "avg_low_f": 42.5,
+    "avg_precip_in": 0.057,
+    "photoperiod_h": 10.6,
+    "soil_temp_f": 52.2,
+    "et0_in": 0.185
+  },
+  {
+    "doy": 293,
+    "avg_high_f": 61.4,
+    "avg_low_f": 42.8,
+    "avg_precip_in": 0.199,
+    "photoperiod_h": 10.56,
+    "soil_temp_f": 52.1,
+    "et0_in": 0.166
+  },
+  {
+    "doy": 294,
+    "avg_high_f": 61.6,
+    "avg_low_f": 43.6,
+    "avg_precip_in": 0.033,
+    "photoperiod_h": 10.51,
+    "soil_temp_f": 52,
+    "et0_in": 0.163
+  },
+  {
+    "doy": 295,
+    "avg_high_f": 60.2,
+    "avg_low_f": 41.5,
+    "avg_precip_in": 0.363,
+    "photoperiod_h": 10.46,
+    "soil_temp_f": 51.9,
+    "et0_in": 0.158
+  },
+  {
+    "doy": 296,
+    "avg_high_f": 62.3,
+    "avg_low_f": 41.2,
+    "avg_precip_in": 0.309,
+    "photoperiod_h": 10.42,
+    "soil_temp_f": 51.8,
+    "et0_in": 0.169
+  },
+  {
+    "doy": 297,
+    "avg_high_f": 56,
+    "avg_low_f": 38.8,
+    "avg_precip_in": 0.171,
+    "photoperiod_h": 10.37,
+    "soil_temp_f": 51.8,
+    "et0_in": 0.138
+  },
+  {
+    "doy": 298,
+    "avg_high_f": 56.3,
+    "avg_low_f": 37.3,
+    "avg_precip_in": 0.285,
+    "photoperiod_h": 10.33,
+    "soil_temp_f": 51.7,
+    "et0_in": 0.141
+  },
+  {
+    "doy": 299,
+    "avg_high_f": 52.4,
+    "avg_low_f": 38.2,
+    "avg_precip_in": 0.18,
+    "photoperiod_h": 10.28,
+    "soil_temp_f": 51.6,
+    "et0_in": 0.117
+  },
+  {
+    "doy": 300,
+    "avg_high_f": 52.5,
+    "avg_low_f": 38.4,
+    "avg_precip_in": 0.119,
+    "photoperiod_h": 10.24,
+    "soil_temp_f": 51.5,
+    "et0_in": 0.115
+  },
+  {
+    "doy": 301,
+    "avg_high_f": 53.3,
+    "avg_low_f": 37.8,
+    "avg_precip_in": 0.074,
+    "photoperiod_h": 10.2,
+    "soil_temp_f": 51.4,
+    "et0_in": 0.12
+  },
+  {
+    "doy": 302,
+    "avg_high_f": 55.1,
+    "avg_low_f": 39.6,
+    "avg_precip_in": 0.176,
+    "photoperiod_h": 10.15,
+    "soil_temp_f": 51.3,
+    "et0_in": 0.123
+  },
+  {
+    "doy": 303,
+    "avg_high_f": 51.6,
+    "avg_low_f": 41.2,
+    "avg_precip_in": 0.199,
+    "photoperiod_h": 10.11,
+    "soil_temp_f": 51.2,
+    "et0_in": 0.098
+  },
+  {
+    "doy": 304,
+    "avg_high_f": 52.1,
+    "avg_low_f": 35.3,
+    "avg_precip_in": 0.022,
+    "photoperiod_h": 10.07,
+    "soil_temp_f": 51.1,
+    "et0_in": 0.115
+  },
+  {
+    "doy": 305,
+    "avg_high_f": 53.7,
+    "avg_low_f": 37.3,
+    "avg_precip_in": 0.071,
+    "photoperiod_h": 10.02,
+    "soil_temp_f": 51,
+    "et0_in": 0.117
+  },
+  {
+    "doy": 306,
+    "avg_high_f": 56.7,
+    "avg_low_f": 38.1,
+    "avg_precip_in": 0.145,
+    "photoperiod_h": 9.98,
+    "soil_temp_f": 51,
+    "et0_in": 0.129
+  },
+  {
+    "doy": 307,
+    "avg_high_f": 56.9,
+    "avg_low_f": 39.5,
+    "avg_precip_in": 0.08,
+    "photoperiod_h": 9.94,
+    "soil_temp_f": 50.9,
+    "et0_in": 0.125
+  },
+  {
+    "doy": 308,
+    "avg_high_f": 59.6,
+    "avg_low_f": 39.8,
+    "avg_precip_in": 0.015,
+    "photoperiod_h": 9.9,
+    "soil_temp_f": 50.8,
+    "et0_in": 0.136
+  },
+  {
+    "doy": 309,
+    "avg_high_f": 61,
+    "avg_low_f": 42.1,
+    "avg_precip_in": 0.084,
+    "photoperiod_h": 9.86,
+    "soil_temp_f": 50.7,
+    "et0_in": 0.136
+  },
+  {
+    "doy": 310,
+    "avg_high_f": 58.8,
+    "avg_low_f": 42.2,
+    "avg_precip_in": 0.295,
+    "photoperiod_h": 9.82,
+    "soil_temp_f": 50.6,
+    "et0_in": 0.123
+  },
+  {
+    "doy": 311,
+    "avg_high_f": 52,
+    "avg_low_f": 37.2,
+    "avg_precip_in": 0.003,
+    "photoperiod_h": 9.78,
+    "soil_temp_f": 50.5,
+    "et0_in": 0.102
+  },
+  {
+    "doy": 312,
+    "avg_high_f": 52.5,
+    "avg_low_f": 36,
+    "avg_precip_in": 0.067,
+    "photoperiod_h": 9.74,
+    "soil_temp_f": 50.4,
+    "et0_in": 0.106
+  },
+  {
+    "doy": 313,
+    "avg_high_f": 54.1,
+    "avg_low_f": 35.8,
+    "avg_precip_in": 0.015,
+    "photoperiod_h": 9.7,
+    "soil_temp_f": 50.3,
+    "et0_in": 0.111
+  },
+  {
+    "doy": 314,
+    "avg_high_f": 53,
+    "avg_low_f": 35.1,
+    "avg_precip_in": 0.021,
+    "photoperiod_h": 9.66,
+    "soil_temp_f": 50.2,
+    "et0_in": 0.107
+  },
+  {
+    "doy": 315,
+    "avg_high_f": 53,
+    "avg_low_f": 34.4,
+    "avg_precip_in": 0.162,
+    "photoperiod_h": 9.63,
+    "soil_temp_f": 50.1,
+    "et0_in": 0.107
+  },
+  {
+    "doy": 316,
+    "avg_high_f": 45.7,
+    "avg_low_f": 32.8,
+    "avg_precip_in": 0.116,
+    "photoperiod_h": 9.59,
+    "soil_temp_f": 50,
+    "et0_in": 0.079
+  },
+  {
+    "doy": 317,
+    "avg_high_f": 42.7,
+    "avg_low_f": 29.4,
+    "avg_precip_in": 0.023,
+    "photoperiod_h": 9.55,
+    "soil_temp_f": 49.9,
+    "et0_in": 0.073
+  },
+  {
+    "doy": 318,
+    "avg_high_f": 45.4,
+    "avg_low_f": 29,
+    "avg_precip_in": 0.032,
+    "photoperiod_h": 9.52,
+    "soil_temp_f": 49.9,
+    "et0_in": 0.083
+  },
+  {
+    "doy": 319,
+    "avg_high_f": 46.2,
+    "avg_low_f": 33.7,
+    "avg_precip_in": 0.18,
+    "photoperiod_h": 9.48,
+    "soil_temp_f": 49.8,
+    "et0_in": 0.077
+  },
+  {
+    "doy": 320,
+    "avg_high_f": 47.9,
+    "avg_low_f": 32.6,
+    "avg_precip_in": 0.047,
+    "photoperiod_h": 9.45,
+    "soil_temp_f": 49.7,
+    "et0_in": 0.085
+  },
+  {
+    "doy": 321,
+    "avg_high_f": 47.6,
+    "avg_low_f": 34.1,
+    "avg_precip_in": 0.179,
+    "photoperiod_h": 9.42,
+    "soil_temp_f": 49.6,
+    "et0_in": 0.08
+  },
+  {
+    "doy": 322,
+    "avg_high_f": 47.2,
+    "avg_low_f": 32.9,
+    "avg_precip_in": 0.106,
+    "photoperiod_h": 9.39,
+    "soil_temp_f": 49.5,
+    "et0_in": 0.08
+  },
+  {
+    "doy": 323,
+    "avg_high_f": 45.8,
+    "avg_low_f": 32,
+    "avg_precip_in": 0.093,
+    "photoperiod_h": 9.35,
+    "soil_temp_f": 49.4,
+    "et0_in": 0.075
+  },
+  {
+    "doy": 324,
+    "avg_high_f": 44.8,
+    "avg_low_f": 32.1,
+    "avg_precip_in": 0.026,
+    "photoperiod_h": 9.32,
+    "soil_temp_f": 49.3,
+    "et0_in": 0.071
+  },
+  {
+    "doy": 325,
+    "avg_high_f": 44.5,
+    "avg_low_f": 31,
+    "avg_precip_in": 0.148,
+    "photoperiod_h": 9.29,
+    "soil_temp_f": 49.2,
+    "et0_in": 0.071
+  },
+  {
+    "doy": 326,
+    "avg_high_f": 37.5,
+    "avg_low_f": 26,
+    "avg_precip_in": 0.017,
+    "photoperiod_h": 9.26,
+    "soil_temp_f": 49.1,
+    "et0_in": 0.054
+  },
+  {
+    "doy": 327,
+    "avg_high_f": 43.5,
+    "avg_low_f": 25.9,
+    "avg_precip_in": 0.005,
+    "photoperiod_h": 9.23,
+    "soil_temp_f": 49,
+    "et0_in": 0.073
+  },
+  {
+    "doy": 328,
+    "avg_high_f": 45.6,
+    "avg_low_f": 31.1,
+    "avg_precip_in": 0.07,
+    "photoperiod_h": 9.21,
+    "soil_temp_f": 49,
+    "et0_in": 0.072
+  },
+  {
+    "doy": 329,
+    "avg_high_f": 45.5,
+    "avg_low_f": 31.1,
+    "avg_precip_in": 0.055,
+    "photoperiod_h": 9.18,
+    "soil_temp_f": 48.9,
+    "et0_in": 0.072
+  },
+  {
+    "doy": 330,
+    "avg_high_f": 43.5,
+    "avg_low_f": 32,
+    "avg_precip_in": 0.204,
+    "photoperiod_h": 9.15,
+    "soil_temp_f": 48.8,
+    "et0_in": 0.063
+  },
+  {
+    "doy": 331,
+    "avg_high_f": 42.7,
+    "avg_low_f": 30.8,
+    "avg_precip_in": 0.207,
+    "photoperiod_h": 9.13,
+    "soil_temp_f": 48.7,
+    "et0_in": 0.061
+  },
+  {
+    "doy": 332,
+    "avg_high_f": 40.2,
+    "avg_low_f": 29.6,
+    "avg_precip_in": 0,
+    "photoperiod_h": 9.1,
+    "soil_temp_f": 48.6,
+    "et0_in": 0.055
+  },
+  {
+    "doy": 333,
+    "avg_high_f": 41.3,
+    "avg_low_f": 27.2,
+    "avg_precip_in": 0.104,
+    "photoperiod_h": 9.08,
+    "soil_temp_f": 48.5,
+    "et0_in": 0.061
+  },
+  {
+    "doy": 334,
+    "avg_high_f": 44.6,
+    "avg_low_f": 30.2,
+    "avg_precip_in": 0.076,
+    "photoperiod_h": 9.06,
+    "soil_temp_f": 48.4,
+    "et0_in": 0.067
+  },
+  {
+    "doy": 335,
+    "avg_high_f": 40.4,
+    "avg_low_f": 29.6,
+    "avg_precip_in": 0.167,
+    "photoperiod_h": 9.04,
+    "soil_temp_f": 48.3,
+    "et0_in": 0.054
+  },
+  {
+    "doy": 336,
+    "avg_high_f": 42.5,
+    "avg_low_f": 31.2,
+    "avg_precip_in": 0.059,
+    "photoperiod_h": 9.02,
+    "soil_temp_f": 48.3,
+    "et0_in": 0.058
+  },
+  {
+    "doy": 337,
+    "avg_high_f": 41.2,
+    "avg_low_f": 28.7,
+    "avg_precip_in": 0.047,
+    "photoperiod_h": 9,
+    "soil_temp_f": 48.2,
+    "et0_in": 0.057
+  },
+  {
+    "doy": 338,
+    "avg_high_f": 40.7,
+    "avg_low_f": 30.6,
+    "avg_precip_in": 0.016,
+    "photoperiod_h": 8.98,
+    "soil_temp_f": 48.1,
+    "et0_in": 0.052
+  },
+  {
+    "doy": 339,
+    "avg_high_f": 40.1,
+    "avg_low_f": 28.5,
+    "avg_precip_in": 0.108,
+    "photoperiod_h": 8.96,
+    "soil_temp_f": 48,
+    "et0_in": 0.054
+  },
+  {
+    "doy": 340,
+    "avg_high_f": 38.8,
+    "avg_low_f": 26.5,
+    "avg_precip_in": 0.023,
+    "photoperiod_h": 8.94,
+    "soil_temp_f": 47.9,
+    "et0_in": 0.052
+  },
+  {
+    "doy": 341,
+    "avg_high_f": 34.5,
+    "avg_low_f": 25,
+    "avg_precip_in": 0.01,
+    "photoperiod_h": 8.93,
+    "soil_temp_f": 47.8,
+    "et0_in": 0.041
+  },
+  {
+    "doy": 342,
+    "avg_high_f": 38.6,
+    "avg_low_f": 26.5,
+    "avg_precip_in": 0.006,
+    "photoperiod_h": 8.91,
+    "soil_temp_f": 47.8,
+    "et0_in": 0.051
+  },
+  {
+    "doy": 343,
+    "avg_high_f": 40.5,
+    "avg_low_f": 29.1,
+    "avg_precip_in": 0.072,
+    "photoperiod_h": 8.9,
+    "soil_temp_f": 47.7,
+    "et0_in": 0.053
+  },
+  {
+    "doy": 344,
+    "avg_high_f": 39.7,
+    "avg_low_f": 29.6,
+    "avg_precip_in": 0.07,
+    "photoperiod_h": 8.89,
+    "soil_temp_f": 47.6,
+    "et0_in": 0.049
+  },
+  {
+    "doy": 345,
+    "avg_high_f": 38.6,
+    "avg_low_f": 27.3,
+    "avg_precip_in": 0.051,
+    "photoperiod_h": 8.88,
+    "soil_temp_f": 47.5,
+    "et0_in": 0.05
+  },
+  {
+    "doy": 346,
+    "avg_high_f": 38.2,
+    "avg_low_f": 25.3,
+    "avg_precip_in": 0.127,
+    "photoperiod_h": 8.87,
+    "soil_temp_f": 47.4,
+    "et0_in": 0.051
+  },
+  {
+    "doy": 347,
+    "avg_high_f": 37.6,
+    "avg_low_f": 26.6,
+    "avg_precip_in": 0.255,
+    "photoperiod_h": 8.86,
+    "soil_temp_f": 47.4,
+    "et0_in": 0.047
+  },
+  {
+    "doy": 348,
+    "avg_high_f": 37.7,
+    "avg_low_f": 24.6,
+    "avg_precip_in": 0.074,
+    "photoperiod_h": 8.85,
+    "soil_temp_f": 47.3,
+    "et0_in": 0.05
+  },
+  {
+    "doy": 349,
+    "avg_high_f": 38.4,
+    "avg_low_f": 25.7,
+    "avg_precip_in": 0.103,
+    "photoperiod_h": 8.84,
+    "soil_temp_f": 47.2,
+    "et0_in": 0.05
+  },
+  {
+    "doy": 350,
+    "avg_high_f": 38.6,
+    "avg_low_f": 27.1,
+    "avg_precip_in": 0.091,
+    "photoperiod_h": 8.84,
+    "soil_temp_f": 47.1,
+    "et0_in": 0.049
+  },
+  {
+    "doy": 351,
+    "avg_high_f": 35.5,
+    "avg_low_f": 26.7,
+    "avg_precip_in": 0.099,
+    "photoperiod_h": 8.83,
+    "soil_temp_f": 47.1,
+    "et0_in": 0.04
+  },
+  {
+    "doy": 352,
+    "avg_high_f": 33.4,
+    "avg_low_f": 23.6,
+    "avg_precip_in": 0.052,
+    "photoperiod_h": 8.83,
+    "soil_temp_f": 47,
+    "et0_in": 0.039
+  },
+  {
+    "doy": 353,
+    "avg_high_f": 34.2,
+    "avg_low_f": 24.4,
+    "avg_precip_in": 0.004,
+    "photoperiod_h": 8.83,
+    "soil_temp_f": 46.9,
+    "et0_in": 0.04
+  },
+  {
+    "doy": 354,
+    "avg_high_f": 35.5,
+    "avg_low_f": 25.4,
+    "avg_precip_in": 0.019,
+    "photoperiod_h": 8.82,
+    "soil_temp_f": 46.9,
+    "et0_in": 0.043
+  },
+  {
+    "doy": 355,
+    "avg_high_f": 37.1,
+    "avg_low_f": 24.7,
+    "avg_precip_in": 0.107,
+    "photoperiod_h": 8.82,
+    "soil_temp_f": 46.8,
+    "et0_in": 0.048
+  },
+  {
+    "doy": 356,
+    "avg_high_f": 37,
+    "avg_low_f": 26.3,
+    "avg_precip_in": 0.071,
+    "photoperiod_h": 8.82,
+    "soil_temp_f": 46.7,
+    "et0_in": 0.045
+  },
+  {
+    "doy": 357,
+    "avg_high_f": 38.2,
+    "avg_low_f": 25.6,
+    "avg_precip_in": 0.102,
+    "photoperiod_h": 8.83,
+    "soil_temp_f": 46.6,
+    "et0_in": 0.05
+  },
+  {
+    "doy": 358,
+    "avg_high_f": 39.7,
+    "avg_low_f": 29,
+    "avg_precip_in": 0.116,
+    "photoperiod_h": 8.83,
+    "soil_temp_f": 46.6,
+    "et0_in": 0.049
+  },
+  {
+    "doy": 359,
+    "avg_high_f": 39.7,
+    "avg_low_f": 26.5,
+    "avg_precip_in": 0.057,
+    "photoperiod_h": 8.83,
+    "soil_temp_f": 46.5,
+    "et0_in": 0.053
+  },
+  {
+    "doy": 360,
+    "avg_high_f": 36.2,
+    "avg_low_f": 26,
+    "avg_precip_in": 0.027,
+    "photoperiod_h": 8.84,
+    "soil_temp_f": 46.4,
+    "et0_in": 0.044
+  },
+  {
+    "doy": 361,
+    "avg_high_f": 38.4,
+    "avg_low_f": 25.6,
+    "avg_precip_in": 0.083,
+    "photoperiod_h": 8.85,
+    "soil_temp_f": 46.4,
+    "et0_in": 0.051
+  },
+  {
+    "doy": 362,
+    "avg_high_f": 37.9,
+    "avg_low_f": 25.8,
+    "avg_precip_in": 0.147,
+    "photoperiod_h": 8.85,
+    "soil_temp_f": 46.3,
+    "et0_in": 0.049
+  },
+  {
+    "doy": 363,
+    "avg_high_f": 40.6,
+    "avg_low_f": 29.5,
+    "avg_precip_in": 0.114,
+    "photoperiod_h": 8.86,
+    "soil_temp_f": 46.3,
+    "et0_in": 0.052
+  },
+  {
+    "doy": 364,
+    "avg_high_f": 37.3,
+    "avg_low_f": 25.9,
+    "avg_precip_in": 0.274,
+    "photoperiod_h": 8.87,
+    "soil_temp_f": 46.2,
+    "et0_in": 0.048
+  },
+  {
+    "doy": 365,
+    "avg_high_f": 33.6,
+    "avg_low_f": 25.6,
+    "avg_precip_in": 0.153,
+    "photoperiod_h": 8.88,
+    "soil_temp_f": 46.1,
+    "et0_in": 0.038
+  }
+]

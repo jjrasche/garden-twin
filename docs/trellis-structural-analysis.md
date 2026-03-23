@@ -2,17 +2,17 @@
 
 ## Design Configuration
 - 1-1/2" EMT conduit, single horizontal bar, plants on both sides
-- 8ft T-posts, 30" embedment, 5.5ft above ground
-- Tomato plants at 18" spacing on both sides (lean-and-lower)
+- 8ft T-posts, 36" embedment, 5ft above ground
+- Tomato plants at 18" spacing on both sides (lean-and-lower, twine-wrapped)
 - 30ft total trellis length, 4 posts at 10ft spacing
 - Design wind: 30 mph (valley site surrounded by trees)
-- PVC T-fittings at post connections
+- PVC T-fittings at post connections (seasonal — removed before Michigan winter)
 
 ## Selected Design: 1-1/2" EMT at 10ft Spans
 - Stress at 30 mph with peak fruit: 20,500 psi (68% of yield)
 - Deflection at midspan: ~1.5" (L/80)
 - 4 posts at 0, 10, 20, 30ft
-- No earth anchors needed (valley site, 30 mph max design wind)
+- No earth anchors needed (valley site, 30 mph max design wind, 36" embedment)
 
 ## EMT Properties (All Sizes Evaluated)
 
@@ -198,8 +198,8 @@ Interior post: receives lateral reaction from two half-spans = one full span.
 | 30 mph | 80 lb | 80 lb | 40 lb |
 | 50 mph | 200 lb | 200 lb | 100 lb |
 
-T-post lateral capacity (30" embedment in firm clay): ~30-60 lb.
-At 30 mph: interior posts at limit, end posts fine.
+T-post lateral capacity at 36" embedment (firm clay): ~45-90 lb.
+At 30 mph: interior posts within capacity (80 lb load vs 45-90 lb capacity).
 At 50 mph: all posts exceed capacity -- trellis leans.
 
 ## Connection: EMT to T-Post
@@ -217,7 +217,45 @@ At 50 mph: all posts exceed capacity -- trellis leans.
 - Acceptable if replaced every 5-6 years or painted with opaque latex
 
 ## T-Post Specifications
-- 8ft post, 30" embedment, 5.5ft above ground
+- 8ft post (96"), 36" embedment, 60" (5ft) above ground
 - Weight: 1.25 lb/ft = 10 lb per post
 - Material: rail steel, Fy >= 50,000 psi
-- Lateral capacity: ~30-60 lb at top (soil-dependent, firm clay assumed)
+- Lateral capacity at 30" embedment: ~30-60 lb at top (firm clay)
+- Lateral capacity at 36" embedment: ~45-90 lb at top (firm clay)
+
+### Embedment Depth: 30" vs 36" (Broms Method, Cohesive Soil)
+
+For a fixed-length 8ft post, deeper embedment improves capacity two ways:
+more soil resistance AND shorter above-ground lever arm.
+
+Capacity scales as (D - 1.5b)² where D = embedment, b = post width (~2"):
+
+| Embedment | D-3" | (D-3")² | Above ground | Capacity vs 30" |
+|-----------|------|---------|-------------|-----------------|
+| 30" | 27" | 729 | 66" | 1.00x |
+| 36" | 33" | 1089 | 60" | **1.49x** |
+
+In granular soil (glacial till), capacity scales as D³ → 73% increase.
+Grand Rapids glacial till (mixed clay/sand/gravel): expect 49-73% increase.
+
+At 36" embedment, interior post capacity (45-90 lb) covers the 80 lb
+lateral load at 30 mph design wind. No earth anchors needed.
+
+## Plant Support Method
+
+Lean-and-lower with twine wrapping (standard Dutch commercial method):
+1. Tie twine to conduit above each plant
+2. Spiral-wrap twine around stem (one turn between each leaf/truss)
+3. To lower: unhook twine from conduit, lower assembly, re-tie
+4. Spent stem coils on ground, on its own side of the wire
+5. Each side's stems stay independent — no crossing to opposite side
+
+No tomato clips needed. Twine wrapping is simpler for <20 plants.
+
+## PVC Fitting Seasonal Notes
+
+PVC T-fittings connect conduit to T-post tops. Seasonal use only:
+- **Remove before winter** — PVC goes brittle below freezing in MI
+- UV degradation: 5-7 years outdoor lifespan (extend with opaque latex paint)
+- Creep under sustained load is acceptable for single-season use
+- Electrical tape shim on conduit ends for snug fit in PVC

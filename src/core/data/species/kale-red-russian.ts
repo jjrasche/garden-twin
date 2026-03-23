@@ -72,7 +72,9 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
     spread_in: 20,
     root_depth: 'medium',
     frost_tolerance: 'very_hardy',
-    kill_temp_f: 10,
+    // Pam Dawling (Sustainable Market Farming) field-tracked winter-kill data:
+    // Red Russian hardy to 15°F. The -10°F claims assume snow/row cover protection.
+    kill_temp_f: 15,
     min_soil_temp_f: 40,
     planting_method: 'transplant',
     role: 'food_crop',

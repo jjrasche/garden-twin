@@ -39,46 +39,16 @@ function resolveConditions(
   return flat;
 }
 
-/** Check if plant dies from frost. Returns 'frost' cause or null.
- *  For historical sources (smoothed monthly averages), uses categorical proxy
- *  dates for tender/semi-hardy plants. For very hardy plants (kill_temp < 25),
- *  estimates nightly frost probability from (avg_low - kill_temp) / daily_stdev.
- *  Uses per-plant frost_resistance (independent of bolt_resistance). */
+/** Check if plant dies from frost. avg_low < kill_temp = dead.
+ *  No proxies, no probability. Requires daily temperature data. */
 function checkFrost(
   species: PlantSpecies, date: Date, env: ConditionsResolver,
-  frost_resistance?: number,
 ): string | null {
   const kill_temp = species.layout?.kill_temp_f;
   if (kill_temp === undefined) return null;
   const cond = env.getConditions(date);
-  // Observed/composite sources have actual daily lows
   if (cond.avg_low_f < kill_temp) return 'frost';
-  // Historical proxy: tender (kill_temp >= 32) and semi-hardy (>= 25) use categorical dates
-  if (env.source_type === 'historical' && kill_temp >= 32 && date >= env.avg_first_frost) return 'frost';
-  if (env.source_type === 'historical' && kill_temp >= 25 && date >= env.avg_hard_frost) return 'frost';
-  // Very hardy plants (kill_temp < 25): probabilistic frost from daily variance.
-  // GR daily low stdev ~9°F in winter. P(low < kill) = P(z < (kill - avg) / stdev).
-  // Plants with high frost_resistance survive colder nights.
-  if (env.source_type === 'historical' && kill_temp < 25 && frost_resistance !== undefined) {
-    const DAILY_LOW_STDEV = 9;
-    const z = (kill_temp - cond.avg_low_f) / DAILY_LOW_STDEV;
-    if (z > -3) {
-      const pKill = approxNormalCdf(z);
-      if (pKill > frost_resistance) return 'frost';
-    }
-  }
   return null;
-}
-
-/** Fast approximation of standard normal CDF for z in [-3, 0] range. */
-function approxNormalCdf(z: number): number {
-  if (z <= -3) return 0.001;
-  if (z >= 0) return 0.5;
-  // Abramowitz & Stegun 26.2.17 approximation
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const d = 0.3989423 * Math.exp(-0.5 * z * z);
-  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  return z < 0 ? p : 1 - p;
 }
 
 /** Check population survival curves against per-plant bolt resistance.
@@ -225,7 +195,7 @@ export function tickPlant(
   env: ConditionsResolver,
   catalog: Map<string, PlantSpecies>,
 ): TickResult {
-  if (plant.is_dead || plant.stage === 'done') {
+  if (plant.is_dead || plant.is_bolted || plant.is_pulled || plant.stage === 'done') {
     return { plant, events: [] };
   }
 
@@ -241,7 +211,7 @@ export function tickPlant(
   const conditions = resolveConditions(date, env);
 
   // 1. Frost kill
-  const frost_cause = checkFrost(species, date, env, plant.frost_resistance);
+  const frost_cause = checkFrost(species, date, env);
   if (frost_cause) {
     return {
       plant: { ...plant, stage: 'done', is_dead: true },
@@ -249,12 +219,12 @@ export function tickPlant(
     };
   }
 
-  // 2. Population survival
+  // 2. Population survival → bolting (not death)
   const survival_cause = checkSurvival(species, conditions, plant.bolt_resistance);
   if (survival_cause) {
     return {
-      plant: { ...plant, stage: 'done', is_dead: true },
-      events: [{ type: 'plant_died', plant_id: plant.plant_id, date, cause: survival_cause }],
+      plant: { ...plant, is_bolted: true, is_harvestable: false },
+      events: [{ type: 'plant_bolted', plant_id: plant.plant_id, date, cause: survival_cause }],
     };
   }
 

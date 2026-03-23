@@ -23,7 +23,8 @@ import {
 import { computeFlavorScore } from '@core/calculators/flavorModel';
 import { useWeatherSource } from '../../hooks/useWeatherSource';
 import { useLegendHighlight } from '../../hooks/useLegendHighlight';
-import { formatWeekLabel, buildDefaultSowingDots, CHART_RANGE } from './chartUtils';
+import { formatWeekLabel, buildDefaultSowingDots } from './chartUtils';
+import { SEASON_RANGE } from '@core/calculators/ProductionTimeline';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
 
 const SPECIES_TO_SHOW: Array<{ id: string; label: string; color: string }> = [
@@ -43,8 +44,8 @@ interface ChartRow {
 
 function buildFlavorData(env: ReturnType<typeof useWeatherSource>['env']): ChartRow[] {
   const rows: ChartRow[] = [];
-  const day = new Date(CHART_RANGE.start);
-  const end = CHART_RANGE.end;
+  const day = new Date(SEASON_RANGE.start);
+  const end = SEASON_RANGE.end;
 
   while (day <= end) {
     const cond = env.getConditions(day);

@@ -79,6 +79,11 @@ export function harvestPlant(
     || (max_cuts !== undefined && next_cut >= max_cuts);
 
   if (is_exhausted) {
+    if (strategy?.type === 'cut_and_come_again') {
+      // CAC exhaustion = spent/bolted, not dead. Plant occupies space until pulled.
+      return { ...plant, accumulated_lbs: 0, cut_number: next_cut, is_harvestable: false, is_bolted: true };
+    }
+    // Bulk harvest = plant is done (potato vine die-back, corn dry-down)
     return { ...plant, accumulated_lbs: 0, cut_number: next_cut, is_harvestable: false, is_dead: true, stage: 'done' as const };
   }
 
@@ -221,13 +226,19 @@ export function collectSnapshots(
     // 2. Auto-harvest
     plants = plants.map(p => p.is_harvestable ? harvestPlant(p, ctx.catalog) : p);
 
-    // 3. Succession evaluation
+    // 3. Auto-pull bolted plants (gardener clears them same day they notice)
+    plants = plants.map(p => {
+      if (p.is_bolted && !p.is_pulled) return { ...p, is_pulled: true };
+      return p;
+    });
+
+    // 4. Succession evaluation
     plants = evaluateAndMaterializeSuccessions(activeSuccessions, plants, currentDate, ctx);
 
     snapshots.push({ date: currentDate, plants: [...plants], events: result.events });
     day.setDate(day.getDate() + 1);
 
-    if (plants.every(p => p.is_dead)) break;
+    if (plants.every(p => p.is_dead || p.is_pulled)) break;
   }
 
   return snapshots;
@@ -291,7 +302,7 @@ export function simulateWithTasks(
 
     day.setDate(day.getDate() + 1);
 
-    if (plants.every(p => p.is_dead)) break;
+    if (plants.every(p => p.is_dead || p.is_pulled)) break;
   }
 
   return snapshots;

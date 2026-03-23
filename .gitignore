@@ -44,5 +44,10 @@ tests/vlm-screenshots/
 # Playwright/verification screenshots
 *.png
 
-# Diagram scratch files
+# Diagram exports (rendered PNGs from drawio-export Docker)
+docs/export/
+
+# Diagram scratch files (committed .drawio files must be git add -f'd or exempted below)
 *.drawio
+!docs/**/*.drawio
+!data-flow.drawio

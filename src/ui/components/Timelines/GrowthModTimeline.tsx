@@ -20,7 +20,8 @@ import {
   ReferenceLine,
   ReferenceDot,
 } from 'recharts';
-import { formatWeekLabel, buildDefaultSowingDots, CHART_RANGE } from './chartUtils';
+import { formatWeekLabel, buildDefaultSowingDots } from './chartUtils';
+import { SEASON_RANGE } from '@core/calculators/ProductionTimeline';
 import { useWeatherSource } from '../../hooks/useWeatherSource';
 import { useLegendHighlight } from '../../hooks/useLegendHighlight';
 import { computeGrowthModifier } from '@core/calculators/yieldModel';
@@ -43,8 +44,8 @@ interface ChartRow {
 
 function buildGrowthModData(env: ReturnType<typeof useWeatherSource>['env']): ChartRow[] {
   const rows: ChartRow[] = [];
-  const day = new Date(CHART_RANGE.start);
-  const end = CHART_RANGE.end;
+  const day = new Date(SEASON_RANGE.start);
+  const end = SEASON_RANGE.end;
 
   // Sample weekly (every 7 days)
   while (day <= end) {
