@@ -5,86 +5,96 @@
 <title>Seed Block Placement Optimizer</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 16px; }
-  h1 { font-size: 1.3rem; margin-bottom: 2px; }
-  .subtitle { color: #999; font-size: 0.8rem; margin-bottom: 12px; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 14px; }
+  h1 { font-size: 1.2rem; margin-bottom: 2px; }
+  .subtitle { color: #999; font-size: 0.75rem; margin-bottom: 10px; }
 
-  .layout { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
+  .layout { display: grid; grid-template-columns: 1fr 260px; gap: 14px; }
   .main-col { min-width: 0; }
-  .side-col { display: flex; flex-direction: column; gap: 10px; }
+  .side-col { display: flex; flex-direction: column; gap: 8px; max-height: 90vh; overflow-y: auto; }
 
-  .controls { margin-bottom: 10px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .controls label { font-size: 0.78rem; color: #bbb; display: flex; align-items: center; gap: 4px; }
-  .controls input[type=range] { width: 100px; }
-  .controls .value { font-weight: bold; color: #fff; min-width: 28px; font-size: 0.8rem; }
+  .controls { margin-bottom: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .controls label { font-size: 0.75rem; color: #bbb; display: flex; align-items: center; gap: 3px; }
+  .controls input[type=range] { width: 90px; }
+  .controls .value { font-weight: bold; color: #fff; min-width: 24px; font-size: 0.75rem; }
 
-  .view-tabs { display: flex; gap: 0; margin-bottom: 10px; }
-  .view-tab { padding: 5px 12px; background: #2a2a3e; border: 1px solid #444; cursor: pointer; font-size: 0.78rem; color: #bbb; }
+  .view-tabs { display: flex; gap: 0; margin-bottom: 8px; }
+  .view-tab { padding: 4px 10px; background: #2a2a3e; border: 1px solid #444; cursor: pointer; font-size: 0.75rem; color: #bbb; }
   .view-tab:first-child { border-radius: 4px 0 0 4px; }
   .view-tab:last-child { border-radius: 0 4px 4px 0; }
   .view-tab.active { background: #3a3a5e; color: #fff; border-color: #666; }
 
-  canvas { display: block; border: 1px solid #333; border-radius: 4px; cursor: crosshair; }
+  canvas { display: block; border: 1px solid #333; border-radius: 4px; }
 
-  .panel { background: #222; border-radius: 6px; padding: 10px; }
-  .panel h3 { font-size: 0.82rem; margin-bottom: 5px; color: #ccc; }
-  .panel p { font-size: 0.75rem; line-height: 1.4; color: #aaa; }
+  .panel { background: #222; border-radius: 5px; padding: 8px; }
+  .panel h3 { font-size: 0.78rem; margin-bottom: 4px; color: #ccc; }
+  .panel p { font-size: 0.72rem; line-height: 1.35; color: #aaa; }
 
-  .crop-btn { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border: 2px solid transparent;
-    border-radius: 4px; cursor: pointer; font-size: 0.78rem; background: #2a2a3e; color: #ddd; width: 100%; margin-bottom: 3px; }
+  .crop-btn { display: flex; align-items: center; gap: 5px; padding: 4px 7px; border: 2px solid transparent;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem; background: #2a2a3e; color: #ddd; width: 100%; margin-bottom: 3px; }
   .crop-btn.active { border-color: #fff; background: #3a3a5e; }
-  .crop-btn .swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-  .crop-btn .info { font-size: 0.65rem; color: #999; margin-left: auto; white-space: nowrap; }
+  .crop-btn .swatch { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+  .crop-btn .info { font-size: 0.62rem; color: #999; margin-left: auto; white-space: nowrap; }
 
-  .stats-table { width: 100%; font-size: 0.72rem; border-collapse: collapse; }
-  .stats-table td { padding: 2px 3px; }
+  .stats-table { width: 100%; font-size: 0.7rem; border-collapse: collapse; }
+  .stats-table td { padding: 1px 3px; }
   .stats-table .num { text-align: right; font-variant-numeric: tabular-nums; }
   .stats-table .good { color: #6bcb77; }
   .stats-table .warn { color: #ffd93d; }
   .stats-table .bad { color: #ff6b6b; }
 
-  .btn { padding: 5px 10px; border: 1px solid #555; border-radius: 4px; background: #2a2a3e;
-    color: #ddd; cursor: pointer; font-size: 0.78rem; }
+  .btn { padding: 4px 9px; border: 1px solid #555; border-radius: 3px; background: #2a2a3e;
+    color: #ddd; cursor: pointer; font-size: 0.75rem; }
   .btn:hover { background: #3a3a5e; }
   .btn.primary { background: #3a5a8e; border-color: #5a8abe; }
   .btn.primary:hover { background: #4a6a9e; }
 
-  .legend { display: flex; gap: 0; margin-top: 8px; height: 18px; border-radius: 3px; overflow: hidden; }
-  .legend-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 600; color: #000; }
+  .legend { display: flex; gap: 0; margin-top: 6px; height: 16px; border-radius: 3px; overflow: hidden; }
+  .legend-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 600; color: #000; }
 
-  .tray-dims { font-size: 0.68rem; color: #777; margin-top: 4px; }
+  .tray-dims { font-size: 0.65rem; color: #777; margin-top: 3px; }
 
-  #tooltip { position: absolute; display: none; background: rgba(0,0,0,0.88); padding: 6px 10px;
-    border-radius: 4px; font-size: 0.72rem; pointer-events: none; z-index: 10; border: 1px solid #555; line-height: 1.4; }
+  .light-cfg { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 3px; }
+  .light-cfg .btn { font-size: 0.7rem; padding: 2px 7px; }
+  .light-cfg .btn.light-only { display: none; }
+  .light-cfg.editing .btn.light-only { display: inline-block; }
+
+  #tooltip { position: absolute; display: none; background: rgba(0,0,0,0.9); padding: 5px 9px;
+    border-radius: 4px; font-size: 0.7rem; pointer-events: none; z-index: 10; border: 1px solid #555; line-height: 1.35; }
 </style>
 </head>
 <body>
 
 <h1>Seed Block Placement Optimizer</h1>
-<div class="subtitle">2x Barrina TX36 (24" each) | Real 1020 tray inner dims | Click/drag to paint, auto-optimize to minimize PPFD mismatch</div>
+<div class="subtitle">Drag light bars to position. Click/drag blocks to paint crops. Auto-optimize minimizes PPFD mismatch.</div>
 
 <div class="controls">
-  <label>Height: <input type="range" id="heightSlider" min="6" max="16" step="0.5" value="9">
+  <label>Height: <input type="range" id="heightSlider" min="4" max="18" step="0.5" value="9">
   <span class="value" id="heightVal">9"</span></label>
-
-  <label>Baseline PPFD @ 4": <input type="range" id="baselineSlider" min="400" max="700" step="10" value="560">
+  <label>Baseline @4": <input type="range" id="baselineSlider" min="400" max="700" step="10" value="560">
   <span class="value" id="baselineVal">560</span></label>
-
-  <label>Bar gap: <input type="range" id="gapSlider" min="0" max="12" step="0.5" value="0">
-  <span class="value" id="gapVal">0"</span></label>
-
-  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="4">
-  <span class="value" id="trayVal">4</span></label>
+  <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="5">
+  <span class="value" id="trayVal">5</span></label>
 </div>
 
 <div class="layout">
 <div class="main-col">
-  <div class="view-tabs">
-    <div class="view-tab active" data-view="ppfd">Raw PPFD</div>
-    <div class="view-tab" data-view="difference">PPFD Mismatch</div>
-    <div class="view-tab" data-view="crop">Crop Assignment</div>
+  <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+    <div class="view-tabs">
+      <div class="view-tab active" data-view="ppfd">Raw PPFD</div>
+      <div class="view-tab" data-view="difference">Fit Quality</div>
+      <div class="view-tab" data-view="crop">Crop Map</div>
+    </div>
+    <div class="light-cfg">
+      <label style="font-size:0.75rem; color:#f0c040; cursor:pointer;">
+        <input type="checkbox" id="editLights"> Edit Lights</label>
+      <button class="btn light-only" id="addLight">+ Add</button>
+      <button class="btn light-only" id="removeLight">- Remove</button>
+      <button class="btn light-only" id="rotateAll">Rotate 90&deg;</button>
+      <button class="btn light-only" id="resetLights">Reset</button>
+    </div>
   </div>
-  <canvas id="grid" width="980" height="480"></canvas>
+  <canvas id="grid" width="980" height="560"></canvas>
   <div class="legend" id="legend"></div>
   <div class="tray-dims" id="trayDims"></div>
 </div>
@@ -92,9 +102,9 @@
 <div class="side-col">
   <div class="panel">
     <h3>Paint Crop</h3>
-    <p style="margin-bottom:5px">Click or drag-paint blocks. Shift+click = fill tray. Right-click = erase. Ctrl+click = fill row.</p>
+    <p style="margin-bottom:4px">Click/drag = paint. Shift+click = fill tray. Ctrl+click = fill row. Right-click = erase.</p>
     <div id="cropButtons"></div>
-    <div style="margin-top:6px; display:flex; gap:5px; flex-wrap:wrap;">
+    <div style="margin-top:5px; display:flex; gap:4px; flex-wrap:wrap;">
       <button class="btn primary" id="optimizeBtn">Auto-Optimize</button>
       <button class="btn" id="clearBtn">Clear All</button>
     </div>
@@ -106,20 +116,25 @@
   </div>
 
   <div class="panel">
-    <h3>PPFD Fit Summary</h3>
+    <h3>Fit Quality</h3>
     <table class="stats-table" id="fitTable"></table>
-    <p id="totalScore" style="margin-top:5px; font-weight:bold; font-size:0.75rem;"></p>
+    <p id="totalScore" style="margin-top:4px; font-weight:bold; font-size:0.72rem;"></p>
   </div>
 
   <div class="panel">
-    <h3>Interaction</h3>
-    <p><b>Click</b> = assign active crop to block</p>
-    <p><b>Drag</b> = paint multiple blocks</p>
-    <p><b>Shift+click</b> = fill entire tray</p>
-    <p><b>Ctrl+click</b> = fill row across all trays</p>
-    <p><b>Right-click</b> = erase single block</p>
-    <p><b>No crop selected</b> = click cycles crops</p>
-    <p style="margin-top:4px"><b>Bar gap</b> = inches between the two 24" bars (0 = butted). Spreading reduces hotspot, evens distribution.</p>
+    <h3>Fit Quality explained</h3>
+    <p>Each crop has an optimal PPFD range where seedlings grow best (from published research).</p>
+    <p style="margin-top:3px"><span style="color:#6bcb77">Green</span> = block PPFD is inside optimal range.
+    <span style="color:#ffd93d">Yellow</span> = 10-25% outside range.
+    <span style="color:#ff6b6b">Red</span> = &gt;25% outside — seedling will be leggy (too dim) or stressed (too bright).</p>
+    <p style="margin-top:3px">The number on each block shows <b>actual PPFD</b> in Raw view, or <b>+/- deviation</b> from optimal in Fit view.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Light bars</h3>
+    <p>Check <b>Edit Lights</b> to show full bars with drag handles. Uncheck to see the heatmap clearly (bars become ghost lines).</p>
+    <p style="margin-top:3px">In edit mode: <b>drag</b> center dot to move, <b>double-click</b> to rotate 90 degrees.</p>
+    <p style="margin-top:3px">Try 3 bars running the long way (20") for more even coverage across 5 trays.</p>
   </div>
 </div>
 </div>
@@ -127,7 +142,7 @@
 <div id="tooltip"></div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
+// ── Crop config ─────────────────────────────────────────────────────────────
 
 const CROPS = {
   tomato:   { label: 'Tomato',   color: '#ff5050', optimal: [200, 250], target: 21 },
@@ -136,137 +151,170 @@ const CROPS = {
 };
 const CROP_IDS = Object.keys(CROPS);
 
-// Real 1020 tray inner bottom dimensions (conservative: Bootstrap Farmer spec)
-// Top opening is wider due to taper but blocks sit on the bottom
-const TRAY_INNER_LENGTH = 20;  // ~19.625-20.39" depending on brand, using 20" usable
-const TRAY_INNER_WIDTH = 10;   // ~9.5-10.15" depending on brand, using 10" usable
+// ── Tray geometry (measured) ────────────────────────────────────────────────
 
-const BLOCK_SIZE = 2;  // 2" soil blocks, flush-touching (no gap needed for soil blocks)
+const TRAY_W = 9.5;   // inner width (short side), measured
+const TRAY_L = 20;     // inner length (long side), measured
+const BLOCK = 2;       // 2" soil blocks, flush
+const COLS = Math.floor(TRAY_W / BLOCK);  // 4
+const ROWS = Math.floor(TRAY_L / BLOCK);  // 10
+const BPT = COLS * ROWS;                   // 40 per tray
 
-const BAR_LENGTH = 24; // each Barrina TX36 bar
+// ── Light bars ──────────────────────────────────────────────────────────────
+// Each bar: { cx, cy, angle, length }
+// cx/cy in tray-grid inches. angle=0 means bar runs along X (tray row), 90=along Y (tray depth).
 
-// ── Dynamic state (recalculated when sliders change) ────────────────────────
+const BAR_LEN = 24;
+let lights = [];
 
-let trayCount = 4;
-let barGap = 0;       // inches between the two bars
+function defaultLights(nTrays) {
+  // Default: 2 bars end-to-end along X, centered over trays
+  const totalW = nTrays * TRAY_W;
+  const cy = TRAY_L / 2;
+  return [
+    { cx: totalW / 2 - BAR_LEN / 2, cy, angle: 0, length: BAR_LEN },
+    { cx: totalW / 2 + BAR_LEN / 2, cy, angle: 0, length: BAR_LEN },
+  ];
+}
+
+// ── State ───────────────────────────────────────────────────────────────────
+
+let trayCount = 5;
 let blocks = [];
 
-function colsPerTray() { return Math.floor(TRAY_INNER_WIDTH / BLOCK_SIZE); }   // 5
-function rowsPerTray() { return Math.floor(TRAY_INNER_LENGTH / BLOCK_SIZE); }   // 10
-function blocksPerTray() { return colsPerTray() * rowsPerTray(); }              // 50
-function totalBlocks() { return blocksPerTray() * trayCount; }
+function totalW() { return trayCount * TRAY_W; }
 
-function totalTrayLength() { return trayCount * TRAY_INNER_WIDTH; }
-// Bars centered over trays. With gap, total bar span = 2*24 + gap
-function barSpan() { return 2 * BAR_LENGTH + barGap; }
-
-function buildBlockPositions() {
-  const newBlocks = [];
-  const cols = colsPerTray();
-  const rows = rowsPerTray();
-  const xPad = (TRAY_INNER_WIDTH - cols * BLOCK_SIZE) / 2;
-  const yPad = (TRAY_INNER_LENGTH - rows * BLOCK_SIZE) / 2;
-
-  for (let tray = 0; tray < trayCount; tray++) {
-    const trayStartX = tray * TRAY_INNER_WIDTH;
-    for (let col = 0; col < cols; col++) {
-      for (let row = 0; row < rows; row++) {
-        const cx = trayStartX + xPad + col * BLOCK_SIZE + BLOCK_SIZE / 2;
-        const cy = yPad + row * BLOCK_SIZE + BLOCK_SIZE / 2;
-        // Preserve existing crop assignment if block index matches
-        const existing = blocks.find(b => b.tray === tray && b.col === col && b.row === row);
-        newBlocks.push({ tray, col, row, cx, cy, crop: existing ? existing.crop : null, ppfd: 0 });
+function buildBlocks() {
+  const old = blocks;
+  const nb = [];
+  const xPad = (TRAY_W - COLS * BLOCK) / 2;
+  const yPad = (TRAY_L - ROWS * BLOCK) / 2;
+  for (let t = 0; t < trayCount; t++) {
+    for (let c = 0; c < COLS; c++) {
+      for (let r = 0; r < ROWS; r++) {
+        const cx = t * TRAY_W + xPad + c * BLOCK + BLOCK / 2;
+        const cy = yPad + r * BLOCK + BLOCK / 2;
+        const prev = old.find(b => b.tray === t && b.col === c && b.row === r);
+        nb.push({ tray: t, col: c, row: r, cx, cy, crop: prev ? prev.crop : null, ppfd: 0 });
       }
     }
   }
-  return newBlocks;
+  return nb;
 }
 
-// ── Canvas layout ───────────────────────────────────────────────────────────
+// ── Canvas ──────────────────────────────────────────────────────────────────
 
 const canvas = document.getElementById('grid');
 const ctx = canvas.getContext('2d');
 const tooltip = document.getElementById('tooltip');
 
-const ML = 50, MT = 36, MR = 14, MB = 40;
+const ML = 44, MT = 20, MR = 10, MB = 34;
 const PW = canvas.width - ML - MR;
 const PH = canvas.height - MT - MB;
 
+// Map inches to pixels, maintaining aspect ratio
+function getScale() {
+  const tw = totalW();
+  const scaleX = PW / tw;
+  const scaleY = PH / TRAY_L;
+  return Math.min(scaleX, scaleY);
+}
+function plotOrigin() {
+  const s = getScale();
+  const usedW = totalW() * s, usedH = TRAY_L * s;
+  return [ML + (PW - usedW) / 2, MT + (PH - usedH) / 2];
+}
+function inToP(xIn, yIn) {
+  const s = getScale();
+  const [ox, oy] = plotOrigin();
+  return [ox + xIn * s, oy + yIn * s];
+}
+function inWToP(wIn, hIn) {
+  const s = getScale();
+  return [wIn * s, hIn * s];
+}
+function pToIn(px, py) {
+  const s = getScale();
+  const [ox, oy] = plotOrigin();
+  return [(px - ox) / s, (py - oy) / s];
+}
+
 // ── PPFD physics ────────────────────────────────────────────────────────────
 
-function ledProfile(angleDeg) {
-  const a = Math.abs(angleDeg);
+function ledProfile(a) {
+  a = Math.abs(a);
   if (a <= 30) return 1.0 - 0.2 * (a / 30);
   if (a <= 60) return 0.80 - 0.40 * ((a - 30) / 30);
   if (a <= 90) return 0.40 - 0.40 * ((a - 60) / 30);
   return 0;
 }
 
-function barIrradiance(barStart, barEnd, px, py, h) {
+function barIrr(x1, y1, x2, y2, px, py, h) {
+  // Irradiance from a bar segment (x1,y1)-(x2,y2) at point (px,py) at height h
   const N = 48;
-  const dx = (barEnd - barStart) / N;
+  const dxB = (x2 - x1) / N, dyB = (y2 - y1) / N;
+  const segLen = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+  const dl = segLen / N;
   let sum = 0;
   for (let i = 0; i < N; i++) {
-    const bx = barStart + (i + 0.5) * dx;
-    const distX = px - bx;
-    const distSq = distX * distX + py * py + h * h;
+    const bx = x1 + (i + 0.5) * dxB;
+    const by = y1 + (i + 0.5) * dyB;
+    const dx = px - bx, dy = py - by;
+    const distSq = dx*dx + dy*dy + h*h;
     const dist = Math.sqrt(distSq);
-    const horiz = Math.sqrt(distX * distX + py * py);
+    const horiz = Math.sqrt(dx*dx + dy*dy);
     const angle = Math.atan2(horiz, h) * 180 / Math.PI;
-    sum += ledProfile(angle) * (h / dist) / distSq * dx;
+    sum += ledProfile(angle) * (h / dist) / distSq * dl;
   }
   return sum;
 }
 
 let calFactor = 1;
 function calibrate(h, baseline) {
-  calFactor = baseline / barIrradiance(0, 24, 12, 0, 4);
+  // Reference: single horizontal bar 0-24 along X, point at center (12,0), height 4"
+  calFactor = baseline / barIrr(0, 0, 24, 0, 12, 0, 4);
 }
 
-// Bar positions relative to tray x-coordinate system
-// Bars are centered over the tray row. barA is left, barB is right, with barGap between.
-function barPositions() {
-  const trayLen = totalTrayLength();
-  const center = trayLen / 2;
-  const aStart = center - BAR_LENGTH - barGap / 2;
-  const aEnd = center - barGap / 2;
-  const bStart = center + barGap / 2;
-  const bEnd = center + BAR_LENGTH + barGap / 2;
-  return { aStart, aEnd, bStart, bEnd };
+function barEndpoints(light) {
+  const rad = light.angle * Math.PI / 180;
+  const dx = Math.cos(rad) * light.length / 2;
+  const dy = Math.sin(rad) * light.length / 2;
+  return [light.cx - dx, light.cy - dy, light.cx + dx, light.cy + dy];
 }
 
-function computePPFD(px, py_offset, h) {
-  const bp = barPositions();
-  return (barIrradiance(bp.aStart, bp.aEnd, px, py_offset, h) +
-          barIrradiance(bp.bStart, bp.bEnd, px, py_offset, h)) * calFactor;
-}
-
-function computeBlockPPFDs(height, baseline) {
-  calibrate(height, baseline);
-  for (const b of blocks) {
-    const py = b.cy - TRAY_INNER_LENGTH / 2;
-    b.ppfd = computePPFD(b.cx, py, height);
+function computePPFD(px, py, h) {
+  let sum = 0;
+  for (const L of lights) {
+    const [x1, y1, x2, y2] = barEndpoints(L);
+    sum += barIrr(x1, y1, x2, y2, px, py, h);
   }
+  return sum * calFactor;
 }
 
-// Background heatmap grid
-const HM_NX = 100, HM_NY = 50;
-let heatmapGrid = [];
-function computeHeatmapGrid(height, baseline) {
-  calibrate(height, baseline);
-  const trayLen = totalTrayLength();
-  heatmapGrid = [];
-  for (let iy = 0; iy < HM_NY; iy++) {
-    heatmapGrid[iy] = [];
-    const py = (iy / (HM_NY - 1) - 0.5) * TRAY_INNER_LENGTH;
-    for (let ix = 0; ix < HM_NX; ix++) {
-      const px = (ix / (HM_NX - 1)) * trayLen;
-      heatmapGrid[iy][ix] = computePPFD(px, py, height);
+function computeAll() {
+  const h = parseFloat(document.getElementById('heightSlider').value);
+  const bl = parseFloat(document.getElementById('baselineSlider').value);
+  calibrate(h, bl);
+  for (const b of blocks) b.ppfd = computePPFD(b.cx, b.cy, h);
+  computeHeatmap(h);
+}
+
+const HNX = 80, HNY = 40;
+let hGrid = [];
+function computeHeatmap(h) {
+  const tw = totalW();
+  hGrid = [];
+  for (let iy = 0; iy < HNY; iy++) {
+    hGrid[iy] = [];
+    const py = (iy / (HNY - 1)) * TRAY_L;
+    for (let ix = 0; ix < HNX; ix++) {
+      const px = (ix / (HNX - 1)) * tw;
+      hGrid[iy][ix] = computePPFD(px, py, h);
     }
   }
 }
 
-// ── Mismatch scoring ────────────────────────────────────────────────────────
+// ── Mismatch ────────────────────────────────────────────────────────────────
 
 function mismatch(ppfd, crop) {
   if (!crop) return 0;
@@ -275,62 +323,48 @@ function mismatch(ppfd, crop) {
   if (ppfd > hi) return ppfd - hi;
   return 0;
 }
-
+function mismatchSigned(ppfd, crop) {
+  if (!crop) return 0;
+  const [lo, hi] = CROPS[crop].optimal;
+  if (ppfd < lo) return ppfd - lo;  // negative = too dim
+  if (ppfd > hi) return ppfd - hi;  // positive = too bright
+  return 0;
+}
 function mismatchPct(ppfd, crop) {
   if (!crop) return 0;
   const [lo, hi] = CROPS[crop].optimal;
-  const mid = (lo + hi) / 2;
-  return mismatch(ppfd, crop) / mid;
-}
-
-function totalMismatch() {
-  let sum = 0;
-  for (const b of blocks) {
-    if (b.crop) sum += mismatch(b.ppfd, b.crop);
-  }
-  return sum;
+  return mismatch(ppfd, crop) / ((lo + hi) / 2);
 }
 
 // ── Optimizer ───────────────────────────────────────────────────────────────
 
 function optimize() {
   for (const b of blocks) b.crop = null;
-
-  // Sort crops by strictness (narrowest optimal range first)
+  const total = blocks.length;
   const assignments = CROP_IDS
     .map(id => ({
-      id,
-      mid: (CROPS[id].optimal[0] + CROPS[id].optimal[1]) / 2,
-      count: Math.min(CROPS[id].target, totalBlocks()),
+      id, mid: (CROPS[id].optimal[0] + CROPS[id].optimal[1]) / 2,
+      count: Math.min(CROPS[id].target, total),
     }))
     .sort((a, b) => {
       const rA = CROPS[a.id].optimal[1] - CROPS[a.id].optimal[0];
       const rB = CROPS[b.id].optimal[1] - CROPS[b.id].optimal[0];
       return rA - rB;
     });
-
-  // Cap total assigned to available blocks
-  let remaining = totalBlocks();
-  for (const crop of assignments) {
-    crop.count = Math.min(crop.count, remaining);
-    remaining -= crop.count;
-  }
+  let rem = total;
+  for (const c of assignments) { c.count = Math.min(c.count, rem); rem -= c.count; }
 
   const sorted = [...blocks].sort((a, b) => b.ppfd - a.ppfd);
   const used = new Set();
-
   for (const crop of assignments) {
-    const candidates = sorted
-      .filter(b => !used.has(b))
-      .map(b => ({ block: b, dist: Math.abs(b.ppfd - crop.mid) }))
-      .sort((a, b) => a.dist - b.dist);
-
-    for (let i = 0; i < Math.min(crop.count, candidates.length); i++) {
-      candidates[i].block.crop = crop.id;
-      used.add(candidates[i].block);
+    const cands = sorted.filter(b => !used.has(b))
+      .map(b => ({ b, d: Math.abs(b.ppfd - crop.mid) }))
+      .sort((a, b) => a.d - b.d);
+    for (let i = 0; i < Math.min(crop.count, cands.length); i++) {
+      cands[i].b.crop = crop.id;
+      used.add(cands[i].b);
     }
   }
-
   render();
 }
 
@@ -338,198 +372,195 @@ function optimize() {
 
 let currentView = 'ppfd';
 
-function ppfdColor(ppfd) {
-  if (ppfd < 50)  return [30, 0, 60];
-  if (ppfd < 100) return lerp3([30, 0, 60], [40, 60, 180], (ppfd - 50) / 50);
-  if (ppfd < 150) return lerp3([40, 60, 180], [60, 180, 100], (ppfd - 100) / 50);
-  if (ppfd < 200) return lerp3([60, 180, 100], [240, 210, 50], (ppfd - 150) / 50);
-  if (ppfd < 250) return lerp3([240, 210, 50], [240, 140, 30], (ppfd - 200) / 50);
-  if (ppfd < 300) return lerp3([240, 140, 30], [220, 50, 30], (ppfd - 250) / 50);
-  return [200, 30, 30];
+function ppfdColor(v) {
+  if (v < 50)  return [30, 0, 60];
+  if (v < 100) return lerp3([30,0,60],[40,60,180],(v-50)/50);
+  if (v < 150) return lerp3([40,60,180],[60,180,100],(v-100)/50);
+  if (v < 200) return lerp3([60,180,100],[240,210,50],(v-150)/50);
+  if (v < 250) return lerp3([240,210,50],[240,140,30],(v-200)/50);
+  if (v < 300) return lerp3([240,140,30],[220,50,30],(v-250)/50);
+  return [200,30,30];
 }
-
-function mismatchColor(pct) {
-  if (pct <= 0.05) return [60, 200, 100];
-  if (pct <= 0.15) return lerp3([60, 200, 100], [240, 210, 50], (pct - 0.05) / 0.10);
-  if (pct <= 0.30) return lerp3([240, 210, 50], [220, 60, 40], (pct - 0.15) / 0.15);
-  return [200, 40, 40];
+function fitColor(pct) {
+  if (pct <= 0.05) return [60,200,100];
+  if (pct <= 0.15) return lerp3([60,200,100],[240,210,50],(pct-0.05)/0.10);
+  if (pct <= 0.30) return lerp3([240,210,50],[220,60,40],(pct-0.15)/0.15);
+  return [200,40,40];
 }
-
-function lerp3(a, b, t) {
-  t = Math.max(0, Math.min(1, t));
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-}
-
-function inchToPixel(xIn, yIn) {
-  const tl = totalTrayLength();
-  return [ML + (xIn / tl) * PW, MT + (yIn / TRAY_INNER_LENGTH) * PH];
-}
-function inchWToPixelW(wIn, hIn) {
-  const tl = totalTrayLength();
-  return [(wIn / tl) * PW, (hIn / TRAY_INNER_LENGTH) * PH];
+function lerp3(a,b,t) {
+  t = Math.max(0,Math.min(1,t));
+  return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
 }
 
 function render() {
-  const height = parseFloat(document.getElementById('heightSlider').value);
-  const baseline = parseFloat(document.getElementById('baselineSlider').value);
-  document.getElementById('heightVal').textContent = height + '"';
-  document.getElementById('baselineVal').textContent = baseline;
+  const h = parseFloat(document.getElementById('heightSlider').value);
+  const bl = parseFloat(document.getElementById('baselineSlider').value);
+  document.getElementById('heightVal').textContent = h+'"';
+  document.getElementById('baselineVal').textContent = bl;
 
-  computeBlockPPFDs(height, baseline);
-  computeHeatmapGrid(height, baseline);
+  computeAll();
 
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Background heatmap
-  const tl = totalTrayLength();
-  const cellW = PW / HM_NX, cellH = PH / HM_NY;
-  const dim = currentView !== 'ppfd' ? 0.25 : 1.0;
-  for (let iy = 0; iy < HM_NY; iy++) {
-    for (let ix = 0; ix < HM_NX; ix++) {
-      const c = ppfdColor(heatmapGrid[iy][ix]);
+  const tw = totalW();
+  const s = getScale();
+  const [ox, oy] = plotOrigin();
+
+  // Heatmap background
+  const cellW = (tw / HNX) * s, cellH = (TRAY_L / HNY) * s;
+  const dim = currentView !== 'ppfd' ? 0.2 : 0.9;
+  for (let iy = 0; iy < HNY; iy++) {
+    for (let ix = 0; ix < HNX; ix++) {
+      const c = ppfdColor(hGrid[iy][ix]);
       ctx.fillStyle = `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${dim})`;
-      ctx.fillRect(ML + ix * cellW, MT + iy * cellH, cellW + 0.5, cellH + 0.5);
+      ctx.fillRect(ox + ix * cellW, oy + iy * cellH, cellW + 0.5, cellH + 0.5);
     }
   }
 
   // Tray outlines
-  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
   ctx.lineWidth = 1.5;
   for (let i = 0; i < trayCount; i++) {
-    const [tx, ty] = inchToPixel(i * TRAY_INNER_WIDTH, 0);
-    const [tw, th] = inchWToPixelW(TRAY_INNER_WIDTH, TRAY_INNER_LENGTH);
-    ctx.strokeRect(tx, ty, tw, th);
+    const [tx, ty] = inToP(i * TRAY_W, 0);
+    const [tw2, th] = inWToP(TRAY_W, TRAY_L);
+    ctx.strokeRect(tx, ty, tw2, th);
   }
 
   // Blocks
-  const [bw, bh] = inchWToPixelW(BLOCK_SIZE, BLOCK_SIZE);
+  const [bw, bh] = inWToP(BLOCK, BLOCK);
   for (const b of blocks) {
-    const [px, py] = inchToPixel(b.cx - BLOCK_SIZE / 2, b.cy - BLOCK_SIZE / 2);
+    const [px, py] = inToP(b.cx - BLOCK/2, b.cy - BLOCK/2);
 
     if (currentView === 'ppfd') {
       const c = ppfdColor(b.ppfd);
       ctx.fillStyle = `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
       ctx.fillRect(px, py, bw, bh);
       if (b.crop) {
-        ctx.strokeStyle = CROPS[b.crop].color;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(px + 1, py + 1, bw - 2, bh - 2);
+        ctx.strokeStyle = CROPS[b.crop].color; ctx.lineWidth = 2;
+        ctx.strokeRect(px+1, py+1, bw-2, bh-2);
       } else {
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5;
         ctx.strokeRect(px, py, bw, bh);
+      }
+      // PPFD number
+      if (bw > 18) {
+        ctx.font = (bw > 28 ? 9 : 7) + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = b.ppfd > 200 ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)';
+        ctx.fillText(Math.round(b.ppfd), px+bw/2, py+bh/2+3);
       }
     } else if (currentView === 'difference') {
       if (b.crop) {
         const pct = mismatchPct(b.ppfd, b.crop);
-        const c = mismatchColor(pct);
+        const c = fitColor(pct);
         ctx.fillStyle = `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
         ctx.fillRect(px, py, bw, bh);
-        ctx.strokeStyle = CROPS[b.crop].color;
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(px + 1, py + 1, bw - 2, bh - 2);
+        ctx.strokeStyle = CROPS[b.crop].color; ctx.lineWidth = 1.5;
+        ctx.strokeRect(px+1, py+1, bw-2, bh-2);
+        // Show signed deviation
+        if (bw > 18) {
+          const dev = mismatchSigned(b.ppfd, b.crop);
+          ctx.font = (bw > 28 ? 9 : 7) + 'px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = Math.abs(dev) < 10 ? '#000' : '#fff';
+          const label = dev === 0 ? 'OK' : (dev > 0 ? '+' : '') + Math.round(dev);
+          ctx.fillText(label, px+bw/2, py+bh/2+3);
+        }
       } else {
-        ctx.fillStyle = 'rgba(40,40,60,0.5)';
+        ctx.fillStyle = 'rgba(40,40,60,0.4)';
         ctx.fillRect(px, py, bw, bh);
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(px, py, bw, bh);
       }
-    } else {
+    } else { // crop
       if (b.crop) {
-        ctx.fillStyle = CROPS[b.crop].color;
-        ctx.globalAlpha = 0.8;
-        ctx.fillRect(px, py, bw, bh);
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
+        ctx.fillStyle = CROPS[b.crop].color; ctx.globalAlpha = 0.8;
+        ctx.fillRect(px, py, bw, bh); ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
         ctx.strokeRect(px, py, bw, bh);
       } else {
-        ctx.fillStyle = 'rgba(60,60,80,0.4)';
+        ctx.fillStyle = 'rgba(60,60,80,0.35)';
         ctx.fillRect(px, py, bw, bh);
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(px, py, bw, bh);
       }
-    }
-
-    // PPFD value on block
-    if (currentView !== 'crop' && bw > 20) {
-      ctx.font = bw > 30 ? '9px monospace' : '7px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = b.ppfd > 200 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)';
-      ctx.fillText(Math.round(b.ppfd), px + bw / 2, py + bh / 2 + 3);
     }
 
     // Crop letter
-    if (b.crop && bw > 14) {
+    if (b.crop && bw > 12) {
       const letter = b.crop[0].toUpperCase();
-      ctx.font = bw > 30 ? 'bold 9px Segoe UI' : 'bold 7px Segoe UI';
+      ctx.font = 'bold ' + (bw > 28 ? 9 : 7) + 'px Segoe UI';
       ctx.textAlign = 'center';
       if (currentView === 'crop') {
         ctx.fillStyle = '#fff';
-        ctx.fillText(letter, px + bw / 2, py + bh / 2 + 3);
-      } else {
+        ctx.fillText(letter, px+bw/2, py+bh/2+3);
+      } else if (currentView === 'ppfd') {
         ctx.fillStyle = CROPS[b.crop].color;
-        ctx.fillText(letter, px + bw / 2, py + bh - 1);
+        ctx.fillText(letter, px+bw/2, py+bh-1);
       }
     }
   }
 
-  // Bar indicators
-  const bp = barPositions();
-  ctx.fillStyle = '#f0c040';
-  ctx.font = 'bold 10px Segoe UI, system-ui';
-  ctx.textAlign = 'center';
+  // ── Draw light bars ─────────────────────────────────────────────────────
+  const editingLights = document.getElementById('editLights').checked;
+  for (let li = 0; li < lights.length; li++) {
+    const L = lights[li];
+    const [x1,y1,x2,y2] = barEndpoints(L);
+    const [p1x,p1y] = inToP(x1,y1);
+    const [p2x,p2y] = inToP(x2,y2);
 
-  const barAStartPx = ML + (bp.aStart / tl) * PW;
-  const barAEndPx = ML + (bp.aEnd / tl) * PW;
-  const barBStartPx = ML + (bp.bStart / tl) * PW;
-  const barBEndPx = ML + (bp.bEnd / tl) * PW;
+    if (editingLights) {
+      // Full edit mode: glow + thick bar + drag handle + label
+      ctx.strokeStyle = 'rgba(251,191,36,0.3)';
+      ctx.lineWidth = Math.max(8, 12*s);
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(p1x,p1y); ctx.lineTo(p2x,p2y); ctx.stroke();
 
-  // Clamp to canvas area
-  const clampL = Math.max(ML, barAStartPx);
-  const clampR = Math.min(ML + PW, barBEndPx);
+      ctx.strokeStyle = li === dragLight ? '#fff' : '#D97706';
+      ctx.lineWidth = Math.max(3, 5*s);
+      ctx.beginPath(); ctx.moveTo(p1x,p1y); ctx.lineTo(p2x,p2y); ctx.stroke();
 
-  ctx.fillRect(clampL, MT - 6, Math.min(barAEndPx, ML + PW) - clampL, 3);
-  ctx.fillRect(Math.max(ML, barBStartPx), MT - 6, clampR - Math.max(ML, barBStartPx), 3);
+      const [pcx,pcy] = inToP(L.cx, L.cy);
+      ctx.fillStyle = li === dragLight ? '#fff' : '#f0c040';
+      ctx.beginPath(); ctx.arc(pcx, pcy, Math.max(4, 6*s), 0, Math.PI*2); ctx.fill();
 
-  if (barGap > 0) {
-    // Draw gap indicator
-    ctx.fillStyle = '#666';
-    ctx.font = '8px Segoe UI';
-    ctx.fillText(barGap + '" gap', (barAEndPx + barBStartPx) / 2, MT - 10);
+      ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#f0c040';
+      ctx.fillText('Bar '+(li+1), pcx, pcy - Math.max(8, 10*s));
+    } else {
+      // Ghost mode: thin dashed line + small endpoint dots
+      ctx.save();
+      ctx.strokeStyle = 'rgba(251,191,36,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(p1x,p1y); ctx.lineTo(p2x,p2y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // Small end dots
+      ctx.fillStyle = 'rgba(251,191,36,0.4)';
+      ctx.beginPath(); ctx.arc(p1x,p1y, 2.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(p2x,p2y, 2.5, 0, Math.PI*2); ctx.fill();
+    }
   }
 
-  ctx.fillStyle = '#f0c040';
-  ctx.font = 'bold 10px Segoe UI';
-  ctx.fillText('BAR A', (clampL + Math.min(barAEndPx, ML + PW)) / 2, MT - 12);
-  ctx.fillText('BAR B', (Math.max(ML, barBStartPx) + clampR) / 2, MT - 12);
-
   // Axes
-  ctx.fillStyle = '#888';
-  ctx.font = '10px Segoe UI';
-  ctx.textAlign = 'center';
+  ctx.fillStyle = '#777'; ctx.font = '9px Segoe UI'; ctx.textAlign = 'center';
   for (let i = 0; i <= trayCount; i++) {
-    const x = ML + (i * TRAY_INNER_WIDTH / tl) * PW;
-    ctx.fillText((i * TRAY_INNER_WIDTH) + '"', x, MT + PH + 14);
+    const [x] = inToP(i * TRAY_W, TRAY_L);
+    ctx.fillText((i * TRAY_W).toFixed(1)+'"', x, oy + TRAY_L*s + 14);
     if (i < trayCount) {
-      const mid = x + (TRAY_INNER_WIDTH / tl) * PW / 2;
-      ctx.fillText('Tray ' + (i + 1), mid, MT + PH + 28);
+      const [mx] = inToP((i+0.5)*TRAY_W, 0);
+      ctx.fillText('Tray '+(i+1), mx, oy + TRAY_L*s + 26);
     }
   }
   ctx.textAlign = 'right';
-  for (const yl of [-10, -5, 0, 5, 10]) {
-    const yPx = MT + ((yl + 10) / 20) * PH;
-    ctx.fillText((yl > 0 ? '+' : '') + yl + '"', ML - 4, yPx + 3);
+  for (const yl of [0, 5, 10, 15, 20]) {
+    const [,yp] = inToP(0, yl);
+    ctx.fillText(yl+'"', ox - 4, yp + 3);
   }
 
-  // Tray dims readout
-  const cols = colsPerTray(), rows = rowsPerTray();
   document.getElementById('trayDims').textContent =
-    `Tray inner: ${TRAY_INNER_WIDTH}" x ${TRAY_INNER_LENGTH}" | ${cols} cols x ${rows} rows = ${blocksPerTray()}/tray | ` +
-    `${trayCount} trays = ${totalBlocks()} total blocks | Bars span ${barSpan().toFixed(0)}" (${BAR_LENGTH}" + ${barGap}" + ${BAR_LENGTH}")`;
+    `Tray: ${TRAY_W}" x ${TRAY_L}" | ${COLS}x${ROWS} = ${BPT}/tray | ${trayCount} trays = ${trayCount*BPT} blocks | ` +
+    `${lights.length} bar${lights.length!==1?'s':''} (${BAR_LEN}" each)`;
 
   updateStats();
 }
@@ -538,116 +569,83 @@ function render() {
 
 function updateStats() {
   const countTable = document.getElementById('countTable');
-  let html = '<tr><td><b>Crop</b></td><td class="num"><b>Placed</b></td><td class="num"><b>Target</b></td><td class="num"><b>+/-</b></td></tr>';
-  let totalPlaced = 0, totalTarget = 0;
+  let html = '<tr><td><b>Crop</b></td><td class="num"><b>#</b></td><td class="num"><b>Need</b></td><td class="num"><b>+/-</b></td></tr>';
+  let tp = 0, tt = 0;
   for (const id of CROP_IDS) {
     const placed = blocks.filter(b => b.crop === id).length;
-    const target = CROPS[id].target;
-    totalPlaced += placed;
-    totalTarget += target;
+    const target = CROPS[id].target; tp += placed; tt += target;
     const diff = placed - target;
     const cls = diff === 0 ? 'good' : Math.abs(diff) <= 3 ? 'warn' : 'bad';
     html += `<tr><td><span style="color:${CROPS[id].color}">${CROPS[id].label}</span></td>
       <td class="num">${placed}</td><td class="num">${target}</td>
-      <td class="num ${cls}">${diff > 0 ? '+' : ''}${diff}</td></tr>`;
+      <td class="num ${cls}">${diff>0?'+':''}${diff}</td></tr>`;
   }
-  html += `<tr><td><b>Total</b></td><td class="num"><b>${totalPlaced}</b></td>
-    <td class="num"><b>${totalTarget}</b></td><td class="num">${totalPlaced - totalTarget > 0 ? '+' : ''}${totalPlaced - totalTarget}</td></tr>`;
-  const empty = totalBlocks() - totalPlaced;
-  html += `<tr><td style="color:#666">Empty</td><td class="num" style="color:#666">${empty}</td><td></td><td></td></tr>`;
+  html += `<tr><td><b>Total</b></td><td class="num"><b>${tp}</b></td><td class="num"><b>${tt}</b></td>
+    <td class="num">${tp-tt>0?'+':''}${tp-tt}</td></tr>`;
+  html += `<tr><td style="color:#666">Empty</td><td class="num" style="color:#666">${trayCount*BPT-tp}</td><td></td><td></td></tr>`;
   countTable.innerHTML = html;
 
   const fitTable = document.getElementById('fitTable');
-  let fhtml = '<tr><td><b>Crop</b></td><td class="num"><b>Avg</b></td><td class="num"><b>Opt</b></td><td class="num"><b>Miss</b></td></tr>';
+  let fh = '<tr><td><b>Crop</b></td><td class="num"><b>Avg</b></td><td class="num"><b>Range</b></td><td class="num"><b>Miss</b></td></tr>';
   for (const id of CROP_IDS) {
-    const assigned = blocks.filter(b => b.crop === id);
-    if (assigned.length === 0) {
-      fhtml += `<tr><td style="color:${CROPS[id].color}">${CROPS[id].label}</td><td class="num">-</td><td class="num">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}</td><td class="num">-</td></tr>`;
-      continue;
-    }
-    const avgPpfd = assigned.reduce((s, b) => s + b.ppfd, 0) / assigned.length;
-    const avgMiss = assigned.reduce((s, b) => s + mismatch(b.ppfd, id), 0) / assigned.length;
-    const cls = avgMiss < 10 ? 'good' : avgMiss < 25 ? 'warn' : 'bad';
-    fhtml += `<tr><td style="color:${CROPS[id].color}">${CROPS[id].label}</td>
-      <td class="num">${Math.round(avgPpfd)}</td>
-      <td class="num">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}</td>
-      <td class="num ${cls}">${avgMiss.toFixed(0)}</td></tr>`;
+    const a = blocks.filter(b => b.crop === id);
+    if (!a.length) { fh += `<tr><td style="color:${CROPS[id].color}">${CROPS[id].label}</td><td class="num">-</td><td class="num">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}</td><td class="num">-</td></tr>`; continue; }
+    const avg = a.reduce((s,b)=>s+b.ppfd,0)/a.length;
+    const miss = a.reduce((s,b)=>s+mismatch(b.ppfd,id),0)/a.length;
+    const cls = miss < 10 ? 'good' : miss < 25 ? 'warn' : 'bad';
+    fh += `<tr><td style="color:${CROPS[id].color}">${CROPS[id].label}</td>
+      <td class="num">${Math.round(avg)}</td><td class="num">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}</td>
+      <td class="num ${cls}">${miss.toFixed(0)}</td></tr>`;
   }
-  fitTable.innerHTML = fhtml;
+  fitTable.innerHTML = fh;
 
-  const total = totalMismatch();
-  const assignedCount = blocks.filter(b => b.crop).length;
+  const ac = blocks.filter(b=>b.crop).length;
   const score = document.getElementById('totalScore');
-  if (assignedCount === 0) {
-    score.textContent = 'Place blocks to see score.';
-    score.style.color = '#888';
-  } else {
-    const avg = total / assignedCount;
-    score.textContent = `Mismatch: ${Math.round(total)} total | ${avg.toFixed(1)} avg/block`;
+  if (!ac) { score.textContent = 'Place blocks to see score.'; score.style.color = '#888'; }
+  else {
+    let tot = 0; for (const b of blocks) if (b.crop) tot += mismatch(b.ppfd,b.crop);
+    const avg = tot/ac;
+    score.textContent = `Total: ${Math.round(tot)} | Avg: ${avg.toFixed(1)}/block`;
     score.style.color = avg < 10 ? '#6bcb77' : avg < 25 ? '#ffd93d' : '#ff6b6b';
   }
 }
 
-// ── Crop buttons ────────────────────────────────────────────────────────────
+// ── Light dragging ──────────────────────────────────────────────────────────
 
-let activeCrop = null;
+let dragLight = -1;
+let dragOffX = 0, dragOffY = 0;
 
-function buildCropButtons() {
-  const container = document.getElementById('cropButtons');
-  container.innerHTML = '';
-  for (const id of CROP_IDS) {
-    const btn = document.createElement('div');
-    btn.className = 'crop-btn';
-    btn.dataset.crop = id;
-    btn.innerHTML = `<span class="swatch" style="background:${CROPS[id].color}"></span>
-      ${CROPS[id].label} <span class="info">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}, ${CROPS[id].target}blk</span>`;
-    btn.addEventListener('click', () => {
-      activeCrop = activeCrop === id ? null : id;
-      document.querySelectorAll('.crop-btn').forEach(b => b.classList.toggle('active', b.dataset.crop === activeCrop));
-    });
-    container.appendChild(btn);
+function hitTestLight(mx, my) {
+  const s = getScale();
+  const r = Math.max(10, 14*s);
+  for (let i = lights.length - 1; i >= 0; i--) {
+    const [px,py] = inToP(lights[i].cx, lights[i].cy);
+    if (Math.hypot(mx-px, my-py) < r) return i;
   }
-}
-
-// ── Canvas interaction (click + drag-paint) ─────────────────────────────────
-
-function pixelToBlock(mx, my) {
-  const [bw, bh] = inchWToPixelW(BLOCK_SIZE, BLOCK_SIZE);
-  for (const b of blocks) {
-    const [px, py] = inchToPixel(b.cx - BLOCK_SIZE / 2, b.cy - BLOCK_SIZE / 2);
-    if (mx >= px && mx <= px + bw && my >= py && my <= py + bh) return b;
-  }
-  return null;
-}
-
-let painting = false;
-let lastPaintedBlock = null;
-
-function applyPaint(b, e) {
-  if (!b || b === lastPaintedBlock) return;
-  lastPaintedBlock = b;
-
-  if (e.shiftKey && activeCrop) {
-    for (const ob of blocks) { if (ob.tray === b.tray) ob.crop = activeCrop; }
-  } else if (e.ctrlKey && activeCrop) {
-    // Fill row across all trays
-    for (const ob of blocks) { if (ob.row === b.row) ob.crop = activeCrop; }
-  } else if (activeCrop) {
-    b.crop = activeCrop;
-  } else {
-    const idx = b.crop ? CROP_IDS.indexOf(b.crop) : -1;
-    b.crop = idx < CROP_IDS.length - 1 ? CROP_IDS[idx + 1] : null;
-  }
-  render();
+  return -1;
 }
 
 canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+  // Check light drag first (only in edit mode)
+  const editMode = document.getElementById('editLights').checked;
+  const li = editMode ? hitTestLight(mx, my) : -1;
+  if (li >= 0 && e.button === 0) {
+    dragLight = li;
+    const [px,py] = inToP(lights[li].cx, lights[li].cy);
+    dragOffX = mx - px; dragOffY = my - py;
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+    return;
+  }
+
+  // Block painting
   if (e.button === 0) {
-    painting = true;
-    lastPaintedBlock = null;
-    const rect = canvas.getBoundingClientRect();
-    const b = pixelToBlock(e.clientX - rect.left, e.clientY - rect.top);
-    applyPaint(b, e);
+    painting = true; lastPainted = null;
+    const b = hitBlock(mx, my);
+    paintBlock(b, e);
   }
 });
 
@@ -655,40 +653,135 @@ canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
 
+  if (dragLight >= 0) {
+    const [ix, iy] = pToIn(mx - dragOffX, my - dragOffY);
+    lights[dragLight].cx = ix;
+    lights[dragLight].cy = iy;
+    render();
+    return;
+  }
+
   if (painting) {
-    const b = pixelToBlock(mx, my);
-    applyPaint(b, e);
+    const b = hitBlock(mx, my);
+    paintBlock(b, e);
   }
 
   // Tooltip
-  const b = pixelToBlock(mx, my);
+  const b = hitBlock(mx, my);
   if (b) {
-    const miss = b.crop ? mismatch(b.ppfd, b.crop) : null;
-    const opt = b.crop ? CROPS[b.crop].optimal : null;
-    let text = `<b>${Math.round(b.ppfd)} PPFD</b> | Tray ${b.tray + 1}, col ${b.col + 1}, row ${b.row + 1}`;
+    let text = `<b>${Math.round(b.ppfd)} PPFD</b> | T${b.tray+1} c${b.col+1} r${b.row+1}`;
     if (b.crop) {
-      text += `<br>${CROPS[b.crop].label} (opt ${opt[0]}-${opt[1]})`;
-      text += `<br>Miss: ${miss.toFixed(0)} (${(mismatchPct(b.ppfd, b.crop) * 100).toFixed(0)}%)`;
+      const [lo,hi] = CROPS[b.crop].optimal;
+      const dev = mismatchSigned(b.ppfd, b.crop);
+      text += `<br>${CROPS[b.crop].label} (opt ${lo}-${hi})`;
+      text += dev === 0 ? '<br><span style="color:#6bcb77">In range</span>'
+        : `<br><span style="color:${Math.abs(dev)<15?'#ffd93d':'#ff6b6b'}">${dev>0?'+':''}${Math.round(dev)} (${dev>0?'too bright':'too dim'})</span>`;
     }
-    const dli = (b.ppfd * 16 * 3600 / 1e6).toFixed(1);
-    text += `<br>DLI @16h: ${dli} mol/m&sup2;/d`;
+    text += `<br>DLI @16h: ${(b.ppfd*16*3600/1e6).toFixed(1)} mol/m&sup2;/d`;
     tooltip.innerHTML = text;
     tooltip.style.display = 'block';
-    tooltip.style.left = (mx + 14) + 'px';
-    tooltip.style.top = (my - 20) + 'px';
+    tooltip.style.left = (mx+14)+'px'; tooltip.style.top = (my-20)+'px';
   } else {
     tooltip.style.display = 'none';
+    // Cursor hint for light hover (only in edit mode)
+    const editOn = document.getElementById('editLights').checked;
+    canvas.style.cursor = (editOn && hitTestLight(mx,my) >= 0) ? 'grab' : 'crosshair';
   }
 });
 
-window.addEventListener('mouseup', () => { painting = false; lastPaintedBlock = null; });
+window.addEventListener('mouseup', () => {
+  if (dragLight >= 0) { dragLight = -1; canvas.style.cursor = 'crosshair'; render(); }
+  painting = false; lastPainted = null;
+});
 canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+
+canvas.addEventListener('dblclick', (e) => {
+  if (!document.getElementById('editLights').checked) return;
+  const rect = canvas.getBoundingClientRect();
+  const li = hitTestLight(e.clientX - rect.left, e.clientY - rect.top);
+  if (li >= 0) {
+    lights[li].angle = (lights[li].angle + 90) % 360;
+    render();
+  }
+});
 
 canvas.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
-  const b = pixelToBlock(e.clientX - rect.left, e.clientY - rect.top);
+  const b = hitBlock(e.clientX - rect.left, e.clientY - rect.top);
   if (b) { b.crop = null; render(); }
+});
+
+// ── Block painting ──────────────────────────────────────────────────────────
+
+let painting = false, lastPainted = null, activeCrop = null;
+
+function hitBlock(mx, my) {
+  const [bw,bh] = inWToP(BLOCK, BLOCK);
+  for (const b of blocks) {
+    const [px,py] = inToP(b.cx-BLOCK/2, b.cy-BLOCK/2);
+    if (mx>=px && mx<=px+bw && my>=py && my<=py+bh) return b;
+  }
+  return null;
+}
+
+function paintBlock(b, e) {
+  if (!b || b === lastPainted) return;
+  lastPainted = b;
+  if (e.shiftKey && activeCrop) {
+    for (const ob of blocks) if (ob.tray===b.tray) ob.crop = activeCrop;
+  } else if (e.ctrlKey && activeCrop) {
+    for (const ob of blocks) if (ob.row===b.row) ob.crop = activeCrop;
+  } else if (activeCrop) {
+    b.crop = activeCrop;
+  } else {
+    const idx = b.crop ? CROP_IDS.indexOf(b.crop) : -1;
+    b.crop = idx < CROP_IDS.length-1 ? CROP_IDS[idx+1] : null;
+  }
+  render();
+}
+
+// ── Crop buttons ────────────────────────────────────────────────────────────
+
+function buildCropButtons() {
+  const c = document.getElementById('cropButtons'); c.innerHTML = '';
+  for (const id of CROP_IDS) {
+    const btn = document.createElement('div');
+    btn.className = 'crop-btn'; btn.dataset.crop = id;
+    btn.innerHTML = `<span class="swatch" style="background:${CROPS[id].color}"></span>
+      ${CROPS[id].label} <span class="info">${CROPS[id].optimal[0]}-${CROPS[id].optimal[1]}, ${CROPS[id].target}blk</span>`;
+    btn.addEventListener('click', () => {
+      activeCrop = activeCrop===id ? null : id;
+      document.querySelectorAll('.crop-btn').forEach(b => b.classList.toggle('active', b.dataset.crop===activeCrop));
+    });
+    c.appendChild(btn);
+  }
+}
+
+// ── Light edit toggle ────────────────────────────────────────────────────────
+
+document.getElementById('editLights').addEventListener('change', (e) => {
+  document.querySelector('.light-cfg').classList.toggle('editing', e.target.checked);
+  render();
+});
+
+// ── Light management buttons ────────────────────────────────────────────────
+
+document.getElementById('addLight').addEventListener('click', () => {
+  const tw2 = totalW();
+  lights.push({ cx: tw2/2, cy: TRAY_L/2, angle: 0, length: BAR_LEN });
+  render();
+});
+document.getElementById('removeLight').addEventListener('click', () => {
+  if (lights.length > 1) { lights.pop(); render(); }
+});
+document.getElementById('rotateAll').addEventListener('click', () => {
+  for (const L of lights) L.angle = (L.angle + 90) % 360;
+  render();
+});
+document.getElementById('resetLights').addEventListener('click', () => {
+  lights = defaultLights(trayCount);
+  render();
 });
 
 // ── View tabs ───────────────────────────────────────────────────────────────
@@ -696,7 +789,7 @@ canvas.addEventListener('contextmenu', (e) => {
 document.querySelectorAll('.view-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     currentView = tab.dataset.view;
-    document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t===tab));
     render();
   });
 });
@@ -704,53 +797,30 @@ document.querySelectorAll('.view-tab').forEach(tab => {
 // ── Buttons + sliders ───────────────────────────────────────────────────────
 
 document.getElementById('optimizeBtn').addEventListener('click', optimize);
-document.getElementById('clearBtn').addEventListener('click', () => {
-  for (const b of blocks) b.crop = null;
-  render();
-});
-
+document.getElementById('clearBtn').addEventListener('click', () => { for (const b of blocks) b.crop=null; render(); });
 document.getElementById('heightSlider').addEventListener('input', render);
 document.getElementById('baselineSlider').addEventListener('input', render);
-
-document.getElementById('gapSlider').addEventListener('input', () => {
-  barGap = parseFloat(document.getElementById('gapSlider').value);
-  document.getElementById('gapVal').textContent = barGap + '"';
-  render();
-});
-
 document.getElementById('traySlider').addEventListener('input', () => {
   trayCount = parseInt(document.getElementById('traySlider').value);
   document.getElementById('trayVal').textContent = trayCount;
-  blocks = buildBlockPositions();
+  blocks = buildBlocks();
   render();
 });
 
 // ── Legend ───────────────────────────────────────────────────────────────────
 
-function buildLegend() {
+(function buildLegend() {
   const el = document.getElementById('legend');
-  const stops = [
-    { label: '<100', color: 'rgb(40,60,180)' },
-    { label: '100-150', color: 'rgb(60,180,100)' },
-    { label: '150-200', color: 'rgb(240,210,50)' },
-    { label: '200-250', color: 'rgb(240,140,30)' },
-    { label: '250-300', color: 'rgb(220,50,30)' },
-    { label: '300+', color: 'rgb(200,30,30)' },
-  ];
-  for (const s of stops) {
-    const d = document.createElement('div');
-    d.className = 'legend-item';
-    d.style.background = s.color;
-    d.textContent = s.label;
-    el.appendChild(d);
-  }
-}
+  [{l:'<100',c:'rgb(40,60,180)'},{l:'100-150',c:'rgb(60,180,100)'},{l:'150-200',c:'rgb(240,210,50)'},
+   {l:'200-250',c:'rgb(240,140,30)'},{l:'250-300',c:'rgb(220,50,30)'},{l:'300+',c:'rgb(200,30,30)'}]
+  .forEach(s => { const d=document.createElement('div'); d.className='legend-item'; d.style.background=s.c; d.textContent=s.l; el.appendChild(d); });
+})();
 
 // ── Init ────────────────────────────────────────────────────────────────────
 
 buildCropButtons();
-buildLegend();
-blocks = buildBlockPositions();
+blocks = buildBlocks();
+lights = defaultLights(trayCount);
 render();
 </script>
 </body>
