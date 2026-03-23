@@ -23,7 +23,7 @@ import {
 
 /** Solver-internal: a N-S band allocated to a species group. Not exposed in output. */
 interface SolverBand {
-  physY: [number, number];
+  y: [number, number];
   access: 'bordered' | 'block';
   species_ids: string[];
 }
@@ -45,7 +45,7 @@ const SHADE_RANK: Record<string, number> = {
 // ── Plantable Region ─────────────────────────────────────────────────────────
 
 interface PlantableRegion {
-  physY: [number, number];
+  y: [number, number];
   widthAtY: (y: number) => number;
 }
 
@@ -53,27 +53,27 @@ function buildPlantableRegion(garden: GardenDefinition): PlantableRegion {
   let minY = 0;
   const maxY = garden.bounds.length_in;
   const polylineBuffers: Array<{ polyline: Polyline; buffer: number }> = [];
-  const rectExclusions: Array<{ physX: [number, number]; physY: [number, number] }> = [];
+  const rectExclusions: Array<{ x: [number, number]; y: [number, number] }> = [];
 
   for (const obs of garden.obstructions) {
     if (obs.type === 'rect') {
-      rectExclusions.push({ physX: obs.physX, physY: obs.physY });
-      if (obs.physY[0] === 0) minY = Math.max(minY, obs.physY[1]);
+      rectExclusions.push({ x: obs.x, y: obs.y });
+      if (obs.y[0] === 0) minY = Math.max(minY, obs.y[1]);
     } else if (obs.type === 'polyline_buffer') {
       polylineBuffers.push({ polyline: obs.polyline, buffer: obs.buffer_in });
     }
   }
 
   return {
-    physY: [minY, maxY],
+    y: [minY, maxY],
     widthAtY: (y: number) => {
       let width = garden.bounds.width_in;
       for (const pb of polylineBuffers) {
         width = Math.min(width, widthWestOfPolyline(y, pb.polyline, pb.buffer));
       }
       for (const rect of rectExclusions) {
-        if (y >= rect.physY[0] && y <= rect.physY[1]) {
-          width = Math.min(width, rect.physX[0]);
+        if (y >= rect.y[0] && y <= rect.y[1]) {
+          width = Math.min(width, rect.x[0]);
         }
       }
       return Math.max(0, width);
@@ -152,10 +152,10 @@ function allocateZones(
   const bands: SolverBand[] = [];
   const paths: PathSegment[] = [];
   const warnings: string[] = [];
-  let cursor = region.physY[1];
+  let cursor = region.y[1];
 
   for (const group of groups) {
-    if (cursor <= region.physY[0]) {
+    if (cursor <= region.y[0]) {
       warnings.push(`No space remaining for ${group.species.name}`);
       continue;
     }
@@ -171,7 +171,7 @@ function allocateZones(
     if (isBlock) {
       const estWidth = region.widthAtY(cursor - 50);
       zoneHeightIn = Math.ceil(group.requiredAreaSqft * 144 / estWidth);
-      const estBottom = Math.max(region.physY[0], cursor - zoneHeightIn);
+      const estBottom = Math.max(region.y[0], cursor - zoneHeightIn);
       let sumWidth = 0;
       const samples = 5;
       for (let i = 0; i < samples; i++) {
@@ -182,8 +182,8 @@ function allocateZones(
       // Sample width at multiple points to handle variable-width polygon
       const widthSamples = [
         region.widthAtY(cursor - 50),
-        region.widthAtY(Math.max(region.physY[0], cursor - 200)),
-        region.widthAtY(Math.max(region.physY[0], cursor - 400)),
+        region.widthAtY(Math.max(region.y[0], cursor - 200)),
+        region.widthAtY(Math.max(region.y[0], cursor - 400)),
       ];
       const avgWidth = Math.max(...widthSamples);
       let maxZoneRows = 1;
@@ -209,7 +209,7 @@ function allocateZones(
     // Block species need minimum area for pollination/viability (~100 sqft for corn)
     const MIN_BLOCK_AREA_SQFT = 100;
     const zoneTop = cursor;
-    const zoneBottom = Math.max(region.physY[0], cursor - zoneHeightIn);
+    const zoneBottom = Math.max(region.y[0], cursor - zoneHeightIn);
     const allocatedHeight = zoneTop - zoneBottom;
 
     if (allocatedHeight < (isBlock ? eqSpacing : betweenRow)) {
@@ -229,17 +229,17 @@ function allocateZones(
     if (group.successor) speciesIds.push(group.successor.request.species_id);
 
     bands.push({
-      physY: [zoneBottom, zoneTop],
+      y: [zoneBottom, zoneTop],
       access: group.accessType,
       species_ids: speciesIds,
     });
 
     cursor = zoneBottom - pathWidth;
-    if (cursor > region.physY[0]) {
+    if (cursor > region.y[0]) {
       const pathWidth_actual = region.widthAtY(zoneBottom);
       paths.push({
-        physY: zoneBottom - pathWidth / 2,
-        physX: [0, pathWidth_actual],
+        y: zoneBottom - pathWidth / 2,
+        x: [0, pathWidth_actual],
         width_in: pathWidth,
       });
     }
@@ -268,7 +268,7 @@ function placePlantsInBand(
 ): { placements: PlantPlacement[]; innerPaths: PathSegment[] } {
   const placements: PlantPlacement[] = [];
   const innerPaths: PathSegment[] = [];
-  const [zoneSouth, zoneNorth] = band.physY;
+  const [zoneSouth, zoneNorth] = band.y;
 
   const placeSpecies = (
     req: PlantingRequest, species: PlantSpecies, idPrefix: string,
@@ -288,8 +288,8 @@ function placePlantsInBand(
           placements.push({
             plant_id: `${idPrefix}_${placed}`,
             species_id: req.species_id,
-            physX,
-            physY,
+            x: physX,
+            y: physY,
             planted_date: computeStaggerDate(req.planting_date, placed, req.plant_count, req.stagger_days ?? 0),
             density_plants_per_sqft: 0,
             harvest_strategy_id: req.harvest_strategy_id,
@@ -301,8 +301,8 @@ function placePlantsInBand(
       let physY = zoneSouth + pathWidth;
 
       innerPaths.push({
-        physY: zoneSouth + pathWidth / 2,
-        physX: [0, region.widthAtY(zoneSouth)],
+        y: zoneSouth + pathWidth / 2,
+        x: [0, region.widthAtY(zoneSouth)],
         width_in: pathWidth,
       });
 
@@ -316,8 +316,8 @@ function placePlantsInBand(
             placements.push({
               plant_id: `${idPrefix}_${placed}`,
               species_id: req.species_id,
-              physX: col,
-              physY: row,
+              x: col,
+              y: row,
               planted_date: computeStaggerDate(req.planting_date, placed, req.plant_count, req.stagger_days ?? 0),
               density_plants_per_sqft: 0,
               harvest_strategy_id: req.harvest_strategy_id,
@@ -328,8 +328,8 @@ function placePlantsInBand(
 
         physY = rowNorth + pathWidth;
         innerPaths.push({
-          physY: rowNorth + pathWidth / 2,
-          physX: [0, region.widthAtY(rowNorth)],
+          y: rowNorth + pathWidth / 2,
+          x: [0, region.widthAtY(rowNorth)],
           width_in: pathWidth,
         });
       }
@@ -350,9 +350,9 @@ function placePlantsInBand(
   // Compute density from actual placement and band area
   const sampleCount = 10;
   let bandAreaSqIn = 0;
-  const dY = (band.physY[1] - band.physY[0]) / sampleCount;
+  const dY = (band.y[1] - band.y[0]) / sampleCount;
   for (let i = 0; i < sampleCount; i++) {
-    const y = band.physY[0] + (i + 0.5) * dY;
+    const y = band.y[0] + (i + 0.5) * dY;
     bandAreaSqIn += region.widthAtY(y) * dY;
   }
   const bandAreaSqft = bandAreaSqIn / 144;
@@ -388,15 +388,15 @@ function placeInfrastructurePlants(
     const trellisAreaSqft = (trellisLengthIn * infra.spacing_in) / 144;
 
     for (let i = 0; i < maxCount; i++) {
-      const physY = infra.start_physY + i * infra.spacing_in;
+      const physY = infra.start_y + i * infra.spacing_in;
       const cx = interpolatePolylineX(physY, infra.polyline);
 
       if (sides[0] && i < sides[0].plant_count) {
         placements.push({
           plant_id: `${sides[0].species_id}_${i}`,
           species_id: sides[0].species_id,
-          physX: cx + WEST_OFFSET,
-          physY,
+          x: cx + WEST_OFFSET,
+          y: physY,
           planted_date: sides[0].planting_date,
           density_plants_per_sqft: sides[0].plant_count / trellisAreaSqft,
           harvest_strategy_id: sides[0].harvest_strategy_id,
@@ -407,8 +407,8 @@ function placeInfrastructurePlants(
         placements.push({
           plant_id: `${sides[1].species_id}_${i}`,
           species_id: sides[1].species_id,
-          physX: cx + EAST_OFFSET,
-          physY,
+          x: cx + EAST_OFFSET,
+          y: physY,
           planted_date: sides[1].planting_date,
           density_plants_per_sqft: sides[1].plant_count / trellisAreaSqft,
           harvest_strategy_id: sides[1].harvest_strategy_id,

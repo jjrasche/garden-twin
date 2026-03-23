@@ -59,10 +59,10 @@ export const PlantInstanceSchema = z.object({
   measurements: z.record(z.string(), z.number()).optional(),
   last_observed: z.string(),                // ISO datetime
 
-  // Physical position in garden (inches from SW corner)
+  // Position in garden (inches from SW corner)
   position: z.object({
-    physX: z.number().min(0),
-    physY: z.number().min(0),
+    x: z.number().min(0),
+    y: z.number().min(0),
   }).optional(),
 
   // Actual planting density (plants/sq ft). Computed by layout solver.

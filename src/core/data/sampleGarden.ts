@@ -49,7 +49,7 @@ const COMPANION_DATE = '2025-05-15';
 const GARDEN_DEFINITION: GardenDefinition = {
   bounds: { width_in: PHYS_WIDTH_IN, length_in: PHYS_LENGTH_IN },
   obstructions: [
-    { id: 'dead_zone', type: 'rect', physX: [0, PHYS_WIDTH_IN], physY: [0, 120] },
+    { id: 'dead_zone', type: 'rect', x: [0, PHYS_WIDTH_IN], y: [0, 120] },
     { id: 'channel', type: 'polyline_buffer', polyline: CHANNEL_PATH, buffer_in: CHANNEL_BUFFER_IN },
   ],
   infrastructure: [
@@ -59,7 +59,7 @@ const GARDEN_DEFINITION: GardenDefinition = {
       polyline: CHANNEL_PATH,
       species_ids: ['tomato_sun_gold', 'tomato_amish_paste'],
       spacing_in: 18,
-      start_physY: 240,
+      start_y: 240,
     },
   ],
 };
@@ -128,7 +128,7 @@ function toPlantingRequests(plantings: CropPlanting[]): PlantingRequest[] {
 // ── PlantPlacement → PlantInstance ───────────────────────────────────────────
 
 function toPlantInstance(placement: PlantPlacement): PlantInstance {
-  const pos = toScreenSnapped(placement.physX, placement.physY);
+  const pos = toScreenSnapped(placement.x, placement.y);
   const occupied = createRectFootprint(pos.x_in, pos.y_in, 2, 2);
 
   return {
@@ -143,7 +143,7 @@ function toPlantInstance(placement: PlantPlacement): PlantInstance {
     last_observed: PROJECTION_DATE,
     health_status: 'healthy',
     harvest_strategy_id: placement.harvest_strategy_id,
-    position: { physX: placement.physX, physY: placement.physY },
+    position: { x: placement.x, y: placement.y },
     density_plants_per_sqft: placement.density_plants_per_sqft,
   };
 }
@@ -167,10 +167,10 @@ function generateSubcells(
 
   // Build path lookup: which physY ranges are paths?
   const pathRanges = paths.map(p => ({
-    yMin: p.physY - p.width_in / 2,
-    yMax: p.physY + p.width_in / 2,
-    xMin: p.physX[0],
-    xMax: p.physX[1],
+    yMin: p.y - p.width_in / 2,
+    yMax: p.y + p.width_in / 2,
+    xMin: p.x[0],
+    xMax: p.x[1],
   }));
 
   for (let physX = 0; physX < PHYS_WIDTH_IN; physX += SUBCELL_SIZE_IN) {
@@ -266,10 +266,10 @@ function resolveAllCompanions(placements: PlantPlacement[]): PlantInstance[] {
   for (const p of placements) {
     const ext = extents.get(p.species_id);
     if (ext) {
-      ext.minY = Math.min(ext.minY, p.physY);
-      ext.maxY = Math.max(ext.maxY, p.physY);
+      ext.minY = Math.min(ext.minY, p.y);
+      ext.maxY = Math.max(ext.maxY, p.y);
     } else {
-      extents.set(p.species_id, { minY: p.physY, maxY: p.physY, species_ids: [p.species_id] });
+      extents.set(p.species_id, { minY: p.y, maxY: p.y, species_ids: [p.species_id] });
     }
   }
 

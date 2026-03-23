@@ -17,11 +17,11 @@ const CHANNEL: Array<{ x: number; y: number }> = [
 const GARDEN: GardenDefinition = {
   bounds: { width_in: 360, length_in: 1200 },
   obstructions: [
-    { id: 'dead_zone', type: 'rect', physX: [0, 360], physY: [0, 120] },
+    { id: 'dead_zone', type: 'rect', x: [0, 360], y: [0, 120] },
     { id: 'channel', type: 'polyline_buffer', polyline: CHANNEL, buffer_in: 36 },
   ],
   infrastructure: [
-    { id: 'trellis', type: 'trellis', polyline: CHANNEL, species_ids: ['tomato_sun_gold', 'tomato_amish_paste'], spacing_in: 18, start_physY: 240 },
+    { id: 'trellis', type: 'trellis', polyline: CHANNEL, species_ids: ['tomato_sun_gold', 'tomato_amish_paste'], spacing_in: 18, start_y: 240 },
   ],
 };
 
@@ -63,15 +63,15 @@ function makeRequests(): PlantingRequest[] {
 describe('species ordering', () => {
   test('tallest species placed furthest north', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
-    const cornMinY = Math.min(...layout.placements.filter(p => p.species_id === 'corn_nothstine_dent').map(p => p.physY));
-    const kaleMaxY = Math.max(...layout.placements.filter(p => p.species_id === 'kale_red_russian').map(p => p.physY));
+    const cornMinY = Math.min(...layout.placements.filter(p => p.species_id === 'corn_nothstine_dent').map(p => p.y));
+    const kaleMaxY = Math.max(...layout.placements.filter(p => p.species_id === 'kale_red_russian').map(p => p.y));
     expect(cornMinY).toBeGreaterThan(kaleMaxY);
   });
 
   test('shade-tolerant species placed furthest south', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
-    const lettuceMinY = Math.min(...layout.placements.filter(p => p.species_id === 'lettuce_bss').map(p => p.physY));
-    const kaleMinY = Math.min(...layout.placements.filter(p => p.species_id === 'kale_red_russian').map(p => p.physY));
+    const lettuceMinY = Math.min(...layout.placements.filter(p => p.species_id === 'lettuce_bss').map(p => p.y));
+    const kaleMinY = Math.min(...layout.placements.filter(p => p.species_id === 'kale_red_russian').map(p => p.y));
     expect(lettuceMinY).toBeLessThan(kaleMinY);
   });
 });
@@ -82,7 +82,7 @@ describe('access patterns', () => {
   test('corn plants are in a contiguous block (no paths between corn rows)', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
     const cornPlants = layout.placements.filter(p => p.species_id === 'corn_nothstine_dent');
-    const cornYs = cornPlants.map(p => p.physY).sort((a, b) => a - b);
+    const cornYs = cornPlants.map(p => p.y).sort((a, b) => a - b);
     // All corn should be within ~18" spacing of each other (no path gaps)
     for (let i = 1; i < cornYs.length; i++) {
       expect(cornYs[i]! - cornYs[i - 1]!).toBeLessThanOrEqual(18);
@@ -92,7 +92,7 @@ describe('access patterns', () => {
   test('kale plants have path-width gaps (bordered access)', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
     const kalePlants = layout.placements.filter(p => p.species_id === 'kale_red_russian');
-    const kaleYs = [...new Set(kalePlants.map(p => p.physY))].sort((a, b) => a - b);
+    const kaleYs = [...new Set(kalePlants.map(p => p.y))].sort((a, b) => a - b);
     // Bordered zones have paths between 48" zone rows — some row gaps should exceed plant spacing (18")
     const gaps = kaleYs.slice(1).map((y, i) => y - kaleYs[i]!);
     const hasPathGap = gaps.some(g => g > 20); // > plant spacing means a path intervened
@@ -124,14 +124,14 @@ describe('physical coordinates', () => {
   test('all placements have physX and physY > 0', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
     for (const p of layout.placements) {
-      expect(p.physX).toBeGreaterThan(0);
-      expect(p.physY).toBeGreaterThanOrEqual(0);
+      expect(p.x).toBeGreaterThan(0);
+      expect(p.y).toBeGreaterThanOrEqual(0);
     }
   });
 
   test('no plant placed in dead zone (physY < 120)', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
-    const inDeadZone = layout.placements.filter(p => p.physY < 120);
+    const inDeadZone = layout.placements.filter(p => p.y < 120);
     expect(inDeadZone.length).toBe(0);
   });
 });
@@ -162,7 +162,7 @@ describe('GardenState integration', () => {
     const corn = state.plants.find(p => p.species_id === 'corn_nothstine_dent');
     expect(corn).toBeDefined();
     expect(corn!.position).toBeDefined();
-    expect(corn!.position!.physX).toBeGreaterThan(0);
+    expect(corn!.position!.x).toBeGreaterThan(0);
     expect(corn!.density_plants_per_sqft).toBeGreaterThan(0);
   });
 });
@@ -177,10 +177,10 @@ describe('species spatial separation', () => {
     for (const p of layout.placements) {
       const ext = extents.get(p.species_id);
       if (ext) {
-        ext.min = Math.min(ext.min, p.physY);
-        ext.max = Math.max(ext.max, p.physY);
+        ext.min = Math.min(ext.min, p.y);
+        ext.max = Math.max(ext.max, p.y);
       } else {
-        extents.set(p.species_id, { min: p.physY, max: p.physY });
+        extents.set(p.species_id, { min: p.y, max: p.y });
       }
     }
     // Corn and kale should not overlap

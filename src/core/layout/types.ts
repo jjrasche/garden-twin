@@ -16,7 +16,7 @@ export interface GardenDefinition {
 }
 
 export type Obstruction =
-  | { id: string; type: 'rect'; physX: [number, number]; physY: [number, number] }
+  | { id: string; type: 'rect'; x: [number, number]; y: [number, number] }
   | { id: string; type: 'polyline_buffer'; polyline: Polyline; buffer_in: number };
 
 export interface InfrastructureRef {
@@ -25,7 +25,7 @@ export interface InfrastructureRef {
   polyline: Polyline;
   species_ids: string[];
   spacing_in: number;
-  start_physY: number;
+  start_y: number;
 }
 
 // ── Solver Input ─────────────────────────────────────────────────────────────
@@ -44,16 +44,16 @@ export interface PlantingRequest {
 export interface PlantPlacement {
   plant_id: string;
   species_id: string;
-  physX: number;
-  physY: number;
+  x: number;
+  y: number;
   planted_date: string;
   density_plants_per_sqft: number;
   harvest_strategy_id?: string;
 }
 
 export interface PathSegment {
-  physY: number;
-  physX: [number, number];
+  y: number;
+  x: [number, number];
   width_in: number;
 }
 
