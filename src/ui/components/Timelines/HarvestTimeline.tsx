@@ -23,7 +23,7 @@ import {
 } from '../../../core/calculators/ProductionTimeline';
 import { useWeatherSource } from '../../hooks/useWeatherSource';
 import { useLegendHighlight } from '../../hooks/useLegendHighlight';
-import { formatWeekLabel as sharedFormatWeekLabel, buildDefaultSowingDots } from './chartUtils';
+import { formatWeekLabel as sharedFormatWeekLabel, buildDefaultSowingDots, DISPLAY_RANGE } from './chartUtils';
 
 const GROUP_COLORS: Record<string, string> = {
   Lettuce: '#7BC67E',
@@ -74,7 +74,8 @@ function buildSowingByWeek(plan: readonly CropPlanting[]): Map<string, Set<strin
 }
 
 function buildChartData(plan: typeof PRODUCTION_PLAN, env: import('@core/environment').ConditionsResolver, actualData?: WeeklyHarvest[]): ChartRow[] {
-  const weeks = simulateSeason(plan, env);
+  const allWeeks = simulateSeason(plan, env);
+  const weeks = allWeeks.filter(w => w.week_start >= DISPLAY_RANGE.start && w.week_start <= DISPLAY_RANGE.end);
   const sowingByWeek = buildSowingByWeek(plan);
 
   const actualByWeek = new Map<string, WeeklyHarvest>();

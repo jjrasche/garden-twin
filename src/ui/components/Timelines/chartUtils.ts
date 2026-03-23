@@ -4,8 +4,13 @@
 
 import { PRODUCTION_PLAN, SEASON_RANGE, type CropPlanting } from '@core/calculators/ProductionTimeline';
 
-
 const MS_PER_DAY = 86_400_000;
+
+/** Fixed display range for all charts: April 1 → March 31 (full growing year). */
+export const DISPLAY_RANGE = {
+  start: new Date(`${SEASON_RANGE.start.getFullYear()}-04-01`),
+  end: new Date(`${SEASON_RANGE.start.getFullYear() + 1}-03-31`),
+};
 
 export function formatWeekLabel(date: Date): string {
   const m = date.toLocaleString('en-US', { month: 'short' });
