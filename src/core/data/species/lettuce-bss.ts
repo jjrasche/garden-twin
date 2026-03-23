@@ -18,7 +18,7 @@ export const LETTUCE_BSS: PlantSpecies = {
     { factor: 'spacing_plants_per_sq_ft', curve: { 1.0: 1.1, 2.78: 1.0, 4.0: 0.8, 6.0: 0.5 }, effect: 'growth_rate' as const },
     // Lettuce bolting is gradual — driven by accumulated heat days, not a single-day threshold.
     // The growth_rate temp curve already drops to 0 at 85°F (no useful production in heat).
-    // Actual plant death from heat is handled by stress_tolerances.heat (5 days above 85°F).
+    // Actual plant death from heat is handled by stress_tolerances.heat (14 days above 85°F).
     // No population_survival curve — bolting is a stress accumulation, not an instant kill.
     { factor: 'N_ppm', curve: { 10: 0.7, 30: 1.0, 60: 1.0, 120: 0.8 }, effect: 'growth_rate' as const },
     { factor: 'P_ppm', curve: { 10: 0.8, 25: 1.0, 50: 1.0 }, effect: 'growth_rate' as const },
@@ -72,8 +72,13 @@ export const LETTUCE_BSS: PlantSpecies = {
     productive_stages: ['vegetative'],
   } satisfies StageConfig,
 
+  // Research: lettuce survives 13+ consecutive days above 86°F (ScienceDirect 2022).
+  // Bolts (senescent) from accumulated heat well before death. Damage (tipburn, bitterness)
+  // starts at 3 days; actual death at ~14 days sustained. The growth_rate curve already
+  // drops production to near-zero above 80°F, so the plant is economically dead long before
+  // biological death.
   stress_tolerances: {
-    heat: { threshold: 85, direction: 'above', days_to_damage: 2, days_to_death: 5 },
+    heat: { threshold: 85, direction: 'above', days_to_damage: 3, days_to_death: 14 },
   } satisfies StressTolerances,
 
   phenology: {

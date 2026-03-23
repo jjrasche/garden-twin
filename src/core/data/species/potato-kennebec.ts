@@ -63,7 +63,9 @@ export const POTATO_KENNEBEC: PlantSpecies = {
 
   stress_tolerances: {
     drought: { threshold: 30, direction: 'below', days_to_damage: 4, days_to_death: 10 },
-    waterlog: { threshold: 110, direction: 'above', days_to_damage: 1, days_to_death: 3 },
+    // Brief rain saturation (1-3 days) is normal — potato survives if soil drains.
+    // Sustained waterlog (7+ days) causes Phytophthora. Your loam with 5.5-7% OM drains well.
+    waterlog: { threshold: 110, direction: 'above', days_to_damage: 2, days_to_death: 7 },
   } satisfies StressTolerances,
 
   phenology: {

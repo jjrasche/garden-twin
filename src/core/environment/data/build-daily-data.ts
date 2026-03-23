@@ -200,7 +200,7 @@ let soilTempEma: number | null = null;
 const FIELD_CAPACITY_IN = 3.2;    // ~32% volumetric × 10" root zone = 3.2" water
 const WILTING_POINT_IN = 1.5;     // ~15% volumetric × 10" root zone
 const SATURATION_IN = 4.5;        // ~45% porosity × 10" root zone
-const DRAINAGE_RATE = 0.3;        // Fraction of excess above FC that drains per day
+const DRAINAGE_RATE = 0.5;        // Fraction of excess above FC that drains per day (loam with high OM)
 let soilWater_in = FIELD_CAPACITY_IN; // Start at field capacity (spring snowmelt)
 
 interface DailyRecord {
