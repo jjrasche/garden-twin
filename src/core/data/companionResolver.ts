@@ -12,16 +12,7 @@ import type { CompanionBenefit } from '../types/Pest';
 import { createSubcellId } from '../types';
 import { findProtectorsForCrop } from '../types/Pest';
 import { CROP_VULNERABILITIES, COMPANION_BENEFITS } from './pests';
-
-const PHYS_WIDTH_IN = 360;
-const PHYS_LENGTH_IN = 1200;
-const SUBCELL_SIZE_IN = 3;
-
-function toScreenSnapped(physX: number, physY: number): { x_in: number; y_in: number } {
-  const x_in = Math.round((PHYS_LENGTH_IN - physY) / SUBCELL_SIZE_IN) * SUBCELL_SIZE_IN;
-  const y_in = Math.round((PHYS_WIDTH_IN - physX) / SUBCELL_SIZE_IN) * SUBCELL_SIZE_IN;
-  return { x_in, y_in };
-}
+import { toScreenSnapped, SUBCELL_SIZE_IN } from '../geometry/gardenGeometry';
 
 function createRectFootprint(x: number, y: number, dx: number, dy: number): string[] {
   const cells: string[] = [];

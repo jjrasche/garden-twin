@@ -221,6 +221,10 @@ export const LayoutProfileSchema = z.object({
   // Containment (invasive species like mint, catnip)
   needs_containment: z.boolean(),
   spread_mechanism: z.enum(['none', 'rhizomes', 'self_seeding', 'both']).optional(),
+
+  // Zone access requirement: 'bordered' needs paths alongside (most crops),
+  // 'block' needs only perimeter access (corn — no mid-season entry after canopy closure)
+  access_type: z.enum(['bordered', 'block']).optional(), // default: bordered
 });
 
 export type LayoutProfile = z.infer<typeof LayoutProfileSchema>;

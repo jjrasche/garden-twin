@@ -74,6 +74,7 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
     planting_method: 'direct_sow',
     role: 'food_crop',
     needs_containment: false,
+    access_type: 'block',
   },
 
   seed_cost_per_plant: 0.10,

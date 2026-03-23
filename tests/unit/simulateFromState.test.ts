@@ -51,8 +51,8 @@ describe('initPlantStates', () => {
 
     // All plants are included; eliminated ones are marked dead
     expect(plants.length).toBe(gardenState.plants.length);
-    const alive = plants.filter(p => !p.is_dead);
-    const dead = plants.filter(p => p.is_dead);
+    const alive = plants.filter(p => p.lifecycle !== 'dead');
+    const dead = plants.filter(p => p.lifecycle === 'dead');
     expect(alive.length).toBeLessThan(plants.length);
     expect(alive.length).toBeGreaterThan(0);
     expect(dead.every(p => p.stage === 'done')).toBe(true);
@@ -182,10 +182,10 @@ describe('bucketHarvests', () => {
 // =============================================================================
 
 describe('end-to-end regression', () => {
-  test('simulateSeason new path total ~ old path total (pinned to 673 lbs)', () => {
+  test('simulateSeason new path total ~ old path total (pinned to 700 lbs)', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~673 lbs after kale germination_rate fix (1.00 for transplants, was 0.95).
-    expect(total).toBeCloseTo(673, -1);
+    // ~700 lbs after layout solver migration (biointensive beds).
+    expect(total).toBeCloseTo(700, -1);
   });
 });
