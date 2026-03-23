@@ -42,17 +42,19 @@ export function PlantTooltip({ plant, species, x, y }: PlantTooltipProps) {
           <span className="text-gray-500">Cut #</span>
           <span className="text-gray-200 font-mono">{plant.cut_number}</span>
 
+          <span className="text-gray-500">Lifecycle</span>
+          <span className={
+            plant.lifecycle === 'growing' ? 'text-green-400' :
+            plant.lifecycle === 'stressed' ? 'text-yellow-400' :
+            plant.lifecycle === 'senescent' ? 'text-orange-400' :
+            plant.lifecycle === 'pulled' ? 'text-gray-400' :
+            'text-red-400'
+          }>{plant.lifecycle}</span>
+
           {plant.is_harvestable && (
             <>
               <span className="text-emerald-500">Harvestable</span>
               <span className="text-emerald-400">Yes</span>
-            </>
-          )}
-
-          {plant.is_dead && (
-            <>
-              <span className="text-red-500">Dead</span>
-              <span className="text-red-400">Yes</span>
             </>
           )}
         </div>

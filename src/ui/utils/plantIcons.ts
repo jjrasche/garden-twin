@@ -163,9 +163,11 @@ function desaturate(hex: string, amount: number): string {
   return toHex(r + (gray - r) * t, g + (gray - g) * t, b + (gray - b) * t);
 }
 
-/** Species color modulated by growth stage. */
-export function getStageColor(speciesId: string, stage: string, isDead: boolean): string {
-  if (isDead) return desaturate(scaleColor(getPlantColor(speciesId), 0.3), 0.8);
+/** Species color modulated by growth stage and lifecycle. */
+export function getStageColor(speciesId: string, stage: string, lifecycle: string): string {
+  if (lifecycle === 'dead' || lifecycle === 'pulled') return desaturate(scaleColor(getPlantColor(speciesId), 0.3), 0.8);
+  if (lifecycle === 'senescent') return desaturate(scaleColor(getPlantColor(speciesId), 0.5), 0.5);
+  if (lifecycle === 'stressed') return scaleColor(getPlantColor(speciesId), 0.7);
 
   const base = getPlantColor(speciesId);
   switch (stage) {

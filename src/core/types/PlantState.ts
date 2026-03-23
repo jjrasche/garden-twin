@@ -87,10 +87,8 @@ export const PlantStateSchema = z.object({
   bolt_resistance: z.number().min(0).max(1),
 
   // Lifecycle status (set by engine)
+  lifecycle: z.enum(['growing', 'stressed', 'senescent', 'pulled', 'dead']),
   is_harvestable: z.boolean(),
-  is_bolted: z.boolean(),    // Alive but not harvestable (heat/photoperiod bolting or CAC exhaustion)
-  is_pulled: z.boolean(),    // Removed by gardener — frees space for successor
-  is_dead: z.boolean(),      // Killed by frost, stress, or disease
 });
 
 export type PlantState = z.infer<typeof PlantStateSchema>;
@@ -102,6 +100,6 @@ export type PlantState = z.infer<typeof PlantStateSchema>;
 export type GrowthEvent =
   | { type: 'stage_changed'; plant_id: string; from: string; to: string; date: Date }
   | { type: 'harvest_ready'; plant_id: string; date: Date; accumulated_lbs: number }
-  | { type: 'plant_bolted'; plant_id: string; date: Date; cause: string }
+  | { type: 'plant_senescent'; plant_id: string; date: Date; cause: string }
   | { type: 'plant_pulled'; plant_id: string; date: Date }
   | { type: 'plant_died'; plant_id: string; date: Date; cause: string };

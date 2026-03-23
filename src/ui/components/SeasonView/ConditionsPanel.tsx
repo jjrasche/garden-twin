@@ -145,8 +145,12 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
   }
 
   const grandTotal = Object.values(accumulation).reduce((s, v) => s + v, 0);
-  const alive = snapshot.plants.filter(p => !p.is_dead).length;
-  const dead = snapshot.plants.filter(p => p.is_dead).length;
+  const growing = snapshot.plants.filter(p => p.lifecycle === 'growing').length;
+  const stressed = snapshot.plants.filter(p => p.lifecycle === 'stressed').length;
+  const senescent = snapshot.plants.filter(p => p.lifecycle === 'senescent').length;
+  const pulled = snapshot.plants.filter(p => p.lifecycle === 'pulled').length;
+  const dead = snapshot.plants.filter(p => p.lifecycle === 'dead').length;
+  const alive = growing + stressed;
 
   return (
     <div className="bg-gray-800 border-l border-gray-700 flex flex-col h-full overflow-hidden">
@@ -156,7 +160,7 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
           {snapshot.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </div>
         <div className="text-[10px] text-gray-500 mt-0.5">
-          {alive} alive / {dead} dead
+          {alive} alive{stressed > 0 ? ` (${stressed} stressed)` : ''} / {dead} dead{senescent > 0 ? ` / ${senescent} senescent` : ''}{pulled > 0 ? ` / ${pulled} pulled` : ''}
         </div>
       </div>
 

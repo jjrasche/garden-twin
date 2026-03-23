@@ -193,7 +193,7 @@ function computeSeasonRange(plan: CropPlanting[]): { start: Date; end: Date } {
   const start = new Date(earliest);
   start.setDate(start.getDate() - 1);
   // Safety bound: 18 months from start. Never reached — all plants die from frost/bolt
-  // well before this. The early termination check (plants.every(p => p.is_dead)) is
+  // well before this. The early termination check (plants.every(p => lifecycle === 'dead' || 'pulled')) is
   // the real stop condition.
   const end = new Date(start);
   end.setMonth(end.getMonth() + 18);

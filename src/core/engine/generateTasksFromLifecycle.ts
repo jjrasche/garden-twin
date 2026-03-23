@@ -21,7 +21,7 @@ export function generateTasksFromLifecycle(
   date: Date,
   env: ConditionsResolver,
 ): Task[] {
-  const alive = plants.filter(p => !p.is_dead && p.stage !== 'done');
+  const alive = plants.filter(p => p.lifecycle === 'growing' || p.lifecycle === 'stressed');
   if (alive.length === 0) return [];
 
   const tasks: Task[] = [];
@@ -67,7 +67,7 @@ function isRecurrenceExpired(
     case 'max_cuts':
       return representative.cut_number >= (recurrence.end_value ?? Infinity);
     case 'bolt':
-      return representative.is_dead;
+      return representative.lifecycle === 'dead' || representative.lifecycle === 'senescent' || representative.lifecycle === 'pulled';
     case 'days_after_planting': {
       const planted = new Date(representative.planted_date);
       const elapsed = (date.getTime() - planted.getTime()) / 86_400_000;

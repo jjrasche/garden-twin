@@ -61,7 +61,7 @@ export function planDay(input: PlannerInput): PlannerResult {
 function groupPlantsBySpecies(plants: PlantState[]): Map<string, PlantState[]> {
   const groups = new Map<string, PlantState[]>();
   for (const plant of plants) {
-    if (plant.is_dead || plant.stage === 'done') continue;
+    if (plant.lifecycle === 'dead' || plant.lifecycle === 'senescent' || plant.lifecycle === 'pulled') continue;
     const group = groups.get(plant.species_id);
     if (group) {
       group.push(plant);

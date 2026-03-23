@@ -80,8 +80,9 @@ const CROP_ZONE_NORTH_EAST_X = 204;  // physY >= 660: channel at 240
 
 export const ZONE_CONFIG = {
   dead:       { physY: [0, 120]     as [number, number] },
-  greens:     { physY: [120, 240]   as [number, number], spacing: { row: 12, plant: 6 },
+  greens:     { physY: [120, 240]   as [number, number],
                 crop_ids: [LETTUCE_BSS.id, SPINACH_BLOOMSDALE.id] },
+                // No zone-level spacing — generator uses each species' layout.spacing
   kale:       { physY: [240, 480]   as [number, number], spacing: { row: 18, plant: 18 },
                 crop_ids: [KALE_RED_RUSSIAN.id] },
   potato:     { physY: [480, 600]   as [number, number], spacing: { row: 30, plant: 12 }, rows: 'ew' as const,
@@ -338,26 +339,36 @@ function generateKalePlants(totalKale: number): PlantInstance[] {
   return plants;
 }
 
-function generateGreensPlants(greens: ZoneAllocation['greens']): PlantInstance[] {
-  const plants: PlantInstance[] = [];
-
-  // Grid: 6" in-row (physX), 12" between rows (physY)
+/** Build a position grid for a species using its own layout spacing. */
+function buildSpeciesGrid(
+  species: { layout?: { spacing?: { in_row_in: number; between_row_in: number } } },
+  physYRange: [number, number],
+  eastBound: number,
+): Array<{ physX: number; physY: number }> {
+  const row = species.layout?.spacing?.between_row_in ?? 12;
+  const plant = species.layout?.spacing?.in_row_in ?? 6;
   const positions: Array<{ physX: number; physY: number }> = [];
-  const { row: gRow, plant: gPlant } = ZONE_CONFIG.greens.spacing;
-  for (let physY = ZONE_CONFIG.greens.physY[0]; physY < ZONE_CONFIG.greens.physY[1]; physY += gRow) {
-    for (let physX = 6; physX < CROP_ZONE_SOUTH_EAST_X; physX += gPlant) {
+  for (let physY = physYRange[0]; physY < physYRange[1]; physY += row) {
+    for (let physX = plant; physX < eastBound; physX += plant) {
       positions.push({ physX, physY });
     }
   }
+  return positions;
+}
 
-  // Spring greens (before July)
+function generateGreensPlants(greens: ZoneAllocation['greens']): PlantInstance[] {
+  const plants: PlantInstance[] = [];
+  const physYRange = ZONE_CONFIG.greens.physY;
+
+  // Spring lettuce — uses lettuce species spacing (6" in-row × 12" between-row)
   const FALL_CUTOFF = '2025-07-01';
   const springReqs = greens.lettuce.filter(r => r.planting_date < FALL_CUTOFF);
+  const lettuceGrid = buildSpeciesGrid(LETTUCE_BSS, physYRange, CROP_ZONE_SOUTH_EAST_X);
   let springIdx = 0;
   let lettuceCount = 0;
   for (const req of springReqs) {
-    for (let i = 0; i < req.plant_count && springIdx < positions.length; i++) {
-      const pos = positions[springIdx++]!;
+    for (let i = 0; i < req.plant_count && springIdx < lettuceGrid.length; i++) {
+      const pos = lettuceGrid[springIdx++]!;
       plants.push(createPlant(
         `lettuce_${lettuceCount++}`, req.species_id,
         pos.physX, pos.physY, 2, 2, req.planting_date,
@@ -365,25 +376,28 @@ function generateGreensPlants(greens: ZoneAllocation['greens']): PlantInstance[]
     }
   }
 
-  // Fall greens (July+) — restart grid, overlaps spring subcells intentionally
+  // Fall spinach — uses spinach species spacing (6" in-row × 12" between-row, but optimal is 6"×6")
+  // Spinach is denser: 4.0 plants/sq ft optimal vs lettuce 2.78
   const fallSpinach = greens.spinach.filter(r => r.planting_date >= FALL_CUTOFF);
-  const fallLettuce = greens.lettuce.filter(r => r.planting_date >= FALL_CUTOFF);
-
+  const spinachGrid = buildSpeciesGrid(SPINACH_BLOOMSDALE, physYRange, CROP_ZONE_SOUTH_EAST_X);
   let fallIdx = 0;
   let spinachCount = 0;
-  let fallLettuceCount = 0;
   for (const req of fallSpinach) {
-    for (let i = 0; i < req.plant_count && fallIdx < positions.length; i++) {
-      const pos = positions[fallIdx++]!;
+    for (let i = 0; i < req.plant_count && fallIdx < spinachGrid.length; i++) {
+      const pos = spinachGrid[fallIdx++]!;
       plants.push(createPlant(
         `spinach_${spinachCount++}`, req.species_id,
         pos.physX, pos.physY, 2, 2, req.planting_date,
       ));
     }
   }
+
+  // Fall lettuce (if any)
+  const fallLettuce = greens.lettuce.filter(r => r.planting_date >= FALL_CUTOFF);
+  let fallLettuceCount = 0;
   for (const req of fallLettuce) {
-    for (let i = 0; i < req.plant_count && fallIdx < positions.length; i++) {
-      const pos = positions[fallIdx++]!;
+    for (let i = 0; i < req.plant_count && fallIdx < spinachGrid.length; i++) {
+      const pos = spinachGrid[fallIdx++]!;
       plants.push(createPlant(
         `lettuce_fall_${fallLettuceCount++}`, req.species_id,
         pos.physX, pos.physY, 2, 2, req.planting_date,

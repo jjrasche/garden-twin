@@ -17,7 +17,7 @@ export function generateHarvestTasks(
   const now = new Date().toISOString();
 
   for (const plant of plants) {
-    if (!plant.is_harvestable || plant.is_dead) continue;
+    if (!plant.is_harvestable || plant.lifecycle === 'dead') continue;
 
     const candidate = {
       type: 'harvest' as const,
@@ -54,7 +54,7 @@ export function estimateNextHarvestDates(
   const today = new Date();
 
   // Filter to living, non-harvestable plants
-  const candidates = plants.filter(p => !p.is_dead && !p.is_harvestable);
+  const candidates = plants.filter(p => (p.lifecycle === 'growing' || p.lifecycle === 'stressed') && !p.is_harvestable);
   if (candidates.length === 0) return result;
 
   // Scan forward day-by-day, advancing all candidates together
@@ -76,7 +76,7 @@ export function estimateNextHarvestDates(
       if (plant.is_harvestable) {
         result.set(plant.plant_id, probe_date);
       }
-      if (!plant.is_dead && !plant.is_harvestable) {
+      if (plant.lifecycle !== 'dead' && !plant.is_harvestable) {
         still_scanning.push(plant);
       }
     }

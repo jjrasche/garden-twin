@@ -86,7 +86,8 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
   },
 
   layout: {
-    spacing: { in_row_in: 6, between_row_in: 12, equidistant_in: 6 },
+    // Optimal density 4.0/sq ft = 6"×6" grid. Compact upright plant (7" spread).
+    spacing: { in_row_in: 6, between_row_in: 6, equidistant_in: 6 },
     shade_tolerance: 'shade_preferred',
     spread_in: 7,
     root_depth: 'shallow',

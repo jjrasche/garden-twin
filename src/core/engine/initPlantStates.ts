@@ -164,10 +164,8 @@ export function initPlantStates(
         daily_potential,
         stress: createStressCounters(),
         bolt_resistance: boltRng(),
+        lifecycle: survived ? 'growing' : 'dead',
         is_harvestable: false,
-        is_bolted: false,
-        is_pulled: false,
-        is_dead: !survived,
       });
     }
   }

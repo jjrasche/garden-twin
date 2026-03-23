@@ -68,7 +68,7 @@ function buildStageColorMap(
   for (const [subcellId, plantId] of occupancyMap) {
     const state = plantStateIndex.get(plantId);
     if (!state) continue;
-    colors.set(subcellId, getStageColor(state.species_id, state.stage, state.is_dead));
+    colors.set(subcellId, getStageColor(state.species_id, state.stage, state.lifecycle));
   }
   return colors;
 }

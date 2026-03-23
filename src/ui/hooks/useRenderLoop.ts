@@ -177,7 +177,7 @@ function drawSubcellLayer(
       // Stage color overrides species color when simulation is active
       const stageColor = stageColors?.get(actualSubcell.subcell_id);
       // If sim active but no entry, plant didn't survive initialization — render as dead
-      ctx.fillStyle = stageColor ?? (stageColors ? getStageColor(speciesId, 'done', true) : getPlantColor(speciesId));
+      ctx.fillStyle = stageColor ?? (stageColors ? getStageColor(speciesId, 'done', 'dead') : getPlantColor(speciesId));
     } else if (terrainType !== 'planting') {
       // Non-plantable terrain - use terrain color
       ctx.fillStyle = TERRAIN_COLORS[terrainType] || TERRAIN_COLORS.planting || '#374151';
@@ -500,7 +500,7 @@ function drawPlantLayer(
       const stageColor = stageColors.get(plant.root_subcell_id);
       if (!stageColor) return; // plant not in sim
       // Check if dead by comparing to the dead color output
-      const deadColor = getStageColor(plant.species_id, 'done', true);
+      const deadColor = getStageColor(plant.species_id, 'done', 'dead');
       if (stageColor === deadColor) return;
     }
 

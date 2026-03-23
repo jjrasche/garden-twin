@@ -199,7 +199,7 @@ export function tickPlant(
   env: ConditionsResolver,
   catalog: Map<string, PlantSpecies>,
 ): TickResult {
-  if (plant.is_dead || plant.is_bolted || plant.is_pulled || plant.stage === 'done') {
+  if (plant.lifecycle === 'dead' || plant.lifecycle === 'senescent' || plant.lifecycle === 'pulled') {
     return { plant, events: [] };
   }
 
@@ -218,7 +218,7 @@ export function tickPlant(
   const frost_cause = checkFrost(species, date, env, plant.stage);
   if (frost_cause) {
     return {
-      plant: { ...plant, stage: 'done', is_dead: true },
+      plant: { ...plant, lifecycle: 'dead' },
       events: [{ type: 'plant_died', plant_id: plant.plant_id, date, cause: 'frost' }],
     };
   }
@@ -227,8 +227,8 @@ export function tickPlant(
   const survival_cause = checkSurvival(species, conditions, plant.bolt_resistance);
   if (survival_cause) {
     return {
-      plant: { ...plant, is_bolted: true, is_harvestable: false },
-      events: [{ type: 'plant_bolted', plant_id: plant.plant_id, date, cause: survival_cause }],
+      plant: { ...plant, lifecycle: 'senescent', is_harvestable: false },
+      events: [{ type: 'plant_senescent', plant_id: plant.plant_id, date, cause: survival_cause }],
     };
   }
 
@@ -236,10 +236,13 @@ export function tickPlant(
   const stress_result = updateStress(plant.stress, species, conditions);
   if (stress_result.cause) {
     return {
-      plant: { ...plant, stage: 'done', is_dead: true, stress: stress_result.stress },
+      plant: { ...plant, lifecycle: 'dead', stress: stress_result.stress },
       events: [{ type: 'plant_died', plant_id: plant.plant_id, date, cause: stress_result.cause }],
     };
   }
+
+  // Lifecycle reflects current stress level
+  const lifecycle = stress_result.vigor_penalty < 1.0 ? 'stressed' as const : 'growing' as const;
 
   // 4. Development accumulation
   const { daily_gdd, daily_dev } = computeDailyDev(species, conditions, plant.stage, env_cond);
@@ -288,6 +291,7 @@ export function tickPlant(
   return {
     plant: {
       ...plant,
+      lifecycle,
       stage: clamped_stage,
       accumulated_dev: new_accumulated_dev,
       accumulated_gdd: new_accumulated_gdd,
