@@ -50,6 +50,8 @@ export interface CropPlanting {
    *  Each plant gets an evenly distributed offset so GDD accumulation
    *  and harvest cycles interleave naturally. 0 or undefined = all same day. */
   stagger_days?: number;
+  /** Zone area in sq ft — used to compute planting density for spacing growth curves. */
+  zone_area_sqft?: number;
   /** What to plant after this crop finishes, in the same physical zone. */
   successor?: SuccessorSpec;
   /** Links to ZONE_CONFIG key for spatial position reuse by successor. */
@@ -88,33 +90,28 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   // ── Spring/Fall greens ──────────────────────────────────────────────────
   // Consumption-derived: 7 lbs/week family + 7 distribution = 14 lbs/week greens.
 
-  // Spring lettuce — greens zone. Bolts gradually from heat stress (growth drops, then stress kills).
-  { species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210, planting_date: '2025-04-15', zone: 'shade', stagger_days: 14 },
+  // Spring lettuce — greens zone (250 sq ft). Bolts gradually from heat stress.
+  { species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210, planting_date: '2025-04-15', zone: 'shade', stagger_days: 14, zone_area_sqft: 250 },
 
-  // Fall spinach — independent planting, same greens zone.
-  // Sow when photoperiod < 14.5h AND temp < 75°F. In GR this is ~July 28 - August 15.
-  // Not dependent on lettuce succession — sow based on conditions regardless of lettuce status.
-  { species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 200, planting_date: '2025-08-01', zone: 'shade', stagger_days: 10 },
+  // Fall spinach — same greens zone, optimal 6"×6" spacing (4.0/sq ft).
+  // 800 plants in 250 sq ft = 3.2/sq ft (near optimal 4.0). 1000 seeds, 90% germ = 900 margin.
+  { species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 800, planting_date: '2025-08-01', zone: 'shade', stagger_days: 10, zone_area_sqft: 250 },
 
-  // Kale — 120 plants (60 family + 60 distribution). Biennial, no bolt year 1.
-  // Staggered over 14 days (1 full regrowth cycle) so cuts interleave weekly.
-  { species: KALE_RED_RUSSIAN, display_group: 'Kale', plant_count: 120, planting_date: '2025-05-08', zone: 'boundary', stagger_days: 21 },
+  // Kale — 120 plants in 500 sq ft zone. 18"×18" = 0.44/sq ft optimal.
+  { species: KALE_RED_RUSSIAN, display_group: 'Kale', plant_count: 120, planting_date: '2025-05-08', zone: 'boundary', stagger_days: 21, zone_area_sqft: 500 },
 
   // ── Warm season ─────────────────────────────────────────────────────────
 
   // Paste — 11 plants (family only, 142 lbs → 44 quarts sauce). Continuous harvest, no stagger needed.
-  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 11, planting_date: '2025-05-25', zone: 'full_sun' },
+  // Trellis tomatoes — linear along channel, ~80 linear ft ≈ 53 sq ft (18" wide footprint)
+  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 11, planting_date: '2025-05-25', zone: 'full_sun', zone_area_sqft: 53 },
+  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2025-05-25', zone: 'full_sun', zone_area_sqft: 53 },
 
-  // Cherry — 8 Sun Gold. Continuous harvest, no stagger needed.
-  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2025-05-25', zone: 'full_sun' },
+  // Potato — 250 sq ft zone. Plant after last frost (May 15).
+  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-05-15', zone: 'full_sun', zone_area_sqft: 250 },
 
-  // Potato — 88 plants (cellar only, buy store-bought Feb-Jun). Bulk harvest.
-  // Plant after last frost (May 15). Emerges ~June 5. No frost risk, only 4-7 days later
-  // maturity vs May 1 planting. GDD is abundant — 3400+ vs 1700 needed.
-  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-05-15', zone: 'full_sun' },
-
-  // Corn — 234 plants (family only, 56 lbs dried grain). Bulk harvest.
-  { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2025-05-25', zone: 'full_sun' },
+  // Corn — 595 sq ft zone.
+  { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2025-05-25', zone: 'full_sun', zone_area_sqft: 595 },
 ];
 
 // ── Weekly Consumption Targets (lbs/week) ───────────────────────────────────
@@ -157,6 +154,11 @@ function expandPlanToInstances(plan: CropPlanting[]): PlantInstance[] {
       plantDate.setDate(plantDate.getDate() + offsetDays);
       const dateStr = plantDate.toISOString().slice(0, 10);
 
+      // Compute actual planting density for spacing growth curves
+      const density = planting.zone_area_sqft
+        ? planting.plant_count / planting.zone_area_sqft
+        : undefined;
+
       instances.push({
         plant_id: `${planting.species.id}_${planting.display_group}_${dateStr}_${i}`,
         species_id: planting.species.id,
@@ -167,7 +169,8 @@ function expandPlanToInstances(plan: CropPlanting[]): PlantInstance[] {
         accumulated_gdd: 0,
         last_observed: new Date().toISOString(),
         harvest_strategy_id: planting.harvest_strategy_id,
-      });
+        density_plants_per_sqft: density,
+      } as PlantInstance & { density_plants_per_sqft?: number });
     }
   }
   return instances;

@@ -213,6 +213,10 @@ export function tickPlant(
   const events: GrowthEvent[] = [];
   const env_cond = env.getConditions(date);
   const conditions = resolveConditions(date, env);
+  // Inject planting density into conditions for spacing growth curves
+  if (plant.density_plants_per_sqft !== undefined) {
+    conditions.spacing_plants_per_sq_ft = plant.density_plants_per_sqft;
+  }
 
   // 1. Frost kill
   const frost_cause = checkFrost(species, date, env, plant.stage);

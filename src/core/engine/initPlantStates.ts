@@ -164,6 +164,7 @@ export function initPlantStates(
         daily_potential,
         stress: createStressCounters(),
         bolt_resistance: boltRng(),
+        density_plants_per_sqft: (instance as any).density_plants_per_sqft,
         lifecycle: survived ? 'growing' : 'dead',
         is_harvestable: false,
       });

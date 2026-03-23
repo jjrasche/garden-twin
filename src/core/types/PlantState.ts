@@ -82,9 +82,11 @@ export const PlantStateSchema = z.object({
   stress: StressCountersSchema,
 
   // Per-plant random threshold for survival checks (statistical bolting).
-  // Plants with high bolt_resistance bolt earlier (when survival is still high).
-  // Assigned once during init from seeded PRNG.
   bolt_resistance: z.number().min(0).max(1),
+
+  // Actual planting density (plants/sq ft). Computed from plant_count / zone_area.
+  // Fed into spacing_plants_per_sq_ft growth_response curves.
+  density_plants_per_sqft: z.number().min(0).optional(),
 
   // Lifecycle status (set by engine)
   lifecycle: z.enum(['growing', 'stressed', 'senescent', 'pulled', 'dead']),
