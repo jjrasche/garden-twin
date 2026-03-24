@@ -62,29 +62,39 @@ export function resolveTask(
 }
 
 /**
- * Harvest: delegate to harvestPlant() which handles the full lifecycle —
- * biomass reset, cut advancement, vigor degradation from cut_yield_curve,
- * and exhaustion (max_cuts → senescent for CAC, dead for bulk).
+ * Harvest: lifecycle generates one batch task per species (targets plants[0]).
+ * Resolution harvests ALL harvestable plants of the same species, not just the target.
+ * This matches reality: "harvest lettuce" means harvest every head that's ready.
  */
 function resolveHarvest(
   task: Task,
   plants: PlantState[],
   catalog: Map<string, PlantSpecies>,
 ): ResolutionResult {
-  const targetPlantId = task.target.target_type === 'plant'
-    ? (task.target as { plant_id: string }).plant_id
-    : undefined;
+  const speciesId = task.parameters?.species_id as string | undefined;
+  if (!speciesId) {
+    // Fallback: single-plant harvest (rule-generated tasks without species context)
+    const targetPlantId = task.target.target_type === 'plant'
+      ? (task.target as { plant_id: string }).plant_id
+      : undefined;
+    if (!targetPlantId) return {};
+    const target = plants.find(p => p.plant_id === targetPlantId);
+    if (!target || !target.is_harvestable) return {};
+    const updated = plants.map(p =>
+      p.plant_id === targetPlantId ? harvestPlant(p, catalog) : p,
+    );
+    return { plants: updated };
+  }
 
-  if (!targetPlantId) return {};
+  // Batch harvest: harvest every harvestable plant of this species
+  let anyHarvested = false;
+  const updated = plants.map(p => {
+    if (p.species_id === speciesId && p.is_harvestable) {
+      anyHarvested = true;
+      return harvestPlant(p, catalog);
+    }
+    return p;
+  });
 
-  const targetPlant = plants.find(p => p.plant_id === targetPlantId);
-  if (!targetPlant || !targetPlant.is_harvestable) return {};
-
-  const updated = plants.map(p =>
-    p.plant_id === targetPlantId
-      ? harvestPlant(p, catalog)
-      : p,
-  );
-
-  return { plants: updated };
+  return anyHarvested ? { plants: updated } : {};
 }

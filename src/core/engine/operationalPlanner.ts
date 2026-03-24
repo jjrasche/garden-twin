@@ -51,7 +51,7 @@ export function planDay(input: PlannerInput): PlannerResult {
     const lifecycle = lifecycles.get(species_id);
     if (!species || !lifecycle) continue;
 
-    candidates.push(...generateTasksFromLifecycle(lifecycle, speciesPlants, species, date, env));
+    candidates.push(...generateTasksFromLifecycle(lifecycle, speciesPlants, species, date, env, existingTasks));
   }
 
   // Source 2: Season calendar tasks (O(1) lookup from pre-built index)

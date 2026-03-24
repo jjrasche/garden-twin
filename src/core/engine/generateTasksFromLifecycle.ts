@@ -20,6 +20,7 @@ export function generateTasksFromLifecycle(
   species: PlantSpecies,
   date: Date,
   env: ConditionsResolver,
+  completedTasks?: Task[],
 ): Task[] {
   const alive = plants.filter(p => p.lifecycle === 'growing' || p.lifecycle === 'stressed');
   if (alive.length === 0) return [];
@@ -27,7 +28,7 @@ export function generateTasksFromLifecycle(
   const tasks: Task[] = [];
 
   for (const activity of lifecycle.activities) {
-    if (!shouldFireActivity(activity, alive, date, env, species)) continue;
+    if (!shouldFireActivity(activity, alive, date, env, species, completedTasks)) continue;
 
     tasks.push(buildTask(activity, alive, date, species));
   }
@@ -42,12 +43,36 @@ function shouldFireActivity(
   date: Date,
   env: ConditionsResolver,
   species: PlantSpecies,
+  completedTasks?: Task[],
 ): boolean {
   const representative = findRepresentative(plants);
   if (isRecurrenceExpired(activity, representative, date, env, species)) return false;
 
+  // Non-recurring stage-triggered activities (thin, hill, pull_dead) are one-shot:
+  // if already completed for this species, don't fire again.
+  // plant_flag triggers (harvest) are self-gating — the flag resets on resolution,
+  // so they naturally stop firing until the condition re-triggers.
+  if (!activity.recurrence
+    && activity.trigger.type === 'growth_stage') {
+    if (isAlreadyCompleted(activity.activity_id, species.id, completedTasks)) return false;
+  }
+
   const recurrenceInterval = activity.recurrence?.interval_days;
   return plants.some(plant => evaluateTrigger(activity.trigger, plant, date, env, recurrenceInterval));
+}
+
+/** Check if a one-shot activity was already completed for this species. */
+function isAlreadyCompleted(
+  activityId: string,
+  speciesId: string,
+  completedTasks?: Task[],
+): boolean {
+  if (!completedTasks) return false;
+  return completedTasks.some(t =>
+    t.status === 'completed'
+    && t.generated_by_rule === `lifecycle:${activityId}`
+    && t.parameters?.species_id === speciesId,
+  );
 }
 
 /** Most advanced plant in the group — earliest planting date, highest cut count. */
