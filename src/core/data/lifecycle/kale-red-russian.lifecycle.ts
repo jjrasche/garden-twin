@@ -1,19 +1,26 @@
 import { LifecycleSpec } from '../../types/LifecycleSpec';
+import {
+  FILL_BLOCKS, DROP_SEED, SETUP_TRAY,
+  GATHER_TOOLS, CLEANUP, WATER_IN_ROW,
+  GATHER_HARVEST_GEAR, CUT_OUTER_LEAVES, SWAP_BASKET, RINSE_AND_STORE,
+} from './shared-steps';
 
 export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
   species_id: 'kale_red_russian',
   activities: [
     {
       activity_id: 'start_seeds',
-      name: 'Start seeds indoors',
+      name: 'Start seeds in soil blocks',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: -21 },  // 3 weeks in 2" soil block
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 15,
-      equipment: ['seed tray', 'seed starting mix', 'grow light'],
+      steps: [
+        FILL_BLOCKS,
+        { ...DROP_SEED, instructions: 'Place 1 kale seed per block indent, 1/4" deep. Cover lightly.' },
+        SETUP_TRAY,
+      ],
+      equipment: ['soil block maker', 'seed starting mix', 'grow light', 'tray'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Fill cells with moist mix. 1 seed per cell, 1/4" deep. Keep at 65-75F under light 16h/day. Germination in 5-7 days.',
       priority: 7,
     },
     {
@@ -21,12 +28,15 @@ export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
       name: 'Transplant to garden',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: 0 },
-      duration_minutes_per_plant: 1,
-      duration_minutes_fixed: 15,
+      steps: [
+        GATHER_TOOLS,
+        { name: 'Dig hole and set transplant', scale: 'plant', minutes: 0.5, instructions: 'Dig hole at spacing marks. Set block at same depth. Firm soil around base.' },
+        WATER_IN_ROW,
+        CLEANUP,
+      ],
       equipment: ['trowel', 'watering can'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Dig hole at spacing marks. Set transplant at same depth as cell. Water in. Kale is frost-hardy; no cover needed.',
       priority: 9,
     },
     {
@@ -34,12 +44,15 @@ export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
       name: 'Harvest leaves (cut)',
       task_type: 'harvest',
       trigger: { type: 'plant_flag', flag: 'is_harvestable' },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
+      steps: [
+        GATHER_HARVEST_GEAR,
+        { ...CUT_OUTER_LEAVES, instructions: 'Cut outer leaves 2" above soil line, leaving growing center and 4-6 inner leaves. Take no more than 1/3 of foliage per cut.' },
+        SWAP_BASKET,
+        RINSE_AND_STORE,
+      ],
       equipment: ['harvest knife', 'harvest bucket'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'Cut outer leaves 2" above soil line, leaving the growing center and 4-6 inner leaves. Take no more than 1/3 of foliage per cut. Bunch loosely in bucket. Rinse before storage.',
       priority: 8,
     },
     {
@@ -47,12 +60,13 @@ export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
       name: 'Remove spent plants',
       task_type: 'weed',
       trigger: { type: 'growth_stage', stage: 'done' },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
+      steps: [
+        { name: 'Cut at base and pull', scale: 'plant', minutes: 0.167, instructions: 'Pull or cut at base after final harvest. Compost stalks.' },
+        CLEANUP,
+      ],
       equipment: ['garden cart'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'Pull or cut at base after final harvest. Compost stalks.',
       priority: 3,
     },
   ],

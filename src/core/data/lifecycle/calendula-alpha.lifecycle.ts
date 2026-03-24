@@ -1,4 +1,5 @@
 import { LifecycleSpec } from '../../types/LifecycleSpec';
+import { PRESS_SEEDS, WATER_IN_ROW } from './shared-steps';
 
 /** Calendula — direct sow or 3-4 week block start. Beneficial insect attractor, mild pest deterrent. */
 export const CALENDULA_ALPHA_LIFECYCLE: LifecycleSpec = {
@@ -9,8 +10,10 @@ export const CALENDULA_ALPHA_LIFECYCLE: LifecycleSpec = {
       name: 'Direct sow seeds',
       task_type: 'sow',
       trigger: { type: 'days_after_planting', days: 0 },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 10,
+      steps: [
+        { ...PRESS_SEEDS, instructions: 'Sow seeds 1/4" deep at spacing marks. Can tolerate light frost.' },
+        WATER_IN_ROW,
+      ],
       equipment: [],
       skill_level: 'beginner',
       labor_type: 'manual',
@@ -23,8 +26,9 @@ export const CALENDULA_ALPHA_LIFECYCLE: LifecycleSpec = {
       task_type: 'prune',
       trigger: { type: 'growth_stage', stage: 'flowering' },
       recurrence: { interval_days: 14, end_condition: 'frost' },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 5,
+      steps: [
+        { name: 'Pinch spent blooms', scale: 'plant', minutes: 0.083, instructions: 'Pinch spent flowers. Save some seed heads for next year if desired.' },
+      ],
       equipment: [],
       skill_level: 'beginner',
       labor_type: 'either',
@@ -36,8 +40,9 @@ export const CALENDULA_ALPHA_LIFECYCLE: LifecycleSpec = {
       name: 'Remove after frost',
       task_type: 'weed',
       trigger: { type: 'growth_stage', stage: 'done' },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 5,
+      steps: [
+        { name: 'Pull plant', scale: 'plant', minutes: 0.083, instructions: 'Pull dead plants. Leave some seed heads on ground for self-seeding if desired.' },
+      ],
       equipment: [],
       skill_level: 'beginner',
       labor_type: 'either',

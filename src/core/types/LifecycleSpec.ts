@@ -65,31 +65,63 @@ export type Recurrence = z.infer<typeof RecurrenceSchema>;
 // Lifecycle Activity — one action in a plant's lifecycle
 // =============================================================================
 
+// =============================================================================
+// Task Step — one sub-action within a lifecycle activity
+// =============================================================================
+
+/**
+ * TaskStep — a discrete action within a lifecycle activity.
+ *
+ * Each step has its own scaling model:
+ *   - 'plant': minutes × plant_count (per-plant action like pressing seeds)
+ *   - 'row': minutes × row_count (row-level prep like hoeing a furrow)
+ *   - 'fixed': minutes × 1 (setup/teardown, constant regardless of scale)
+ *
+ * Row count is derived: ceil(plant_count / floor(row_length_in / spacing_in_row))
+ */
+export const TaskStepSchema = z.object({
+  name: z.string(),
+  scale: z.enum(['plant', 'row', 'fixed']),
+  minutes: z.number().min(0),
+  instructions: z.string().optional(),
+});
+
+export type TaskStep = z.infer<typeof TaskStepSchema>;
+
+// =============================================================================
+// Lifecycle Activity — one action in a plant's lifecycle
+// =============================================================================
+
 /**
  * A template for work that must happen during a plant's life.
  *
- * Combined with plant_count and planting_date from the production plan,
- * these templates produce concrete dated tasks with computed durations.
+ * Duration is computed from steps (preferred) or legacy flat fields.
+ * Steps break the work into discrete sub-actions with individual scaling:
  *
- * Two duration fields:
- * - duration_minutes_per_plant: scales with plant count
- * - duration_minutes_fixed: setup/cleanup overhead, constant regardless of count
+ *   total = sum of:
+ *     step.scale === 'plant' → step.minutes × plant_count
+ *     step.scale === 'row'   → step.minutes × row_count
+ *     step.scale === 'fixed' → step.minutes
  *
- * Total = (per_plant * plant_count) + fixed
+ * Legacy fields (duration_minutes_per_plant, duration_minutes_fixed) are
+ * used when steps are not defined. Both paths produce the same output.
  */
 export const LifecycleActivitySchema = z.object({
   activity_id: z.string(),
-  name: z.string(),                      // "hill", "prune_sucker", "harvest_cut"
+  name: z.string(),
   task_type: TaskTypeSchema,
 
   // When
   trigger: ActivityTriggerSchema,
-  recurrence: RecurrenceSchema.optional(), // null = one-time
+  recurrence: RecurrenceSchema.optional(),
 
-  // How long
-  duration_minutes_per_plant: z.number().min(0),
-  duration_minutes_fixed: z.number().min(0), // Setup/cleanup overhead
-  batch_size: z.number().int().min(1).optional(), // If work is batched (e.g., sow a tray of 72)
+  // How long — step-based (preferred)
+  steps: z.array(TaskStepSchema).optional(),
+
+  // How long — legacy flat fields (used when steps not defined)
+  duration_minutes_per_plant: z.number().min(0).optional(),
+  duration_minutes_fixed: z.number().min(0).optional(),
+  batch_size: z.number().int().min(1).optional(),
 
   // What tools
   equipment: z.array(z.string()),
@@ -98,7 +130,7 @@ export const LifecycleActivitySchema = z.object({
   skill_level: z.enum(['beginner', 'intermediate', 'advanced']),
   labor_type: z.enum(['manual', 'robot', 'either']),
 
-  // How (for training/delegation)
+  // How (for training/delegation) — legacy, prefer step-level instructions
   instructions: z.string().optional(),
 
   // Priority when generating tasks

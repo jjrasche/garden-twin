@@ -5,13 +5,16 @@
  * Handles recurrence end-condition checks and cooldown deduplication.
  */
 
-import type { LifecycleSpec, LifecycleActivity, Recurrence } from '../types/LifecycleSpec';
+import type { LifecycleSpec, LifecycleActivity, TaskStep } from '../types/LifecycleSpec';
 import type { PlantSpecies } from '../types/PlantSpecies';
 import type { PlantState } from '../types/PlantState';
 import type { Task, TaskType } from '../types/Task';
 import { createTaskId } from '../types/Task';
 import type { ConditionsResolver } from '../environment/types';
 import { evaluateTrigger } from './evaluateTrigger';
+
+/** Default garden row length (north-south axis). */
+const ROW_LENGTH_IN = 1200;
 
 /** Generate tasks for one species' lifecycle on a single date. */
 export function generateTasksFromLifecycle(
@@ -118,6 +121,9 @@ function buildTask(
   species: PlantSpecies,
 ): Task {
   const now = date.toISOString();
+  const plantCount = plants.length;
+  const rowCount = computeRowCount(plantCount, species);
+  const { totalMinutes, stepBreakdown } = computeDuration(activity, plantCount, rowCount);
 
   return {
     task_id: createTaskId(activity.task_type as TaskType),
@@ -131,26 +137,81 @@ function buildTask(
       species_name: species.name,
       activity_id: activity.activity_id,
       activity_name: activity.name,
-      plant_count: plants.length,
+      plant_count: plantCount,
+      row_count: rowCount,
       instructions: activity.instructions,
       equipment: activity.equipment,
+      steps: stepBreakdown,
     },
     created_at: now,
     priority: activity.priority ?? 5,
     due_by: now,
     labor_type: activity.labor_type,
-    estimated_duration_minutes: computeDuration(activity, plants.length),
+    estimated_duration_minutes: totalMinutes,
     status: 'queued',
     generated_by_rule: `lifecycle:${activity.activity_id}`,
   };
 }
 
-function computeDuration(activity: LifecycleActivity, plant_count: number): number {
-  if (activity.batch_size) {
-    const batches = Math.ceil(plant_count / activity.batch_size);
-    return (activity.duration_minutes_per_plant * plant_count)
-      + (activity.duration_minutes_fixed * batches);
+/** Derive row count from plant count and species spacing. */
+function computeRowCount(plantCount: number, species: PlantSpecies): number {
+  const inRowSpacing = species.layout?.spacing?.in_row_in
+    ?? species.layout?.spacing?.equidistant_in
+    ?? 12;
+  const plantsPerRow = Math.max(1, Math.floor(ROW_LENGTH_IN / inRowSpacing));
+  return Math.ceil(plantCount / plantsPerRow);
+}
+
+interface StepBreakdown {
+  name: string;
+  scale: string;
+  minutes: number;
+  count: number;
+  total: number;
+  instructions?: string;
+}
+
+function computeDuration(
+  activity: LifecycleActivity,
+  plantCount: number,
+  rowCount: number,
+): { totalMinutes: number; stepBreakdown: StepBreakdown[] } {
+  // Step-based duration (preferred)
+  if (activity.steps && activity.steps.length > 0) {
+    const stepBreakdown: StepBreakdown[] = activity.steps.map(step => {
+      const count = step.scale === 'plant' ? plantCount
+        : step.scale === 'row' ? rowCount
+        : 1;
+      return {
+        name: step.name,
+        scale: step.scale,
+        minutes: step.minutes,
+        count,
+        total: step.minutes * count,
+        instructions: step.instructions,
+      };
+    });
+    const totalMinutes = stepBreakdown.reduce((sum, s) => sum + s.total, 0);
+    return { totalMinutes, stepBreakdown };
   }
-  return (activity.duration_minutes_per_plant * plant_count)
-    + activity.duration_minutes_fixed;
+
+  // Legacy flat duration
+  const perPlant = activity.duration_minutes_per_plant ?? 0;
+  const fixed = activity.duration_minutes_fixed ?? 0;
+  let totalMinutes: number;
+  if (activity.batch_size) {
+    const batches = Math.ceil(plantCount / activity.batch_size);
+    totalMinutes = (perPlant * plantCount) + (fixed * batches);
+  } else {
+    totalMinutes = (perPlant * plantCount) + fixed;
+  }
+
+  const stepBreakdown: StepBreakdown[] = [];
+  if (perPlant > 0) {
+    stepBreakdown.push({ name: activity.name, scale: 'plant', minutes: perPlant, count: plantCount, total: perPlant * plantCount });
+  }
+  if (fixed > 0) {
+    stepBreakdown.push({ name: 'Setup/cleanup', scale: 'fixed', minutes: fixed, count: 1, total: fixed });
+  }
+  return { totalMinutes, stepBreakdown };
 }

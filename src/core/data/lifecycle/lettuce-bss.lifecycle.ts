@@ -1,4 +1,9 @@
 import { LifecycleSpec } from '../../types/LifecycleSpec';
+import {
+  HOE_FURROW, PRESS_SEEDS, COVER_AND_FIRM, WATER_IN_ROW,
+  SNIP_THIN, WALK_ROW_INSPECT,
+  GATHER_HARVEST_GEAR, CUT_OUTER_LEAVES, SWAP_BASKET, RINSE_AND_STORE,
+} from './shared-steps';
 
 export const LETTUCE_BSS_LIFECYCLE: LifecycleSpec = {
   species_id: 'lettuce_bss',
@@ -8,12 +13,13 @@ export const LETTUCE_BSS_LIFECYCLE: LifecycleSpec = {
       name: 'Prepare bed',
       task_type: 'mulch',
       trigger: { type: 'days_after_planting', days: -1 },
-      duration_minutes_per_plant: 0,
-      duration_minutes_fixed: 15,
+      steps: [
+        { name: 'Rake bed smooth', scale: 'row', minutes: 3, instructions: 'Rake bed smooth. Remove debris and large clods.' },
+        WATER_IN_ROW,
+      ],
       equipment: ['rake'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'Rake bed smooth. Remove debris and large clods. Lightly water to settle surface.',
       priority: 6,
     },
     {
@@ -21,12 +27,14 @@ export const LETTUCE_BSS_LIFECYCLE: LifecycleSpec = {
       name: 'Direct sow seeds',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: 0 },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
-      equipment: [],
+      steps: [
+        HOE_FURROW,
+        { ...PRESS_SEEDS, instructions: 'Press 2 seeds per station at 6" spacing. Push into surface only — lettuce needs light to germinate. Do not cover more than 1/8" deep.' },
+        { name: 'Mist gently', scale: 'row', minutes: 2, instructions: 'Water with fine mist. Do not flood — seeds will wash away.' },
+      ],
+      equipment: ['hoe'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Scatter seeds at 6" spacing in rows. Press into soil surface (needs light to germinate). Water gently with fine mist. Do not cover more than 1/8" deep.',
       priority: 9,
     },
     {
@@ -34,12 +42,13 @@ export const LETTUCE_BSS_LIFECYCLE: LifecycleSpec = {
       name: 'Thin seedlings',
       task_type: 'thin',
       trigger: { type: 'growth_stage', stage: 'vegetative' },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 5,
-      equipment: [],
+      steps: [
+        WALK_ROW_INSPECT,
+        { ...SNIP_THIN, instructions: 'When 2-3 true leaves show, snip weaker of each pair at soil level. Do not pull.' },
+      ],
+      equipment: ['scissors'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'When seedlings have 2-3 true leaves, thin to one plant per 6" spacing. Pinch or snip extras at soil level. Do not pull (disturbs roots of keepers).',
       priority: 5,
     },
     {
@@ -47,12 +56,15 @@ export const LETTUCE_BSS_LIFECYCLE: LifecycleSpec = {
       name: 'Harvest (cut)',
       task_type: 'harvest',
       trigger: { type: 'plant_flag', flag: 'is_harvestable' },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
+      steps: [
+        GATHER_HARVEST_GEAR,
+        { ...CUT_OUTER_LEAVES, instructions: 'Cut outer leaves 1" above soil, leaving growing center intact. Take outer ring only. Harvest in morning for best crispness.' },
+        SWAP_BASKET,
+        RINSE_AND_STORE,
+      ],
       equipment: ['harvest knife', 'harvest bucket'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'Cut outer leaves 1" above soil, leaving growing center intact. Take outer ring only. Harvest in morning for best crispness. Rinse and refrigerate within 30 minutes.',
       priority: 8,
     },
     {
@@ -60,12 +72,13 @@ export const LETTUCE_BSS_LIFECYCLE: LifecycleSpec = {
       name: 'Pull bolted plants',
       task_type: 'weed',
       trigger: { type: 'growth_stage', stage: 'done' },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 5,
+      steps: [
+        { name: 'Pull plant', scale: 'plant', minutes: 0.083, instructions: 'When central stem elongates and flower buds appear, plant is bolted. Pull and compost.' },
+        { name: 'Rake bed smooth', scale: 'row', minutes: 2, instructions: 'Bed is now free for fall replanting.' },
+      ],
       equipment: [],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'When central stem elongates and flower buds appear, plant is bolted. Pull and compost. Bed is now free for fall replanting.',
       priority: 4,
     },
   ],

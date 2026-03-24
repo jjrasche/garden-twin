@@ -1,4 +1,5 @@
 import { LifecycleSpec } from '../../types/LifecycleSpec';
+import { GATHER_TOOLS, CLEANUP, WATER_IN_ROW } from './shared-steps';
 
 export const POTATO_KENNEBEC_LIFECYCLE: LifecycleSpec = {
   species_id: 'potato_kennebec',
@@ -6,14 +7,16 @@ export const POTATO_KENNEBEC_LIFECYCLE: LifecycleSpec = {
     {
       activity_id: 'cut_seed',
       name: 'Cut seed potatoes',
-      task_type: 'plant',
+      task_type: 'prepare',
       trigger: { type: 'days_after_planting', days: -1 },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
+      steps: [
+        GATHER_TOOLS,
+        { name: 'Cut seed pieces', scale: 'plant', minutes: 0.33, instructions: 'Cut so each piece has 2-3 eyes and weighs ~2 oz. Let cut faces dry overnight.' },
+        CLEANUP,
+      ],
       equipment: ['knife', 'cutting board'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Cut seed potatoes so each piece has 2-3 eyes and weighs ~2 oz. Let cut faces dry overnight before planting.',
       priority: 7,
     },
     {
@@ -21,12 +24,15 @@ export const POTATO_KENNEBEC_LIFECYCLE: LifecycleSpec = {
       name: 'Plant seed pieces',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: 0 },
-      duration_minutes_per_plant: 1,
-      duration_minutes_fixed: 30,
+      steps: [
+        { name: 'Dig trench', scale: 'row', minutes: 8, instructions: 'Dig 6" trench along row line with shovel.' },
+        { name: 'Place seed pieces', scale: 'plant', minutes: 0.167, instructions: 'Place cut-side down, 12" apart in trench.' },
+        { name: 'Cover with soil', scale: 'row', minutes: 4, instructions: 'Cover with 4" soil. Do not fill trench completely — leaves room for hilling.' },
+        WATER_IN_ROW,
+      ],
       equipment: ['shovel', 'rake'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Dig 6" trench at row spacing marks. Place seed pieces cut-side down, 12" apart. Cover with 4" soil. Water lightly.',
       priority: 9,
     },
     {
@@ -34,12 +40,13 @@ export const POTATO_KENNEBEC_LIFECYCLE: LifecycleSpec = {
       name: 'Hill (first)',
       task_type: 'mulch',
       trigger: { type: 'growth_stage', stage: 'vegetative' },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 15,
+      steps: [
+        { name: 'Mound soil around stems', scale: 'plant', minutes: 0.25, instructions: 'When sprouts are 8-10" tall, mound 4-6" of soil up stems from both sides. Bury lower leaves.' },
+        { name: 'Rake and shape mound', scale: 'row', minutes: 3, instructions: 'Shape mound with hoe. Firm gently.' },
+      ],
       equipment: ['hoe'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'When plants are 8-10" tall, mound soil 4-6" up the stems from both sides. Bury lower leaves. This prevents greening and encourages more tubers.',
       priority: 7,
     },
     {
@@ -47,12 +54,13 @@ export const POTATO_KENNEBEC_LIFECYCLE: LifecycleSpec = {
       name: 'Hill (second)',
       task_type: 'mulch',
       trigger: { type: 'growth_stage', stage: 'flowering' },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 15,
+      steps: [
+        { name: 'Mound additional soil', scale: 'plant', minutes: 0.25, instructions: 'Add another 4-6" around stems. Final hill should be 8-12" above original trench.' },
+        { name: 'Rake and shape mound', scale: 'row', minutes: 3, instructions: 'Shape mound. Ensure no tubers are exposed to light.' },
+      ],
       equipment: ['hoe'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Repeat hilling. Mound another 4-6" of soil around stems. Final hill should be 8-12" above original trench level.',
       priority: 7,
     },
     {
@@ -60,12 +68,16 @@ export const POTATO_KENNEBEC_LIFECYCLE: LifecycleSpec = {
       name: 'Harvest tubers',
       task_type: 'harvest',
       trigger: { type: 'growth_stage', stage: 'harvest' },
-      duration_minutes_per_plant: 2,
-      duration_minutes_fixed: 30,
+      steps: [
+        GATHER_TOOLS,
+        { name: 'Fork and lever tubers', scale: 'plant', minutes: 1, instructions: 'Insert fork 12" from plant base. Lever up soil to expose tubers.' },
+        { name: 'Hand-gather tubers', scale: 'plant', minutes: 0.5, instructions: 'Pick tubers by hand. Brush off loose dirt. Do not wash.' },
+        { name: 'Load cart', scale: 'row', minutes: 3, instructions: 'Transfer buckets to cart.' },
+        { name: 'Cure in dark space', scale: 'fixed', minutes: 15, instructions: 'Spread in dark ventilated space at 50-60F. Cure 2 weeks before long-term storage.' },
+      ],
       equipment: ['digging fork', 'harvest bucket', 'garden cart'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Wait until vines die back or 2 weeks after cutting vines. Insert fork 12" from plant base, lever up soil to expose tubers. Hand-gather, brush off loose dirt. Do not wash. Cure in dark ventilated space at 50-60F for 2 weeks before long-term storage.',
       priority: 9,
     },
   ],

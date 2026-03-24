@@ -1,4 +1,11 @@
 import { LifecycleSpec } from '../../types/LifecycleSpec';
+import {
+  FILL_BLOCKS, DROP_SEED, SETUP_TRAY,
+  GATHER_TOOLS, CLEANUP, WATER_IN_ROW,
+  GATHER_HARVEST_GEAR, PICK_CHERRY_FRUIT, RINSE_AND_STORE,
+  SNAP_SUCKERS, TRAIN_LEADER,
+  LOWER_VINE, REMOVE_LOWER_LEAVES,
+} from './shared-steps';
 
 /** Sun Gold cherry tomato lifecycle. */
 export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
@@ -6,15 +13,17 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
   activities: [
     {
       activity_id: 'start_seeds',
-      name: 'Start seeds indoors',
+      name: 'Start seeds in soil blocks',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: -42 },  // 6 weeks in 2" soil block
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 15,
-      equipment: ['seed tray', 'seed starting mix', 'grow light'],
+      steps: [
+        FILL_BLOCKS,
+        { ...DROP_SEED, instructions: 'Place 1 tomato seed per block, 1/4" deep. Cover with vermiculite. Keep at 75-80F.' },
+        SETUP_TRAY,
+      ],
+      equipment: ['soil block maker', 'seed starting mix', 'grow light', 'tray', 'humidity dome'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Fill cells with moist seed starting mix. Place 1 seed per cell, 1/4" deep. Cover with dome. Keep 75-80F under grow light 16h/day.',
       priority: 7,
     },
     {
@@ -23,12 +32,13 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
       task_type: 'inspect',
       trigger: { type: 'days_after_planting', days: -7 },
       recurrence: { interval_days: 1, end_condition: 'days_after_planting', end_value: 0 },
-      duration_minutes_per_plant: 0,
-      duration_minutes_fixed: 10,
+      steps: [
+        { name: 'Move trays outside', scale: 'fixed', minutes: 5, instructions: 'Increase outdoor exposure daily. Day 1: 2hrs shade → Day 7: overnight.' },
+        { name: 'Move trays inside', scale: 'fixed', minutes: 5, instructions: 'Bring back before nightfall until day 7.' },
+      ],
       equipment: [],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Move trays outside for increasing hours each day. Day 1: 2 hours in shade. Day 3: 4 hours partial sun. Day 5: 6 hours full sun. Day 7: overnight if no frost risk.',
       priority: 5,
     },
     {
@@ -36,12 +46,16 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
       name: 'Transplant to garden',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: 0 },
-      duration_minutes_per_plant: 2,
-      duration_minutes_fixed: 15,
-      equipment: ['trowel', 'watering can'],
+      steps: [
+        GATHER_TOOLS,
+        { name: 'Dig hole and bury deep', scale: 'plant', minutes: 1.5, instructions: 'Dig 6" deep at trellis marks. Bury to first true leaves. Firm soil.' },
+        { name: 'Tie to trellis twine', scale: 'plant', minutes: 0.5, instructions: 'Tie loosely with figure-8 loop.' },
+        WATER_IN_ROW,
+        CLEANUP,
+      ],
+      equipment: ['trowel', 'watering can', 'twine'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Dig hole 6" deep at trellis marks. Bury stem to first true leaves. Water in. Tie to trellis twine.',
       priority: 9,
     },
     {
@@ -50,12 +64,13 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
       task_type: 'prune',
       trigger: { type: 'growth_stage', stage: 'vegetative' },
       recurrence: { interval_days: 7, end_condition: 'frost' },
-      duration_minutes_per_plant: 1,
-      duration_minutes_fixed: 5,
+      steps: [
+        { ...SNAP_SUCKERS, instructions: 'Remove side shoots from leaf axils. Cherry tomatoes can run 2 leaders — let one strong sucker grow if desired.' },
+        TRAIN_LEADER,
+      ],
       equipment: ['pruners'],
       skill_level: 'intermediate',
       labor_type: 'manual',
-      instructions: 'Remove side shoots from leaf axils. Cherry tomatoes can be grown with 2 leaders if desired (let one strong sucker grow). Train leaders up twine.',
       priority: 6,
     },
     {
@@ -63,12 +78,14 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
       name: 'Pick ripe fruit',
       task_type: 'harvest',
       trigger: { type: 'plant_flag', flag: 'is_harvestable' },
-      duration_minutes_per_plant: 1,
-      duration_minutes_fixed: 5,
+      steps: [
+        GATHER_HARVEST_GEAR,
+        PICK_CHERRY_FRUIT,
+        RINSE_AND_STORE,
+      ],
       equipment: ['harvest basket'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'Pick when fully colored and slightly soft. Cherry tomatoes crack if left too long. Gently twist to detach. Eat fresh or refrigerate (keeps 5-7 days).',
       priority: 9,
     },
     {
@@ -77,12 +94,13 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
       task_type: 'stake',
       trigger: { type: 'growth_stage', stage: 'fruiting' },
       recurrence: { interval_days: 14, end_condition: 'frost' },
-      duration_minutes_per_plant: 1.5,
-      duration_minutes_fixed: 10,
+      steps: [
+        { ...LOWER_VINE, instructions: 'Lower vine 12-18" along trellis wire. Cherry tomatoes may run 2 leaders; lower both.' },
+        REMOVE_LOWER_LEAVES,
+      ],
       equipment: ['twine', 'clips'],
       skill_level: 'intermediate',
       labor_type: 'manual',
-      instructions: 'Lower vine 12-18" along trellis wire when leader reaches wire height. Cherry tomatoes may run 2 leaders; lower both. Remove leaves below lowest fruit truss.',
       priority: 6,
     },
     {
@@ -90,12 +108,14 @@ export const CHERRY_TOMATO_LIFECYCLE: LifecycleSpec = {
       name: 'Remove dead plants',
       task_type: 'weed',
       trigger: { type: 'growth_stage', stage: 'done' },
-      duration_minutes_per_plant: 2,
-      duration_minutes_fixed: 15,
+      steps: [
+        { name: 'Cut twine and pull vine', scale: 'plant', minutes: 1, instructions: 'Cut trellis twine. Pull plant.' },
+        { name: 'Harvest remaining fruit', scale: 'plant', minutes: 0.5, instructions: 'Pick all remaining fruit including green ones for indoor ripening.' },
+        CLEANUP,
+      ],
       equipment: ['pruners', 'garden cart'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'After frost kill, cut twine and pull plants. Harvest all remaining fruit including green ones for indoor ripening.',
       priority: 3,
     },
   ],

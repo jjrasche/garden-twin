@@ -1,4 +1,9 @@
 import { LifecycleSpec } from '../../types/LifecycleSpec';
+import {
+  HOE_FURROW, PRESS_SEEDS, COVER_AND_FIRM, WATER_IN_ROW,
+  SNIP_THIN, WALK_ROW_INSPECT,
+  GATHER_HARVEST_GEAR, CUT_OUTER_LEAVES, SWAP_BASKET, RINSE_AND_STORE,
+} from './shared-steps';
 
 export const SPINACH_BLOOMSDALE_LIFECYCLE: LifecycleSpec = {
   species_id: 'spinach_bloomsdale',
@@ -8,12 +13,15 @@ export const SPINACH_BLOOMSDALE_LIFECYCLE: LifecycleSpec = {
       name: 'Direct sow seeds',
       task_type: 'plant',
       trigger: { type: 'days_after_planting', days: 0 },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
-      equipment: [],
+      steps: [
+        HOE_FURROW,
+        { ...PRESS_SEEDS, instructions: 'Press 2 seeds per station at 6" spacing, 1/2" deep. Spinach prefers cool soil (45-65F).' },
+        COVER_AND_FIRM,
+        WATER_IN_ROW,
+      ],
+      equipment: ['hoe', 'rake'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Sow seeds 1/2" deep at 6" spacing. Water well. Spinach germinates in 7-14 days. Prefers cool soil (45-65F).',
       priority: 9,
     },
     {
@@ -21,12 +29,13 @@ export const SPINACH_BLOOMSDALE_LIFECYCLE: LifecycleSpec = {
       name: 'Thin seedlings',
       task_type: 'thin',
       trigger: { type: 'growth_stage', stage: 'vegetative' },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 5,
-      equipment: [],
+      steps: [
+        WALK_ROW_INSPECT,
+        { ...SNIP_THIN, instructions: 'Snip weaker of each pair at soil level when 3-4 true leaves show. Do not pull.' },
+      ],
+      equipment: ['scissors'],
       skill_level: 'beginner',
       labor_type: 'manual',
-      instructions: 'Thin to 6" spacing when seedlings have 3-4 true leaves. Snip at soil level.',
       priority: 5,
     },
     {
@@ -34,12 +43,15 @@ export const SPINACH_BLOOMSDALE_LIFECYCLE: LifecycleSpec = {
       name: 'Harvest (cut)',
       task_type: 'harvest',
       trigger: { type: 'plant_flag', flag: 'is_harvestable' },
-      duration_minutes_per_plant: 0.5,
-      duration_minutes_fixed: 10,
+      steps: [
+        GATHER_HARVEST_GEAR,
+        { ...CUT_OUTER_LEAVES, instructions: 'Cut outer leaves 1" above crown. Leave inner rosette to regrow. Harvest in morning for best crispness.' },
+        SWAP_BASKET,
+        RINSE_AND_STORE,
+      ],
       equipment: ['harvest knife', 'harvest bucket'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'Cut outer leaves 1" above crown. Leave inner rosette to regrow. Harvest in morning. Spinach wilts fast; refrigerate immediately.',
       priority: 8,
     },
     {
@@ -47,12 +59,13 @@ export const SPINACH_BLOOMSDALE_LIFECYCLE: LifecycleSpec = {
       name: 'Pull bolted plants',
       task_type: 'weed',
       trigger: { type: 'growth_stage', stage: 'done' },
-      duration_minutes_per_plant: 0.25,
-      duration_minutes_fixed: 5,
-      equipment: [],
+      steps: [
+        { name: 'Pull plant', scale: 'plant', minutes: 0.083, instructions: 'Grab at base, pull and shake off soil. Toss to compost pile.' },
+        { name: 'Rake bed smooth', scale: 'row', minutes: 2, instructions: 'Rake bed after pulling. Bed is now free for fall replanting.' },
+      ],
+      equipment: ['rake'],
       skill_level: 'beginner',
       labor_type: 'either',
-      instructions: 'When central stalk shoots up and leaves turn pointed/arrow-shaped, plant has bolted. Pull and compost.',
       priority: 4,
     },
   ],
