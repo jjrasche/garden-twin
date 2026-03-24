@@ -11,16 +11,20 @@ import type { ConditionsResolver } from '../environment/types';
 
 const MS_PER_DAY = 86_400_000;
 
-/** Whether a single trigger condition is met for a plant on a date. */
+/**
+ * Whether a single trigger condition is met for a plant on a date.
+ * If the activity has recurrence, days_after_planting also matches recurring intervals.
+ */
 export function evaluateTrigger(
   trigger: ActivityTrigger,
   plant: PlantState,
   date: Date,
   env: ConditionsResolver,
+  recurrenceIntervalDays?: number,
 ): boolean {
   switch (trigger.type) {
     case 'days_after_planting':
-      return evaluateDaysAfterPlanting(trigger.days, plant, date);
+      return evaluateDaysAfterPlanting(trigger.days, plant, date, recurrenceIntervalDays);
     case 'growth_stage':
       return plant.stage === trigger.stage;
     case 'harvest_accumulated':
@@ -33,10 +37,24 @@ export function evaluateTrigger(
   }
 }
 
-function evaluateDaysAfterPlanting(days: number, plant: PlantState, date: Date): boolean {
+function evaluateDaysAfterPlanting(
+  days: number,
+  plant: PlantState,
+  date: Date,
+  recurrenceIntervalDays?: number,
+): boolean {
   const planted = new Date(plant.planted_date);
   const elapsed = Math.floor((date.getTime() - planted.getTime()) / MS_PER_DAY);
-  return elapsed === days;
+
+  // Exact match for the initial trigger day
+  if (elapsed === days) return true;
+
+  // For recurring activities, also match at interval offsets past the trigger day
+  if (recurrenceIntervalDays && recurrenceIntervalDays > 0 && elapsed > days) {
+    return (elapsed - days) % recurrenceIntervalDays === 0;
+  }
+
+  return false;
 }
 
 function evaluateConditionThreshold(

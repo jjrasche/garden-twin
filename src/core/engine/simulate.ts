@@ -12,12 +12,13 @@ import type { Task } from '../types/Task';
 import type { GardenState } from '../types/GardenState';
 import type { PlantInstance } from '../types/GardenState';
 import type { LifecycleSpec } from '../types/LifecycleSpec';
-import type { ConditionsResolver } from '../environment/types';
+import type { TaskRule } from '../types/Rules';
+import type { ConditionsResolver, WeeklyConditions } from '../environment/types';
 import { tickDay } from './tickDay';
 import { initPlantStates } from './initPlantStates';
 import { planDay } from './operationalPlanner';
-import { resolveHarvestStrategy } from '../calculators/strategyResolver';
-import { interpolate } from '../calculators/interpolate';
+import { resolveTask } from './resolveTask';
+import { harvestPlant } from './harvestPlant';
 import { type ActiveSuccession, evaluateSuccessionTrigger, materializeSuccessor } from './evaluateSuccession';
 import type { SuccessorSpec } from '../calculators/ProductionTimeline';
 import type { SunZone } from '../calculators/growthMath';
@@ -39,6 +40,8 @@ export interface SimulationContext {
   dateRange: { start: Date; end: Date };
   successions?: SuccessionConfig[];
   lifecycles?: Map<string, LifecycleSpec>;
+  seasonTasks?: Task[];  // Pre-expanded via adaptSeasonTasks(); indexed at simulation start
+  rules?: TaskRule[];
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -58,47 +61,8 @@ export interface DaySnapshot {
   tasks?: Task[];
 }
 
-// ── Single-Plant Harvest ────────────────────────────────────────────────────
-
-/** Apply harvest to a single plant: reset biomass, advance cut, check exhaustion. */
-export function harvestPlant(
-  plant: PlantState,
-  catalog: Map<string, PlantSpecies>,
-): PlantState {
-  if (!plant.is_harvestable) return plant;
-
-  const species = catalog.get(plant.species_id);
-  if (!species) return plant;
-
-  const strategy = resolveHarvestStrategy(plant.harvest_strategy_id, species);
-  const max_cuts = strategy?.max_cuts;
-  const cut_yield_curve = strategy?.cut_yield_curve;
-  const next_cut = plant.cut_number + 1;
-
-  const is_exhausted = strategy?.type === 'bulk'
-    || (max_cuts !== undefined && next_cut >= max_cuts);
-
-  if (is_exhausted) {
-    if (strategy?.type === 'cut_and_come_again') {
-      // CAC exhaustion = spent/bolted, not dead. Plant occupies space until pulled.
-      return { ...plant, accumulated_lbs: 0, cut_number: next_cut, is_harvestable: false, lifecycle: 'senescent' as const };
-    }
-    // Bulk harvest = plant is done (potato vine die-back, corn dry-down)
-    return { ...plant, accumulated_lbs: 0, cut_number: next_cut, is_harvestable: false, lifecycle: 'dead' as const };
-  }
-
-  const next_vigor = cut_yield_curve
-    ? interpolate(cut_yield_curve, next_cut + 1)
-    : plant.vigor;
-
-  return {
-    ...plant,
-    accumulated_lbs: 0,
-    cut_number: next_cut,
-    vigor: next_vigor,
-    is_harvestable: false,
-  };
-}
+// Re-export harvestPlant for backward compatibility (was defined here, now in harvestPlant.ts)
+export { harvestPlant } from './harvestPlant';
 
 // ── Legacy simulateGrowth (used by older code paths) ────────────────────────
 
@@ -194,6 +158,23 @@ function evaluateAndMaterializeSuccessions(
   return plants;
 }
 
+/** Index pre-expanded season tasks by date key for O(1) lookup per day. */
+function indexSeasonTasksByDate(tasks?: Task[]): Map<string, Task[]> | undefined {
+  if (!tasks || tasks.length === 0) return undefined;
+  const index = new Map<string, Task[]>();
+  for (const task of tasks) {
+    const dateKey = task.due_by?.slice(0, 10);
+    if (!dateKey) continue;
+    const bucket = index.get(dateKey);
+    if (bucket) {
+      bucket.push(task);
+    } else {
+      index.set(dateKey, [task]);
+    }
+  }
+  return index;
+}
+
 function buildActiveSuccessions(ctx: SimulationContext): ActiveSuccession[] {
   return (ctx.successions ?? []).map(c => ({
     predecessorPlantIds: c.predecessorPlantIds,
@@ -256,9 +237,46 @@ export function simulateFromState(
   return collectSnapshots(plants, ctx);
 }
 
+// ── Moisture Overlay ──────────────────────────────────────────────────────
+
+/** Tracks watering events and applies moisture boost with linear decay. */
+const WATERING_TARGET_PCT_FC = 80;
+const WATERING_DECAY_DAYS = 3;
+
+/**
+ * Wrap a ConditionsResolver with a moisture overlay from watering events.
+ * Boost decays linearly over WATERING_DECAY_DAYS back to the weather baseline.
+ */
+function applyMoistureOverlay(
+  baseEnv: ConditionsResolver,
+  lastWateredDate: Date | null,
+): ConditionsResolver {
+  if (!lastWateredDate) return baseEnv;
+
+  return {
+    ...baseEnv,
+    getConditions(date: Date, where?: { physY: number }) {
+      const baseCond = baseEnv.getConditions(date, where);
+      const daysSinceWatering = Math.floor(
+        (date.getTime() - lastWateredDate.getTime()) / 86_400_000,
+      );
+
+      if (daysSinceWatering < 0 || daysSinceWatering >= WATERING_DECAY_DAYS) {
+        return baseCond;
+      }
+
+      const baseMoisture = baseCond.soil_moisture_pct_fc ?? 50;
+      const boostFraction = 1 - daysSinceWatering / WATERING_DECAY_DAYS;
+      const boostedMoisture = baseMoisture + (WATERING_TARGET_PCT_FC - baseMoisture) * boostFraction;
+
+      return { ...baseCond, soil_moisture_pct_fc: Math.min(100, boostedMoisture) };
+    },
+  };
+}
+
 // ── Task-Aware Simulation ─────────────────────────────────────────────────
 
-/** Simulate with operational planner: tick + harvest + succession + task generation. */
+/** Simulate with operational planner: tick + succession + task generation + resolution. */
 export function simulateWithTasks(
   gardenState: GardenState,
   ctx: SimulationContext & { lifecycles: Map<string, LifecycleSpec> },
@@ -267,37 +285,60 @@ export function simulateWithTasks(
   const snapshots: DaySnapshot[] = [];
   const allTasks: Task[] = [];
   const activeSuccessions = buildActiveSuccessions(ctx);
+  const seasonTaskIndex = indexSeasonTasksByDate(ctx.seasonTasks);
+  let lastWateredDate: Date | null = null;
 
   const day = new Date(ctx.dateRange.start);
   while (day <= ctx.dateRange.end) {
     const currentDate = new Date(day);
+    const dateIso = currentDate.toISOString();
 
-    // 1. Growth tick
-    const result = tickDay(plants, currentDate, ctx.env, ctx.catalog);
+    // Apply moisture overlay from prior watering
+    const effectiveEnv = applyMoistureOverlay(ctx.env, lastWateredDate);
+
+    // 1. Growth tick (uses moisture-adjusted conditions)
+    const result = tickDay(plants, currentDate, effectiveEnv, ctx.catalog);
     plants = result.plants;
 
-    // 2. Auto-harvest
-    plants = plants.map(p => p.is_harvestable ? harvestPlant(p, ctx.catalog) : p);
-
-    // 3. Succession evaluation
+    // 2. Succession evaluation
     plants = evaluateAndMaterializeSuccessions(activeSuccessions, plants, currentDate, ctx);
 
-    // 4. Task generation
+    // 3. Task generation (all three sources — uses moisture-adjusted conditions for rules)
     const planResult = planDay({
       plants,
       date: currentDate,
-      env: ctx.env,
+      env: effectiveEnv,
       catalog: ctx.catalog,
       lifecycles: ctx.lifecycles,
       existingTasks: allTasks,
+      seasonTaskIndex,
+      rules: ctx.rules,
     });
-    allTasks.push(...planResult.newTasks);
+
+    // 4. Auto-resolve tasks in simulation (assumed perfect execution)
+    const resolvedTasks = planResult.newTasks.map(task => {
+      const resolution = resolveTask(task, plants, ctx.catalog);
+      if (resolution.plants) {
+        plants = resolution.plants;
+      }
+      if (resolution.watered) {
+        lastWateredDate = currentDate;
+      }
+      return { ...task, status: 'completed' as const, completed_at: dateIso };
+    });
+
+    // 5. Auto-pull senescent plants (gardener clears them same day)
+    plants = plants.map(p =>
+      p.lifecycle === 'senescent' ? { ...p, lifecycle: 'pulled' as const } : p,
+    );
+
+    allTasks.push(...resolvedTasks);
 
     snapshots.push({
       date: currentDate,
       plants: [...plants],
       events: result.events,
-      tasks: planResult.newTasks.length > 0 ? [...planResult.newTasks] : undefined,
+      tasks: resolvedTasks.length > 0 ? resolvedTasks : undefined,
     });
 
     day.setDate(day.getDate() + 1);

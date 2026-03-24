@@ -10,11 +10,9 @@ import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
 import type { ConditionsResolver } from '@core/environment/types';
 import type { PlantSpecies } from '@core/types/PlantSpecies';
-import { buildLaborSchedule, type WeeklyLabor } from '@core/calculators/LaborSchedule';
-import { PRODUCTION_PLAN, SEASON_RANGE } from '@core/calculators/ProductionTimeline';
-import { LIFECYCLE_SPECS } from '@core/data/lifecycle';
+import type { Task } from '@core/types/Task';
 
-type PanelTab = 'conditions' | 'accumulation' | 'labor';
+type PanelTab = 'conditions' | 'accumulation' | 'tasks';
 
 interface ConditionsPanelProps {
   snapshot: DaySnapshot | null;
@@ -74,24 +72,40 @@ function countByStage(snapshot: DaySnapshot): Record<string, number> {
   return counts;
 }
 
-/** Sum labor minutes from weekly schedule up through a given date. */
-function sumMinutesThrough(weeks: WeeklyLabor[], date: Date): number {
+const TASK_CATEGORY_COLORS: Record<string, string> = {
+  harvest: '#22c55e',
+  water: '#3b82f6',
+  thin: '#a78bfa',
+  prune: '#f59e0b',
+  plant: '#10b981',
+  inspect: '#6b7280',
+  weed: '#84cc16',
+  mulch: '#92400e',
+  hill: '#d97706',
+  sow: '#10b981',
+  fertilize: '#8b5cf6',
+};
+
+/** Sum estimated_duration_minutes for all tasks up through dayIndex. */
+function sumTaskMinutesThrough(snapshots: DaySnapshot[], dayIndex: number): number {
   let total = 0;
-  for (const week of weeks) {
-    for (const task of week.tasks) {
-      if (task.date <= date) total += task.duration_minutes;
+  for (let i = 0; i <= dayIndex && i < snapshots.length; i++) {
+    for (const task of snapshots[i]!.tasks ?? []) {
+      total += task.estimated_duration_minutes ?? 0;
     }
   }
   return total;
 }
 
-/** Find the week containing a given date. */
-function findWeek(weeks: WeeklyLabor[], date: Date): WeeklyLabor | undefined {
-  for (const week of weeks) {
-    const weekEnd = new Date(week.week_start.getTime() + 7 * 86_400_000);
-    if (date >= week.week_start && date < weekEnd) return week;
+/** Group tasks by type for display. */
+function groupTasksByType(tasks: Task[]): Map<string, Task[]> {
+  const groups = new Map<string, Task[]>();
+  for (const task of tasks) {
+    const existing = groups.get(task.type) ?? [];
+    existing.push(task);
+    groups.set(task.type, existing);
   }
-  return undefined;
+  return groups;
 }
 
 function ConditionRow({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
@@ -121,20 +135,25 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
     [snapshot],
   );
 
-  const laborSchedule = useMemo(
-    () => buildLaborSchedule(PRODUCTION_PLAN, LIFECYCLE_SPECS, SEASON_RANGE.start, SEASON_RANGE.end),
-    [],
+  const todayTasks = useMemo(
+    () => snapshot?.tasks ?? [],
+    [snapshot],
   );
 
-  const laborHoursToDate = useMemo(() => {
-    if (!snapshot) return 0;
-    return sumMinutesThrough(laborSchedule, snapshot.date) / 60;
-  }, [laborSchedule, snapshot]);
+  const taskGroups = useMemo(
+    () => groupTasksByType(todayTasks),
+    [todayTasks],
+  );
 
-  const currentWeek = useMemo(() => {
-    if (!snapshot) return undefined;
-    return findWeek(laborSchedule, snapshot.date);
-  }, [laborSchedule, snapshot]);
+  const laborMinutesToDate = useMemo(
+    () => sumTaskMinutesThrough(snapshots, dayIndex),
+    [snapshots, dayIndex],
+  );
+
+  const todayMinutes = useMemo(
+    () => todayTasks.reduce((s, t) => s + (t.estimated_duration_minutes ?? 0), 0),
+    [todayTasks],
+  );
 
   if (!snapshot) {
     return (
@@ -166,8 +185,8 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
 
       {/* Tab buttons */}
       <div className="flex border-b border-gray-700">
-        {(['conditions', 'accumulation', 'labor'] as PanelTab[]).map(tab => {
-          const label = tab === 'conditions' ? 'Conditions' : tab === 'accumulation' ? 'Harvest' : 'Labor';
+        {(['conditions', 'accumulation', 'tasks'] as PanelTab[]).map(tab => {
+          const label = tab === 'conditions' ? 'Conditions' : tab === 'accumulation' ? 'Harvest' : 'Tasks';
           return (
             <button
               key={tab}
@@ -259,42 +278,54 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
           </div>
         )}
 
-        {activeTab === 'labor' && (
+        {activeTab === 'tasks' && (
           <div className="space-y-3">
             <div>
               <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Season-to-Date</div>
-              <ConditionRow label="Total hours" value={laborHoursToDate.toFixed(1)} unit=" h" />
-              <ConditionRow label="Total schedule" value={(laborSchedule.reduce((s, w) => s + w.total_minutes, 0) / 60).toFixed(1)} unit=" h" />
+              <ConditionRow label="Total hours" value={(laborMinutesToDate / 60).toFixed(1)} unit=" h" />
             </div>
 
-            {currentWeek && (
-              <div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">This Week</div>
-                <ConditionRow label="Hours" value={(currentWeek.total_minutes / 60).toFixed(1)} unit=" h" />
-                <ConditionRow label="Tasks" value={currentWeek.tasks.length} />
-                {currentWeek.equipment_needed.length > 0 && (
-                  <div className="mt-1">
-                    <div className="text-[10px] text-gray-500 mb-0.5">Equipment</div>
-                    {currentWeek.equipment_needed.map(eq => (
-                      <div key={eq} className="text-[10px] text-gray-400 py-0.5">{eq}</div>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-1">
-                  <div className="text-[10px] text-gray-500 mb-0.5">Tasks</div>
-                  {currentWeek.tasks.map((task, i) => (
-                    <div key={i} className="text-[10px] text-gray-400 py-0.5 flex justify-between">
-                      <span>{task.activity_name}</span>
-                      <span className="text-gray-500 font-mono">{(task.duration_minutes / 60).toFixed(1)}h</span>
-                    </div>
-                  ))}
-                </div>
+            <div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                Today ({todayTasks.length} tasks, {todayMinutes} min)
               </div>
-            )}
-
-            {!currentWeek && (
-              <div className="text-[10px] text-gray-600">No scheduled tasks this week</div>
-            )}
+              {todayTasks.length === 0 ? (
+                <div className="text-[10px] text-gray-600">No tasks today</div>
+              ) : (
+                Array.from(taskGroups.entries()).map(([type, tasks]) => (
+                  <div key={type} className="mb-2">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <span
+                        className="w-2 h-2 rounded-sm inline-block"
+                        style={{ backgroundColor: TASK_CATEGORY_COLORS[type] ?? '#6b7280' }}
+                      />
+                      <span className="text-[10px] text-gray-300 font-medium capitalize">{type}</span>
+                      <span className="text-[10px] text-gray-600">({tasks.length})</span>
+                    </div>
+                    {tasks.slice(0, 5).map(task => {
+                      const targetLabel = task.target.target_type === 'plant'
+                        ? task.target.plant_id.replace(/_\d+$/, '').replace(/_/g, ' ')
+                        : task.target.target_type === 'garden'
+                          ? 'garden'
+                          : task.target.target_type;
+                      return (
+                        <div key={task.task_id} className="text-[10px] text-gray-400 py-0.5 flex justify-between pl-3">
+                          <span className="truncate mr-1">{targetLabel}</span>
+                          {task.estimated_duration_minutes != null && (
+                            <span className="text-gray-500 font-mono shrink-0">
+                              {task.estimated_duration_minutes}m
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {tasks.length > 5 && (
+                      <div className="text-[10px] text-gray-600 pl-3">+{tasks.length - 5} more</div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>

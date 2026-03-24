@@ -45,7 +45,8 @@ function shouldFireActivity(
 ): boolean {
   if (isRecurrenceExpired(activity, plants[0]!, date, env, species)) return false;
 
-  return plants.some(plant => evaluateTrigger(activity.trigger, plant, date, env));
+  const recurrenceInterval = activity.recurrence?.interval_days;
+  return plants.some(plant => evaluateTrigger(activity.trigger, plant, date, env, recurrenceInterval));
 }
 
 /** Check if a recurring activity has passed its end condition. */

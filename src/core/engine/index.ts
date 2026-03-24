@@ -5,6 +5,11 @@ export type { HarvestPolicy, SimulationResult, DaySnapshot, SimulationContext, S
 export { initPlantStates } from './initPlantStates';
 export { evaluateTrigger } from './evaluateTrigger';
 export { generateTasksFromLifecycle } from './generateTasksFromLifecycle';
+export { generateTasksFromRules } from './generateTasksFromRules';
+export { evaluateRule, buildConditionsContext } from './evaluateRule';
+export type { RuleContext } from './evaluateRule';
 export { planDay } from './operationalPlanner';
 export type { PlannerInput, PlannerResult } from './operationalPlanner';
 export { adaptSeasonTasks } from './adaptSeasonTasks';
+export { resolveTask } from './resolveTask';
+export type { ResolutionResult } from './resolveTask';

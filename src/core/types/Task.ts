@@ -236,14 +236,19 @@ export function isDuplicateTask(
 /**
  * Check if task is in cooldown period
  */
+/**
+ * Check if a task type+target is in cooldown.
+ * @param asOfDate - The reference date for cooldown comparison (simulation date, not wall clock).
+ */
 export function isTaskInCooldown(
   taskType: TaskType,
   targetId: string,
   completedTasks: Task[],
-  cooldownDays: number = 7
+  cooldownDays: number = 7,
+  asOfDate?: Date,
 ): boolean {
   const cooldownMs = cooldownDays * 24 * 60 * 60 * 1000;
-  const now = Date.now();
+  const referenceTime = asOfDate ? asOfDate.getTime() : Date.now();
 
   return completedTasks.some(task => {
     if (task.type !== taskType) return false;
@@ -251,7 +256,7 @@ export function isTaskInCooldown(
     if (!task.completed_at) return false;
 
     const completedTime = new Date(task.completed_at).getTime();
-    if (now - completedTime > cooldownMs) return false;
+    if (referenceTime - completedTime > cooldownMs) return false;
 
     // Check target match
     switch (task.target.target_type) {
@@ -259,6 +264,8 @@ export function isTaskInCooldown(
         return task.target.plant_id === targetId;
       case 'subcell':
         return task.target.subcell_id === targetId;
+      case 'garden':
+        return targetId === '__garden__';
       default:
         return false;
     }

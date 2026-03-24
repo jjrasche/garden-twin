@@ -22,8 +22,11 @@ import {
   buildObservedDateSet,
 } from '@core/environment';
 import { AVAILABLE_YEARS } from '@core/environment/HistoricalSource';
-import { simulateFromState } from '@core/engine/simulate';
+import { simulateWithTasks } from '@core/engine/simulate';
+import type { SimulationContext } from '@core/engine/simulate';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
+import { LIFECYCLE_SPECS } from '@core/data/lifecycle';
+import { DEFAULT_RULES } from '@core/types/Rules';
 import { SEASON_RANGE } from '@core/calculators/ProductionTimeline';
 
 export type YearSelection = 'average' | number;
@@ -54,7 +57,14 @@ export function useYearSimulation(gardenState: GardenState | null): YearSimulati
   const cache = useRef(new Map<YearSelection, CachedSimulation>());
 
   const runSimulation = useCallback((env: ConditionsResolver, state: GardenState): DaySnapshot[] => {
-    return simulateFromState(state, GARDEN_SPECIES_MAP, env, SEASON_RANGE);
+    const ctx: SimulationContext & { lifecycles: Map<string, import('@core/types/LifecycleSpec').LifecycleSpec> } = {
+      catalog: GARDEN_SPECIES_MAP,
+      env,
+      dateRange: SEASON_RANGE,
+      lifecycles: LIFECYCLE_SPECS,
+      rules: DEFAULT_RULES,
+    };
+    return simulateWithTasks(state, ctx);
   }, []);
 
   useEffect(() => {
