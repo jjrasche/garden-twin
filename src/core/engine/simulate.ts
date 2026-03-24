@@ -13,11 +13,11 @@ import type { GardenState } from '../types/GardenState';
 import type { PlantInstance } from '../types/GardenState';
 import type { LifecycleSpec } from '../types/LifecycleSpec';
 import type { TaskRule } from '../types/Rules';
-import type { ConditionsResolver, WeeklyConditions } from '../environment/types';
+import type { ConditionsResolver } from '../environment/types';
 import { tickDay } from './tickDay';
 import { initPlantStates } from './initPlantStates';
 import { planDay } from './operationalPlanner';
-import { resolveTask } from './resolveTask';
+import { resolveTask, type ConditionOverride } from './resolveTask';
 import { harvestPlant } from './harvestPlant';
 import { type ActiveSuccession, evaluateSuccessionTrigger, materializeSuccessor } from './evaluateSuccession';
 import type { SuccessorSpec } from '../calculators/ProductionTimeline';
@@ -237,39 +237,64 @@ export function simulateFromState(
   return collectSnapshots(plants, ctx);
 }
 
-// ── Moisture Overlay ──────────────────────────────────────────────────────
+// ── Condition Overrides ──────────────────────────────────────────────────
 
-/** Tracks watering events and applies moisture boost with linear decay. */
-const WATERING_TARGET_PCT_FC = 80;
-const WATERING_DECAY_DAYS = 3;
+const MS_PER_DAY = 86_400_000;
 
 /**
- * Wrap a ConditionsResolver with a moisture overlay from watering events.
- * Boost decays linearly over WATERING_DECAY_DAYS back to the weather baseline.
+ * Compute the effective value for a condition factor given active overrides.
+ * Multiple overrides on the same factor use the most recent one.
+ * Boost decays linearly over decayDays back to the baseline.
  */
-function applyMoistureOverlay(
+export function computeOverrideValue(
+  factor: string,
+  baseValue: number,
+  overrides: ConditionOverride[],
+  currentDate: Date,
+): number {
+  // Find the most recent active override for this factor
+  let bestOverride: ConditionOverride | null = null;
+  for (const ov of overrides) {
+    if (ov.factor !== factor) continue;
+    const daysSince = Math.floor((currentDate.getTime() - ov.appliedDate.getTime()) / MS_PER_DAY);
+    if (daysSince < 0 || daysSince >= ov.decayDays) continue;
+    if (!bestOverride || ov.appliedDate > bestOverride.appliedDate) {
+      bestOverride = ov;
+    }
+  }
+  if (!bestOverride) return baseValue;
+
+  const daysSince = Math.floor((currentDate.getTime() - bestOverride.appliedDate.getTime()) / MS_PER_DAY);
+  const decayFraction = 1 - daysSince / bestOverride.decayDays;
+  return baseValue + (bestOverride.targetValue - baseValue) * decayFraction;
+}
+
+/**
+ * Wrap a ConditionsResolver with active condition overrides from task resolution.
+ * Applies to both getConditions and getWeeklyConditions.
+ */
+function applyConditionOverrides(
   baseEnv: ConditionsResolver,
-  lastWateredDate: Date | null,
+  overrides: ConditionOverride[],
 ): ConditionsResolver {
-  if (!lastWateredDate) return baseEnv;
+  if (overrides.length === 0) return baseEnv;
 
   return {
     ...baseEnv,
     getConditions(date: Date, where?: { physY: number }) {
       const baseCond = baseEnv.getConditions(date, where);
-      const daysSinceWatering = Math.floor(
-        (date.getTime() - lastWateredDate.getTime()) / 86_400_000,
-      );
+      const result = { ...baseCond };
 
-      if (daysSinceWatering < 0 || daysSinceWatering >= WATERING_DECAY_DAYS) {
-        return baseCond;
+      if (baseCond.soil_moisture_pct_fc !== undefined) {
+        result.soil_moisture_pct_fc = computeOverrideValue(
+          'soil_moisture_pct_fc', baseCond.soil_moisture_pct_fc, overrides, date,
+        );
       }
 
-      const baseMoisture = baseCond.soil_moisture_pct_fc ?? 50;
-      const boostFraction = 1 - daysSinceWatering / WATERING_DECAY_DAYS;
-      const boostedMoisture = baseMoisture + (WATERING_TARGET_PCT_FC - baseMoisture) * boostFraction;
-
-      return { ...baseCond, soil_moisture_pct_fc: Math.min(100, boostedMoisture) };
+      return result;
+    },
+    getWeeklyConditions(start: Date, end: Date) {
+      return baseEnv.getWeeklyConditions(start, end);
     },
   };
 }
@@ -286,24 +311,24 @@ export function simulateWithTasks(
   const allTasks: Task[] = [];
   const activeSuccessions = buildActiveSuccessions(ctx);
   const seasonTaskIndex = indexSeasonTasksByDate(ctx.seasonTasks);
-  let lastWateredDate: Date | null = null;
+  const activeOverrides: ConditionOverride[] = [];
 
   const day = new Date(ctx.dateRange.start);
   while (day <= ctx.dateRange.end) {
     const currentDate = new Date(day);
     const dateIso = currentDate.toISOString();
 
-    // Apply moisture overlay from prior watering
-    const effectiveEnv = applyMoistureOverlay(ctx.env, lastWateredDate);
+    // Apply condition overrides from prior task resolutions (watering, fertilizing, etc.)
+    const effectiveEnv = applyConditionOverrides(ctx.env, activeOverrides);
 
-    // 1. Growth tick (uses moisture-adjusted conditions)
+    // 1. Growth tick (uses override-adjusted conditions)
     const result = tickDay(plants, currentDate, effectiveEnv, ctx.catalog);
     plants = result.plants;
 
     // 2. Succession evaluation
     plants = evaluateAndMaterializeSuccessions(activeSuccessions, plants, currentDate, ctx);
 
-    // 3. Task generation (all three sources — uses moisture-adjusted conditions for rules)
+    // 3. Task generation (all three sources)
     const planResult = planDay({
       plants,
       date: currentDate,
@@ -317,12 +342,12 @@ export function simulateWithTasks(
 
     // 4. Auto-resolve tasks in simulation (assumed perfect execution)
     const resolvedTasks = planResult.newTasks.map(task => {
-      const resolution = resolveTask(task, plants, ctx.catalog);
+      const resolution = resolveTask(task, plants, ctx.catalog, currentDate);
       if (resolution.plants) {
         plants = resolution.plants;
       }
-      if (resolution.watered) {
-        lastWateredDate = currentDate;
+      if (resolution.overrides) {
+        activeOverrides.push(...resolution.overrides);
       }
       return { ...task, status: 'completed' as const, completed_at: dateIso };
     });

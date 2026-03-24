@@ -43,10 +43,18 @@ function shouldFireActivity(
   env: ConditionsResolver,
   species: PlantSpecies,
 ): boolean {
-  if (isRecurrenceExpired(activity, plants[0]!, date, env, species)) return false;
+  const representative = findRepresentative(plants);
+  if (isRecurrenceExpired(activity, representative, date, env, species)) return false;
 
   const recurrenceInterval = activity.recurrence?.interval_days;
   return plants.some(plant => evaluateTrigger(activity.trigger, plant, date, env, recurrenceInterval));
+}
+
+/** Most advanced plant in the group — earliest planting date, highest cut count. */
+function findRepresentative(plants: PlantState[]): PlantState {
+  return plants.reduce((best, p) =>
+    p.planted_date < best.planted_date || p.cut_number > best.cut_number ? p : best,
+  );
 }
 
 /** Check if a recurring activity has passed its end condition. */

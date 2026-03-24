@@ -208,3 +208,99 @@ describe('buildConditionsContext', () => {
     expect(conditions.solar_radiation_mj).toBe(18);
   });
 });
+
+// ── evaluateTrigger: plant_flag ─────────────────────────────────────────────
+
+import { evaluateTrigger } from '../../src/core/engine/evaluateTrigger';
+import type { ConditionsResolver } from '../../src/core/environment/types';
+
+const STUB_ENV: ConditionsResolver = {
+  source_type: 'historical',
+  location: 'test',
+  avg_last_frost: new Date('2026-05-15'),
+  avg_first_frost: new Date('2026-10-05'),
+  avg_hard_frost: new Date('2026-10-20'),
+  getConditions: () => ({
+    avg_high_f: 72, avg_low_f: 52, soil_temp_f: 60, photoperiod_h: 14,
+  }),
+  getWeeklyConditions: () => [],
+};
+
+describe('evaluateTrigger — plant_flag', () => {
+  test('is_harvestable fires when plant is harvestable', () => {
+    const plant = makePlant({ is_harvestable: true });
+    const result = evaluateTrigger(
+      { type: 'plant_flag', flag: 'is_harvestable' },
+      plant, new Date('2026-07-01'), STUB_ENV,
+    );
+    expect(result).toBe(true);
+  });
+
+  test('is_harvestable does not fire when plant is not harvestable', () => {
+    const plant = makePlant({ is_harvestable: false });
+    const result = evaluateTrigger(
+      { type: 'plant_flag', flag: 'is_harvestable' },
+      plant, new Date('2026-07-01'), STUB_ENV,
+    );
+    expect(result).toBe(false);
+  });
+});
+
+// ── computeOverrideValue ────────────────────────────────────────────────────
+
+import { computeOverrideValue } from '../../src/core/engine/simulate';
+import type { ConditionOverride } from '../../src/core/engine/resolveTask';
+
+describe('computeOverrideValue — condition override math', () => {
+  const baseDate = new Date('2026-07-01');
+
+  test('no overrides returns baseline', () => {
+    expect(computeOverrideValue('soil_moisture_pct_fc', 40, [], baseDate)).toBe(40);
+  });
+
+  test('same-day override returns full boost', () => {
+    const overrides: ConditionOverride[] = [{
+      factor: 'soil_moisture_pct_fc', targetValue: 80, decayDays: 3, appliedDate: baseDate,
+    }];
+    expect(computeOverrideValue('soil_moisture_pct_fc', 40, overrides, baseDate)).toBe(80);
+  });
+
+  test('override decays linearly over decayDays', () => {
+    const overrides: ConditionOverride[] = [{
+      factor: 'soil_moisture_pct_fc', targetValue: 80, decayDays: 3,
+      appliedDate: new Date('2026-07-01'),
+    }];
+    // Day 1: 2/3 boost remaining → 40 + (80-40) * 2/3 = 66.67
+    const day1 = computeOverrideValue('soil_moisture_pct_fc', 40, overrides, new Date('2026-07-02'));
+    expect(day1).toBeCloseTo(66.67, 1);
+
+    // Day 2: 1/3 boost remaining → 40 + (80-40) * 1/3 = 53.33
+    const day2 = computeOverrideValue('soil_moisture_pct_fc', 40, overrides, new Date('2026-07-03'));
+    expect(day2).toBeCloseTo(53.33, 1);
+  });
+
+  test('override expired after decayDays returns baseline', () => {
+    const overrides: ConditionOverride[] = [{
+      factor: 'soil_moisture_pct_fc', targetValue: 80, decayDays: 3,
+      appliedDate: new Date('2026-07-01'),
+    }];
+    const day3 = computeOverrideValue('soil_moisture_pct_fc', 40, overrides, new Date('2026-07-04'));
+    expect(day3).toBe(40);
+  });
+
+  test('ignores overrides for different factor', () => {
+    const overrides: ConditionOverride[] = [{
+      factor: 'N_ppm', targetValue: 120, decayDays: 30, appliedDate: baseDate,
+    }];
+    expect(computeOverrideValue('soil_moisture_pct_fc', 40, overrides, baseDate)).toBe(40);
+  });
+
+  test('most recent override wins when multiple active', () => {
+    const overrides: ConditionOverride[] = [
+      { factor: 'soil_moisture_pct_fc', targetValue: 70, decayDays: 3, appliedDate: new Date('2026-06-29') },
+      { factor: 'soil_moisture_pct_fc', targetValue: 80, decayDays: 3, appliedDate: new Date('2026-07-01') },
+    ];
+    // Most recent (July 1) should win: full boost to 80
+    expect(computeOverrideValue('soil_moisture_pct_fc', 40, overrides, baseDate)).toBe(80);
+  });
+});

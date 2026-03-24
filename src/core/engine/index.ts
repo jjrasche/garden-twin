@@ -12,4 +12,5 @@ export { planDay } from './operationalPlanner';
 export type { PlannerInput, PlannerResult } from './operationalPlanner';
 export { adaptSeasonTasks } from './adaptSeasonTasks';
 export { resolveTask } from './resolveTask';
-export type { ResolutionResult } from './resolveTask';
+export type { ResolutionResult, ConditionOverride } from './resolveTask';
+export { computeOverrideValue } from './simulate';

@@ -47,7 +47,7 @@ interface WeekRow {
   totalMinutes: number;
   taskCount: number;
   tasks: Task[];
-  [taskType: string]: number | string | Date | Task[];
+  minutesByType: Record<string, number>;
 }
 
 function formatWeekLabel(date: Date): string {
@@ -72,17 +72,18 @@ function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
     const weekKey = monday.toISOString().slice(0, 10);
 
     if (!weekMap.has(weekKey)) {
-      const row: WeekRow = {
+      const minutesByType: Record<string, number> = {};
+      for (const type of TASK_TYPES_DISPLAY) {
+        minutesByType[type] = 0;
+      }
+      weekMap.set(weekKey, {
         weekLabel: formatWeekLabel(monday),
         weekStart: monday,
         totalMinutes: 0,
         taskCount: 0,
         tasks: [],
-      };
-      for (const type of TASK_TYPES_DISPLAY) {
-        row[type] = 0;
-      }
-      weekMap.set(weekKey, row);
+        minutesByType,
+      });
     }
 
     const row = weekMap.get(weekKey)!;
@@ -91,9 +92,7 @@ function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
       row.totalMinutes += minutes;
       row.taskCount++;
       row.tasks.push(task);
-      if (task.type in row && typeof row[task.type] === 'number') {
-        (row[task.type] as number) += minutes;
-      }
+      row.minutesByType[task.type] = (row.minutesByType[task.type] ?? 0) + minutes;
     }
   }
 
@@ -108,7 +107,7 @@ function TaskTooltip({ active, payload, label }: any) {
   const row: WeekRow = payload[0]?.payload;
   if (!row) return null;
 
-  const activeTypes = TASK_TYPES_DISPLAY.filter(t => (row[t] as number) > 0);
+  const activeTypes = TASK_TYPES_DISPLAY.filter(t => (row.minutesByType[t] ?? 0) > 0);
 
   return (
     <div style={{
@@ -123,7 +122,7 @@ function TaskTooltip({ active, payload, label }: any) {
       </p>
       {activeTypes.map(t => (
         <p key={t} style={{ color: TASK_TYPE_COLORS[t], margin: '2px 0' }}>
-          {t}: {row[t] as number} min
+          {t}: {row.minutesByType[t]} min
         </p>
       ))}
     </div>
@@ -251,7 +250,12 @@ interface TaskTimelineProps {
 }
 
 export function TaskTimeline({ snapshots }: TaskTimelineProps) {
-  const chartData = useMemo(() => buildWeeklyData(snapshots), [snapshots]);
+  const weekRows = useMemo(() => buildWeeklyData(snapshots), [snapshots]);
+  // Flatten minutesByType into top-level keys for Recharts dataKey access
+  const chartData = useMemo(() => weekRows.map(row => ({
+    ...row,
+    ...row.minutesByType,
+  })), [weekRows]);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -279,7 +283,7 @@ export function TaskTimeline({ snapshots }: TaskTimelineProps) {
   const overBudgetWeeks = chartData.filter(r => r.totalMinutes > BUDGET_HIGH_MIN).length;
 
   const activeTypes = TASK_TYPES_DISPLAY.filter(
-    t => chartData.some(row => (row[t] as number) > 0),
+    t => weekRows.some(row => (row.minutesByType[t] ?? 0) > 0),
   );
 
   const selectedRow = selectedWeek ? chartData.find(r => r.weekLabel === selectedWeek) : null;
