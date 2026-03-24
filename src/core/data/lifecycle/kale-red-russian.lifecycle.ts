@@ -7,7 +7,7 @@ export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
       activity_id: 'start_seeds',
       name: 'Start seeds indoors',
       task_type: 'plant',
-      trigger: { type: 'days_after_planting', days: -42 },
+      trigger: { type: 'days_after_planting', days: -21 },  // 3 weeks in 2" soil block
       duration_minutes_per_plant: 0.5,
       duration_minutes_fixed: 15,
       equipment: ['seed tray', 'seed starting mix', 'grow light'],
@@ -33,8 +33,7 @@ export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
       activity_id: 'harvest_cut',
       name: 'Harvest leaves (cut)',
       task_type: 'harvest',
-      trigger: { type: 'days_after_planting', days: 50 },
-      recurrence: { interval_days: 14, end_condition: 'max_cuts', end_value: 8 },
+      trigger: { type: 'plant_flag', flag: 'is_harvestable' },
       duration_minutes_per_plant: 0.5,
       duration_minutes_fixed: 10,
       equipment: ['harvest knife', 'harvest bucket'],

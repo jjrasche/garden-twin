@@ -28,6 +28,11 @@ export const ActivityTriggerSchema = z.discriminatedUnion('type', [
     threshold: z.number(),
     direction: z.enum(['above', 'below']),  // Trigger when value goes above/below threshold
   }),
+  // Plant boolean flag (e.g., is_harvestable becomes true when biomass crosses threshold)
+  z.object({
+    type: z.literal('plant_flag'),
+    flag: z.enum(['is_harvestable']),
+  }),
   // Observation of a specific event (e.g., pest detected, damage seen)
   z.object({
     type: z.literal('observation'),

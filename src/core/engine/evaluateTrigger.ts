@@ -29,10 +29,21 @@ export function evaluateTrigger(
       return plant.stage === trigger.stage;
     case 'harvest_accumulated':
       return plant.accumulated_lbs >= trigger.threshold_lbs;
+    case 'plant_flag':
+      return evaluatePlantFlag(trigger.flag, plant);
     case 'condition':
       return evaluateConditionThreshold(trigger, date, env);
     case 'observation':
       // Observations require external input; cannot evaluate from state alone.
+      return false;
+  }
+}
+
+function evaluatePlantFlag(flag: string, plant: PlantState): boolean {
+  switch (flag) {
+    case 'is_harvestable':
+      return plant.is_harvestable;
+    default:
       return false;
   }
 }

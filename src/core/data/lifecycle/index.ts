@@ -6,6 +6,9 @@ import { POTATO_KENNEBEC_LIFECYCLE } from './potato-kennebec.lifecycle';
 import { LETTUCE_BSS_LIFECYCLE } from './lettuce-bss.lifecycle';
 import { SPINACH_BLOOMSDALE_LIFECYCLE } from './spinach-bloomsdale.lifecycle';
 import { CORN_NOTHSTINE_DENT_LIFECYCLE } from './corn-nothstine-dent.lifecycle';
+import { MARIGOLD_FRENCH_LIFECYCLE } from './marigold-french.lifecycle';
+import { NASTURTIUM_TRAILING_LIFECYCLE } from './nasturtium-trailing.lifecycle';
+import { CALENDULA_ALPHA_LIFECYCLE } from './calendula-alpha.lifecycle';
 
 /** All lifecycle specs keyed by species_id. Potato excludes processing (cellar only, no blanching). */
 export const LIFECYCLE_SPECS: Map<string, LifecycleSpec> = new Map([
@@ -16,4 +19,7 @@ export const LIFECYCLE_SPECS: Map<string, LifecycleSpec> = new Map([
   [LETTUCE_BSS_LIFECYCLE.species_id, LETTUCE_BSS_LIFECYCLE],
   [SPINACH_BLOOMSDALE_LIFECYCLE.species_id, SPINACH_BLOOMSDALE_LIFECYCLE],
   [CORN_NOTHSTINE_DENT_LIFECYCLE.species_id, CORN_NOTHSTINE_DENT_LIFECYCLE],
+  [MARIGOLD_FRENCH_LIFECYCLE.species_id, MARIGOLD_FRENCH_LIFECYCLE],
+  [NASTURTIUM_TRAILING_LIFECYCLE.species_id, NASTURTIUM_TRAILING_LIFECYCLE],
+  [CALENDULA_ALPHA_LIFECYCLE.species_id, CALENDULA_ALPHA_LIFECYCLE],
 ]);
