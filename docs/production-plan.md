@@ -28,15 +28,15 @@ Designed backwards from weekly consumption, not forward from maximum yield.
 
 ## Per-Plant Yields
 
-| Crop | Baseline lbs | Germ | Estab | Combined | Yield/plant | Days to harvest |
-|------|-------------|------|-------|----------|------------|----------------|
-| Kale Red Russian | 1.75 | 0.95 | 0.97 | 0.92 | 1.61 | 50 |
-| Lettuce BSS | 0.50 | 0.90 | 0.95 | 0.86 | 0.43 | 28 |
-| Spinach Bloomsdale | 0.28 | 0.90 | 0.95 | 0.86 | 0.24 | 45 |
-| Amish Paste | 15.00 | 1.00 | 0.92 | 0.92 | 13.80 | 82 |
-| Sun Gold | 10.00 | 1.00 | 0.92 | 0.92 | 9.20 | 60 |
-| Potato Kennebec | 1.50 | 0.95 | 0.90 | 0.86 | 1.28 | 90 |
-| Corn Nothstine Dent | 0.28 | 0.90 | 0.95 | 0.86 | 0.24 | 95 |
+| Crop | Baseline lbs | Germ | Estab | Combined | Yield/plant | Days to harvest | Per-plant output |
+|------|-------------|------|-------|----------|------------|----------------|-----------------|
+| Kale Red Russian | 1.75 | 0.95 | 0.97 | 0.92 | 1.61 | 50 | ~26 leaves/harvest × 6 cuts |
+| Lettuce BSS | 0.50 | 0.90 | 0.95 | 0.86 | 0.43 | 28 | 1 head |
+| Spinach Bloomsdale | 0.28 | 0.90 | 0.95 | 0.86 | 0.24 | 45 | ~3 cut-and-come-again harvests |
+| Amish Paste | 15.00 | 1.00 | 0.92 | 0.92 | 13.80 | 82 | **4.6 quarts sauce** (@ 3 lbs/qt) |
+| Sun Gold | 10.00 | 1.00 | 0.92 | 0.92 | 9.20 | 60 | **~245 tomatoes** (@ 0.6 oz each) |
+| Potato Kennebec | 1.50 | 0.95 | 0.90 | 0.86 | 1.28 | 90 | ~5 potatoes (avg 4-5 oz each) |
+| Corn Nothstine Dent | 0.28 | 0.90 | 0.95 | 0.86 | 0.24 | 95 | 1 ear dried → 0.24 lbs meal |
 
 ### Survival rate definitions
 

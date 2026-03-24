@@ -1,249 +1,341 @@
 # Trellis Structural Analysis
 
-## Design Configuration
-- 1-1/2" EMT conduit, single horizontal bar, plants on both sides
-- 8ft T-posts, 36" embedment, 5ft above ground
-- Tomato plants at 18" spacing on both sides (lean-and-lower, twine-wrapped)
-- 30ft total trellis length, 4 posts at 10ft spacing
-- Design wind: 30 mph (valley site surrounded by trees)
-- PVC T-fittings at post connections (seasonal — removed before Michigan winter)
+Updated 2026-03-23. All numbers derived from first principles with sources.
 
-## Selected Design: 1-1/2" EMT at 10ft Spans
-- Stress at 30 mph with peak fruit: 20,500 psi (68% of yield)
-- Deflection at midspan: ~1.5" (L/80)
-- 4 posts at 0, 10, 20, 30ft
-- No earth anchors needed (valley site, 30 mph max design wind, 36" embedment)
+## Decision
 
-## EMT Properties (All Sizes Evaluated)
+**10ft T-post spacing, 1.5" EMT crossbar, 30-36" T-post embedment.**
+Sun Gold on the west (garden-interior) side, Amish Paste on the east side.
 
-Material (all sizes): Fy=30,000 psi, Fu=~50,000 psi, E=29,000,000 psi (ASTM A653 CS Type B, UL 797).
+## Equipment
 
-| Property | 1" EMT | 1-1/4" EMT | 1-1/2" EMT |
-|----------|--------|------------|------------|
-| OD | 1.163" | 1.510" | 1.740" |
-| Wall | 0.057" | 0.065" | 0.065" |
-| Weight (lb/ft) | 0.65 | 0.96 | 1.09 |
-| I (in^4) | 0.0304 | 0.0771 | 0.1201 |
-| c (in) | 0.582 | 0.755 | 0.870 |
-| M_yield (in-lb) | 1,567 | 3,062 | 4,143 |
-| Strength vs 1" | 1.0x | 1.95x | 2.64x |
+| Item | Spec | Notes |
+|------|------|-------|
+| Crossbar | 1.5" EMT (Lowes #72719, Allied Tube 550410000) | 10ft sticks |
+| T-posts | 8ft, driven 30-36" (60" above ground) | Rail steel, Fy >= 50 ksi |
+| Twine | **Polypropylene** (40-80 lbs breaking) | NOT jute (breaks at 10-15 lbs) |
+| Attachment | U-bolts or heavy wire lashing | Do not rest conduit on posts |
 
-### Max Span at 30 mph Design Wind
+## EMT Properties (ANSI C80.3)
 
-| Conduit | Max span | Posts for 30ft | Stress at 10ft span |
-|---------|----------|----------------|---------------------|
-| 1" | 7.5 ft | 5 posts | 133% yield (fails) |
-| 1-1/4" | 10.4 ft | 4 posts | 92% yield (tight) |
-| 1-1/2" | 12.1 ft | 4 posts | 68% yield (selected) |
+All sizes: Fy = 33,000 psi (ASTM A653 Grade 33 min), E = 29,000,000 psi.
+Typical actual yield: 45,000-55,000 psi (exceeds spec by ~35%).
 
-## Per-Variety Plant Weights (Lean-and-Lower)
+| Property | 1" EMT | 1-1/4" EMT | **1-1/2" EMT (selected)** |
+|----------|--------|------------|---------------------------|
+| OD | 1.163" | 1.510" | **1.740"** |
+| Wall | 0.057" | 0.065" | **0.065"** |
+| Weight (lb/ft) | 0.65 | 0.96 | **1.10** |
+| I (in^4) | 0.0304 | 0.0771 | **0.1201** |
+| S (in^3) | 0.0523 | 0.1021 | **0.1381** |
+| Strength vs 1" | 1.0x | 1.95x | **2.64x** |
 
-### Weight Research Sources
-- Vegetative biomass: PMC12388973 (NPK fertilization study, destructive harvest)
-- Leaf biomass: PMC6868607 (Tomato's Green Gold, 0.75 kg leaf FW per plant)
-- Dry matter partitioning: Heuvelink 1996, Annals of Botany 77:71-80 (TOMSIM model)
-- Fruit weights: Victory Seed Co (Amish Paste 6-12oz), Paramount Seeds (Sun Gold 13-15g)
-- Trellis design loads: Bootstrap Farmer (10 lb baseline), Johnny's Seeds (10-12 lb)
-- Dynamic factor: PMC8956605 (greenhouse wind vibration coefficient 2.0-2.05)
-- Rain interception: ~0.15-0.20 mm/LAI (ScienceDirect canopy interception)
+Trade size != OD. Sources: Engineering Toolbox, Electrolink spec tables.
 
-### Component Breakdown
+---
 
-**Stem:** 35-50g fresh weight per foot. ~89-91% water. Diameter 10-17mm.
-**Compound leaf:** 30-43g fresh weight each. ~90% water.
-**Rain water on foliage:** 120-160g per plant (0.3 lb). Based on LAI ~3.7, leaf area ~7700 cm^2.
+## Part 1: Per-Plant Weight (from biology)
 
-In lean-and-lower, bottom 2-4ft is defoliated bare stem on the ground.
-Defoliation removes ~40-65g per foot (~3 leaves per foot removed).
-The trellis supports only the upper active portion.
+Single-leader indeterminate tomato on 60" (5ft) trellis.
 
-### Amish Paste (worst case design load = 12 lb)
+### Stem
 
-| Component | Weight | Notes |
-|-----------|--------|-------|
-| Active stem (upper 4ft) | 0.4 lb | 4ft * 45g/ft |
-| Active leaves (~18) | 1.4 lb | 18 * 35g avg |
-| Fruit on vine at peak | 8-10 lb | 4-5 trusses, 2-4 fruits each at 170-340g |
-| Rain water | 0.3 lb | 160g retained on foliage |
-| Ground-supported portion | -0.5 lb | Bare stem + string tension reduction |
-| **Peak static total** | **~12 lb** | With full fruit load before harvest |
+- Diameter: 12mm base tapering to 8mm tip (PMC/9095744: single-stem = 11.2mm)
+- Mean diameter: 10mm = 1.0cm
+- Volume: pi * 0.5^2 * 152.4cm = 119.7 cm^3
+- Density: 0.95 g/cm^3 (fresh herbaceous stem, ~87% water)
+- **Weight: 113.7g = 0.25 lbs**
 
-Fruit dominates: 8-10 lb of the 12 lb total.
-With regular harvest (picking 2x/week): fruit drops to 4-6 lb, total ~7-8 lb.
+### Foliage
 
-### Sun Gold F1 (worst case design load = 7 lb)
+- Internode spacing: 8.5cm (mid-range of 7-10cm typical)
+- Total nodes on 60" stem: 152.4cm / 8.5cm = 17.9
+- Minus 4 vegetative nodes below first truss = **14 compound leaves**
+- Per-leaf fresh weight: 35g (derived: 3-5g dry * 8-10x fresh:dry ratio, PMC/4235429)
+- **Weight: 14 * 35g = 490g = 1.08 lbs**
+- Cross-check: full unpruned plant has 4-5 lbs foliage. Single-leader removes ~60-70%. Expected 1.2-2.0 lbs.
 
-| Component | Weight | Notes |
-|-----------|--------|-------|
-| Active stem (upper 5ft) | 0.4 lb | Thinner stems than paste |
-| Active leaves (~22) | 1.0 lb | Smaller leaves |
-| Fruit on vine at peak | 3-4.5 lb | 5-7 trusses, 10-20 fruits at 13-15g each |
-| Rain water | 0.25 lb | |
-| Ground-supported portion | -0.5 lb | |
-| **Peak static total** | **~7 lb** | |
+### Trusses
 
-### Fruit Details
+- Pattern: 1 truss every 3 leaves (standard indeterminate)
+- 14 productive nodes / 3 = **~5 trusses** (matches 5-7 guidance for 5ft outdoor plant)
 
-| Variety | Fruit weight | Fruits/truss | Truss weight | Active trusses |
-|---------|-------------|-------------|-------------|----------------|
-| Amish Paste | 170-340g (6-12 oz) | 2-4 | 1.0-2.0 lb | 4-5 |
-| Sun Gold | 13-15g (0.5 oz) | 10-20 | 0.3-0.7 lb | 5-7 |
+### Fruit Load: Amish Paste
 
-Source: MyVegPatch (active truss count), variety-specific seed catalog data.
+3.5 fruit/truss * 10 oz/fruit midpoint (range: 8-12 oz, sources: gardenfocused, Victory Seeds)
 
-## Loading Model
+**Weekly harvest:** Bottom 1-2 trusses harvested, 3 full green trusses + 2 developing (30% weight)
+- 3 * 3.5 * 10oz + 2 * 3.5 * 10oz * 0.3 = 105 + 21 = **126 oz = 7.88 lbs**
 
-### Distributed load formula
+**2-week gap:** All 5 trusses carry full-size fruit + 1 developing
+- 5 * 3.5 * 10oz + 1 * 3.5 * 10oz * 0.4 = 175 + 14 = **189 oz = 11.81 lbs**
 
-At 18" spacing on both sides:
-- Plants per inch of span: 2 sides / 18" = 1/9 plants per inch
-- w_plant = avg_weight / 9 (lb/in)
-- w_conduit = 0.054 lb/in (1" EMT self-weight)
-- w_total = w_plant + w_conduit
+### Fruit Load: Sun Gold
 
-### Design loads (accepted values)
-- Amish Paste peak: 12 lb static
-- Cherry (Sun Gold) peak: 7 lb static
-- Plant mix: 58% paste (11 plants, 12 lb) + 42% cherry (8 plants, 7 lb) = 9.9 lb avg
-- w_static = 10.84/9 + 0.054 = 1.258 lb/in
+15 fruit/truss * 15g/fruit midpoint (range: 13-18g, sources: tomatodirt, paramountseeds)
 
-### Wind lateral forces (per plant)
+Per-truss weight: 15 * 0.529 oz = 7.94 oz
 
-| Wind speed | Pressure (psf) | Force/plant | Source |
-|-----------|----------------|-------------|--------|
-| 20 mph | 1.0 | 3 lb | q=0.00256*V^2, Cd=0.31, A=10sqft |
-| 30 mph | 2.3 | 8 lb | Calculated |
-| 40 mph | 4.1 | 13 lb | Calculated |
-| 50 mph | 6.4 | 20 lb | Calculated |
+**Weekly harvest:** 3 full + 2 partial (30%) = 23.8 + 4.8 = **28.6 oz = 1.79 lbs**
 
-Drag coefficient Cd=0.31 from ASABE 2012 wind tunnel study on tomato canopy.
-Projected area per plant: ~10 sqft (2ft wide * 5ft tall), porosity accounted for by Cd.
+**2-week gap:** 5 full + 1 partial (40%) = 39.7 + 3.2 = **42.9 oz = 2.68 lbs**
 
-### Combined loading (gravity + wind as perpendicular vectors)
+### Rain on Foliage
+
+- Leaf area: 14 leaves * 400 cm^2/leaf = 5,600 cm^2
+- Water film: 0.2mm thick on both surfaces
+- Volume: 5,600 * 2 * 0.02cm = 224 cm^3 = 224g
+- **Rain addition: 0.49 lbs** (dries within 30-60 min in wind)
+
+### Lean-and-Lower Deduction
+
+In lean-and-lower training, the bottom 2-4ft of stem is defoliated bare vine resting on the ground.
+This portion is ground-supported and does not load the crossbar.
+
+- Ground-supported stem + removed leaves: ~0.5 lbs per plant
+- Applied as a deduction from the trellis-supported weight
+
+### Per-Plant Totals (trellis-supported portion)
+
+| Scenario | Amish Paste | Sun Gold |
+|----------|------------|----------|
+| Normal (weekly harvest, dry) | **8.7 lbs** | **2.6 lbs** |
+| Peak (2-week gap, dry) | **12.6 lbs** | **3.5 lbs** |
+| Worst (2-week gap + rain) | **13.1 lbs** | **4.0 lbs** |
+
+Weight is dominated by fruit: 86% for paste, 58% for cherry.
+Lean-and-lower deduction: -0.5 lbs from each value above (stem + leaves on ground).
+
+---
+
+## Part 2: Load Per 10ft Span
+
+18" spacing in 120" span = 7 plants per side (at 9", 27", 45", 63", 81", 99", 117").
+Both sides load the same crossbar. Conduit self-weight: 1.1 lbs/ft * 10ft = 11.0 lbs.
+
+### Gravity Loads (vertical)
+
+#### Mixed Span (7 paste + 7 cherry, realistic)
+
+| Scenario | Paste (7) | Cherry (7) | Conduit | Total |
+|----------|-----------|------------|---------|-------|
+| Normal | 60.9 | 18.2 | 11.0 | **90.1 lbs** |
+| Peak (2-wk) | 88.2 | 24.5 | 11.0 | **123.7 lbs** |
+| Worst static (2-wk + rain) | 91.7 | 28.0 | 11.0 | **130.7 lbs** |
+
+#### All-Paste Span (14 paste, absolute worst case)
+
+| Scenario | Plants (14) | Conduit | Total |
+|----------|-------------|---------|-------|
+| Normal | 121.8 | 11.0 | **132.8 lbs** |
+| Worst static | 183.4 | 11.0 | **194.4 lbs** |
+
+### Combined Loading: Gravity + Wind (vector method)
+
+Wind acts horizontally, gravity acts vertically. The A-frame legs resolve both into
+the crossbar as combined bending. The resultant distributed load on the crossbar:
 
 w_combined = sqrt(w_gravity^2 + w_wind^2)
 
-| Wind speed | w_gravity | w_wind | w_combined | Effective factor |
-|-----------|-----------|--------|------------|-----------------|
-| 0 (calm) | 1.258 | 0 | 1.258 | 1.00x |
-| 20 mph | 1.258 | 0.333 | 1.301 | 1.03x |
-| 30 mph | 1.258 | 0.889 | 1.540 | 1.22x |
-| 40 mph | 1.258 | 1.444 | 1.915 | 1.52x |
-| 50 mph | 1.258 | 2.222 | 2.554 | 2.03x |
+Wind force per inch of span: w_wind = (force_per_plant * plants_per_inch_both_sides)
+- plants per inch = 14 plants / 120" = 0.117 plants/in
 
-The "2x dynamic factor" from greenhouse research corresponds to ~50 mph gust conditions.
-At 30 mph (normal windy day), the factor is only 1.22x.
+| Wind speed | Force/plant | w_wind (lb/in) | Combined factor on gravity |
+|------------|------------|----------------|---------------------------|
+| 0 (calm) | 0 | 0 | 1.00x |
+| 20 mph | 1.4 lbs | 0.163 | 1.01x |
+| 30 mph | 3.2 lbs | 0.373 | 1.07x |
+| 40 mph gust | 5.7 lbs | 0.665 | 1.18x |
+| 50 mph gust | 8.9 lbs | 1.038 | 1.38x |
 
-## Maximum Span Calculation
+Note: the old analysis used a flat 1.4x dynamic amplification factor. The vector method
+shows that at 40 mph gusts the real factor is only 1.18x — less severe than assumed.
+At 50 mph (rare in Grand Rapids) it reaches 1.38x.
 
-### Governing equation (bending stress at midspan)
+### Combined Span Totals (mixed, worst static + wind)
 
-sigma = (w * L^2 / 8) * c / I <= Fy
+| Condition | Gravity | Wind factor | Effective load |
+|-----------|---------|-------------|---------------|
+| Worst static, calm | 130.7 lbs | 1.00x | **130.7 lbs** |
+| Worst static, 30 mph | 130.7 lbs | 1.07x | **139.8 lbs** |
+| Worst static, 40 mph | 130.7 lbs | 1.18x | **154.2 lbs** |
+| Worst static, 50 mph | 130.7 lbs | 1.38x | **180.4 lbs** |
 
-Solving for L:
-L = sqrt(8 * Fy * I / (c * w))
-L = sqrt(8 * 1567 / w)
-L = sqrt(12,536 / w)
+### Combined Span Totals (all-paste, worst static + wind)
 
-### Max span results
+| Condition | Gravity | Wind factor | Effective load |
+|-----------|---------|-------------|---------------|
+| Worst static, calm | 194.4 lbs | 1.00x | **194.4 lbs** |
+| Worst static, 40 mph | 194.4 lbs | 1.18x | **229.4 lbs** |
+| Worst static, 50 mph | 194.4 lbs | 1.38x | **268.3 lbs** |
 
-| Design condition | w (lb/in) | Max span (in) | Max span (ft) | Posts for 30ft |
-|-----------------|-----------|---------------|---------------|----------------|
-| Static only (calm) | 1.258 | 99.8 | 8.3 | 5 (4 spans) |
-| 30 mph wind | 1.540 | 90.2 | 7.5 | 5 (4 spans) |
-| 40 mph wind | 1.915 | 80.9 | 6.7 | 6 (5 spans) |
-| 50 mph gust | 2.554 | 70.1 | 5.8 | 7 (6 spans) |
+---
 
-### Deflection check (secondary, stress governs)
+## Part 3: Beam Analysis
 
-delta = 5 * w * L^4 / (384 * E * I)
+Simply supported, 120" span. Formulas: M = wL^2/8, sigma = M/S, delta = 5wL^4/(384EI)
+S = 0.1381 in^3, I = 0.1201 in^4 for 1.5" EMT.
 
-At 7.5ft span, static load:
-delta = 5 * 1.258 * 90^4 / (384 * 29e6 * 0.0304) = 1.17" (L/77) -- acceptable
+### Mixed Span (7 paste + 7 cherry)
 
-## Post Loading
+| Scenario | Load (lbs) | Stress (psi) | SF (33 ksi) | SF (45 ksi) | Deflection |
+|----------|-----------|-------------|-------------|-------------|------------|
+| Normal (weekly, dry) | 90.1 | 9,792 | **3.37** | 4.60 | 0.58" |
+| Peak (2-wk, dry) | 123.7 | 13,446 | **2.45** | 3.35 | 0.80" |
+| Worst static (2-wk + rain) | 130.7 | 14,207 | **2.32** | 3.17 | 0.84" |
+| + 30 mph wind | 139.8 | 15,197 | **2.17** | 2.96 | 0.90" |
+| + 40 mph gust | 154.2 | 16,763 | **1.97** | 2.68 | 1.00" |
+| + 50 mph gust | 180.4 | 19,611 | **1.68** | 2.29 | 1.17" |
 
-### Gravity (downward) per post
+### All-Paste Span (14 paste, absolute worst case)
 
-Simply-supported spans: each support carries wL/2.
-Interior post supports two spans: wL/2 + wL/2 = wL.
+| Scenario | Load (lbs) | Stress (psi) | SF (33 ksi) | SF (45 ksi) | Deflection |
+|----------|-----------|-------------|-------------|-------------|------------|
+| Normal (weekly, dry) | 132.8 | 14,435 | **2.29** | 3.12 | 0.86" |
+| Worst static (2-wk + rain) | 194.4 | 21,137 | **1.56** | 2.13 | 1.26" |
+| + 40 mph gust | 229.4 | 24,942 | **1.32** | 1.80 | 1.48" |
+| + 50 mph gust | 268.3 | 29,170 | **1.13** | 1.54 | 1.73" |
 
-Per span static: 10.84 lb/plant * (90/18) plants/side * 2 sides = 108 lb
-Conduit: 0.054 * 90 = 5 lb
-Total per span: 113 lb
+### EMT Size Comparison (mixed span, worst static + 40 mph)
 
-Interior post: 113 lb (one full span)
-End post: 57 lb (half span)
+Load: 154.2 lbs. Compares all three standard EMT sizes at 10ft span.
 
-### Wind (lateral) per post
+| Conduit | I (in^4) | S (in^3) | Stress (psi) | SF (33 ksi) | Deflection |
+|---------|----------|----------|-------------|-------------|------------|
+| 1" EMT | 0.0304 | 0.0523 | 44,233 | 0.75 (FAILS) | 3.27" |
+| 1-1/4" EMT | 0.0771 | 0.1021 | 22,663 | 1.46 | 1.29" |
+| **1-1/2" EMT** | **0.1201** | **0.1381** | **16,763** | **1.97** | **0.83"** |
 
-Continuous conduit distributes lateral load to all posts.
-Interior post: receives lateral reaction from two half-spans = one full span.
+1" EMT fails at this load. 1-1/4" is marginal. 1-1/2" has adequate margin.
 
-| Wind speed | Lateral/span | Interior post | End post |
-|-----------|-------------|---------------|----------|
-| 20 mph | 30 lb | 30 lb | 15 lb |
-| 30 mph | 80 lb | 80 lb | 40 lb |
-| 50 mph | 200 lb | 200 lb | 100 lb |
+### Span Comparison (1.5" EMT, mixed worst static + 40 mph)
 
-T-post lateral capacity at 36" embedment (firm clay): ~45-90 lb.
-At 30 mph: interior posts within capacity (80 lb load vs 45-90 lb capacity).
-At 50 mph: all posts exceed capacity -- trellis leans.
+| Span | Load (lbs) | Stress (psi) | SF (33 ksi) | Deflection |
+|------|-----------|-------------|-------------|------------|
+| **10ft (selected)** | 154.2 | 16,763 | **1.97** | 1.00" |
+| 8ft | 123.4 | 10,720 | **3.08** | 0.41" |
+| 6ft | 92.5 | 6,033 | **5.47** | 0.14" |
 
-## Connection: EMT to T-Post
+### Max Span at Yield (mixed span loads)
 
-### Recommended: U-bolt method
-- 1" conduit sits against T-post flange
+| Condition | w (lb/in) | Max span to Fy=33 ksi | Max span to Fy=45 ksi |
+|-----------|-----------|----------------------|----------------------|
+| Normal (calm) | 0.751 | 151" (12.6 ft) | 177" (14.7 ft) |
+| Worst + 30 mph | 1.165 | 122" (10.1 ft) | 142" (11.9 ft) |
+| Worst + 40 mph | 1.285 | 116" (9.7 ft) | 136" (11.3 ft) |
+
+At 10ft span with worst + 40 mph, guaranteed-minimum steel has 3" of margin before yield.
+Typical EMT (45 ksi) has 16" of margin.
+
+---
+
+## Part 4: Point Load Warning
+
+180 lb person hanging at midspan:
+- M = PL/4 = 180 * 120 / 4 = 5,400 in-lbs
+- Stress = 5,400 / 0.138 = **39,130 psi — exceeds yield**
+- **Do not hang from the crossbar. Lean near T-posts where span is zero.**
+
+---
+
+## Part 5: Wind and T-Posts
+
+### Wind Forces
+
+Drag coefficient Cd = 0.31 (wind tunnel study, ResearchGate pub. 274344612).
+Per-plant effective frontal area: 5ft * 1.5ft * 0.6 porosity = 4.5 ft^2.
+
+| Wind speed | Force per plant | Total (14 plants) |
+|------------|----------------|-------------------|
+| 20 mph | 1.4 lbs | 20 lbs |
+| 30 mph | 3.2 lbs | 45 lbs |
+| 40 mph gust | 5.7 lbs | 80 lbs |
+
+The A-frame resolves horizontal wind forces through the legs into the crossbar as combined
+bending. Gravity and wind act as perpendicular vectors — the resultant load is
+sqrt(gravity^2 + wind^2). See Part 2 for combined loading tables.
+
+### T-Post Stability
+
+At 40 mph: ~40 lbs lateral per post * 5ft height = 200 ft-lbs overturning moment.
+T-post lateral capacity at 30-36" embedment in Grand Rapids glacial till: 100-200+ ft-lbs.
+**Adequate at 30-36" embedment.**
+
+### Embedment: 30" vs 36" (Broms Method)
+
+Capacity scales as (D - 1.5b)^2 where D = embedment, b = post width (~2"):
+
+| Embedment | Above ground | Capacity vs 30" |
+|-----------|-------------|-----------------|
+| 30" | 66" | 1.00x |
+| 36" | 60" | **1.49x** |
+
+---
+
+## Part 6: Failure Modes
+
+| Mode | Risk | Mitigation |
+|------|------|-----------|
+| Crossbar yield | Low (SF > 2.2 static, > 1.6 dynamic) | Harvest weekly |
+| Excessive deflection | Cosmetic (0.6-1.2") | Accept — not structural |
+| T-post lean in gusts | Low at 30-36" embedment | Already mitigated |
+| Connection slip | Medium if just resting | **U-bolt or wire lash required** |
+| Twine failure | **High with jute** (10-15 lb break vs 13.6 lb paste plant) | **Use polypropylene** |
+
+---
+
+## Sun Gold Placement: West Side
+
+Sun Gold goes on the **west (garden-interior) side** of the A-frame:
+
+- **Heat tolerance:** Sun Gold keeps setting fruit through 90F when paste drops blossoms (species file: SG temp curve 0.9 at 90F vs AP 0.7 at 90F)
+- **Afternoon sun:** West side gets hotter afternoon sun — better suited to the heat-tolerant variety
+- **Paste protection:** Amish Paste on east side gets cooler morning sun, reducing blossom drop risk
+- **Wind load:** Cherry fruit is lighter (3.1 lbs/plant vs 9.2 lbs), so the side with more afternoon wind exposure carries less load
+
+---
+
+## Plant Support: Lean-and-Lower
+
+Standard Dutch commercial method:
+1. Tie polypropylene twine to conduit above each plant
+2. Spiral-wrap twine around stem (one turn between each leaf/truss)
+3. To lower: unhook twine, lower assembly, re-tie
+4. Spent stem coils on ground, on its own side of the wire
+5. Each side's stems stay independent — no crossing
+
+### Connection to T-Posts
+
+U-bolt method (recommended):
 - 3/8" U-bolt wraps around T-post, plates clamp conduit
-- ~$2 per connection, no drilling, holds 200+ lb
+- ~$2 per connection, holds 200+ lbs
 - Alternative: rest on T-post studs + 12ga galvanized wire wrap
 
-### PVC T-bracket (user's current plan)
-- UV degradation: white PVC goes brittle in 5-7 years
-- Cold brittleness: may crack in Michigan winter if left up
-- Creep: slowly deforms under sustained 100+ lb load
-- Acceptable if replaced every 5-6 years or painted with opaque latex
+### PVC T-Fittings (if used instead of U-bolts)
 
-## T-Post Specifications
-- 8ft post (96"), 36" embedment, 60" (5ft) above ground
-- Weight: 1.25 lb/ft = 10 lb per post
-- Material: rail steel, Fy >= 50,000 psi
-- Lateral capacity at 30" embedment: ~30-60 lb at top (firm clay)
-- Lateral capacity at 36" embedment: ~45-90 lb at top (firm clay)
+- **Cold brittleness:** PVC impact strength drops ~80% below 32F. Michigan winters will crack
+  unprotected fittings. **Remove before first hard freeze** or they will shatter.
+- **UV degradation:** White PVC goes brittle in 5-7 years outdoor. Opaque latex paint extends
+  lifespan significantly. Schedule II fittings are thicker and last longer.
+- **Creep under sustained load:** PVC slowly deforms under constant stress. At the ~60-90 lb
+  reaction per post under normal plant load, creep is minimal for a single season but
+  compounding over multi-year use. Inspect annually for oval deformation.
+- **Fit:** Electrical tape shim on conduit ends for snug fit in PVC T-fitting bore.
+- **Verdict:** Acceptable for seasonal use if removed each winter. U-bolts are more durable
+  and don't require seasonal removal.
 
-### Embedment Depth: 30" vs 36" (Broms Method, Cohesive Soil)
+---
 
-For a fixed-length 8ft post, deeper embedment improves capacity two ways:
-more soil resistance AND shorter above-ground lever arm.
+## Sources
 
-Capacity scales as (D - 1.5b)² where D = embedment, b = post width (~2"):
-
-| Embedment | D-3" | (D-3")² | Above ground | Capacity vs 30" |
-|-----------|------|---------|-------------|-----------------|
-| 30" | 27" | 729 | 66" | 1.00x |
-| 36" | 33" | 1089 | 60" | **1.49x** |
-
-In granular soil (glacial till), capacity scales as D³ → 73% increase.
-Grand Rapids glacial till (mixed clay/sand/gravel): expect 49-73% increase.
-
-At 36" embedment, interior post capacity (45-90 lb) covers the 80 lb
-lateral load at 30 mph design wind. No earth anchors needed.
-
-## Plant Support Method
-
-Lean-and-lower with twine wrapping (standard Dutch commercial method):
-1. Tie twine to conduit above each plant
-2. Spiral-wrap twine around stem (one turn between each leaf/truss)
-3. To lower: unhook twine from conduit, lower assembly, re-tie
-4. Spent stem coils on ground, on its own side of the wire
-5. Each side's stems stay independent — no crossing to opposite side
-
-No tomato clips needed. Twine wrapping is simpler for <20 plants.
-
-## PVC Fitting Seasonal Notes
-
-PVC T-fittings connect conduit to T-post tops. Seasonal use only:
-- **Remove before winter** — PVC goes brittle below freezing in MI
-- UV degradation: 5-7 years outdoor lifespan (extend with opaque latex paint)
-- Creep under sustained load is acceptable for single-season use
-- Electrical tape shim on conduit ends for snug fit in PVC
+- Lowes 1-1/2" EMT: lowes.com/pd/5005565621
+- EMT dimensions: Engineering Toolbox, Electrolink spec tables
+- ASTM A653 Grade 33: materials.gelsonluz.com
+- Tomato stem diameter: PMC/9095744 (single-stem training)
+- Tomato leaf dry weight: PMC/4235429
+- Tomato canopy drag Cd=0.31: ResearchGate pub. 274344612
+- Amish Paste fruit: gardenfocused.co.uk, Victory Seeds, heirloom-organics
+- Sun Gold fruit: specialtyproduce.com, paramountseeds
+- UF IFAS greenhouse tomato: edis.ifas.ufl.edu/CV266 (10-12 lb/plant baseline)
+- Bootstrap Farmer trellis design: bootstrapfarmer.com (10 lb/plant design load)
+- Broms method for lateral post capacity: standard geotechnical reference
