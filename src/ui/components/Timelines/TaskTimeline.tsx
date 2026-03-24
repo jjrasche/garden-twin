@@ -267,30 +267,36 @@ function TaskModal({ row, onClose }: { row: WeekRow; onClose: () => void }) {
           {detailTask ? (
             <TaskDetail task={detailTask} onBack={() => setDetailTask(null)} />
           ) : (
-            <div className="grid gap-1">
-              {groups.map(group => (
-                <button
-                  key={group.type}
-                  onClick={() => setDetailTask(group.tasks[0]!)}
-                  className="flex items-center gap-2 py-2 px-3 rounded bg-gray-800 hover:bg-gray-750 text-xs text-left w-full transition-colors"
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: TASK_TYPE_COLORS[group.type] ?? '#6b7280' }}
-                  />
-                  <span className="text-white flex-1 capitalize">{group.type}</span>
-                  {group.tasks[0]?.parameters?.species_name && (
-                    <span className="text-gray-500 truncate max-w-32">
-                      {group.tasks[0].parameters.species_name as string}
-                    </span>
-                  )}
-                  <span className="text-gray-400 font-mono">{group.count}x</span>
-                  <span className="text-gray-400 w-20 text-right shrink-0">
-                    {group.totalMinutes >= 60 ? `${(group.totalMinutes / 60).toFixed(1)} hrs` : `${Math.round(group.totalMinutes)} min`}
-                  </span>
-                  <span className="text-gray-600">&rsaquo;</span>
-                </button>
-              ))}
+            <div className="grid gap-2">
+              {groups.map(group => {
+                const species = group.tasks[0]?.parameters?.species_name as string | undefined;
+                const duration = group.totalMinutes >= 60
+                  ? `${(group.totalMinutes / 60).toFixed(1)} hrs`
+                  : `${Math.round(group.totalMinutes)} min`;
+                return (
+                  <button
+                    key={group.type}
+                    onClick={() => setDetailTask(group.tasks[0]!)}
+                    className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 py-2.5 px-4 rounded-lg bg-gray-800 hover:bg-gray-750 text-sm text-left w-full transition-colors"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: TASK_TYPE_COLORS[group.type] ?? '#6b7280' }}
+                    />
+                    <div className="min-w-0">
+                      <span className="text-white capitalize">{group.type}</span>
+                      {species && (
+                        <span className="text-gray-500 ml-2 text-xs">{species}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 text-xs">
+                      <span className="text-gray-400 font-mono">{group.count}x</span>
+                      <span className="text-gray-300 font-mono w-16 text-right">{duration}</span>
+                      <span className="text-gray-600">&rsaquo;</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
