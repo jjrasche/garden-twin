@@ -118,11 +118,11 @@ function TaskTooltip({ active, payload, label }: any) {
         {label} — {row.taskCount} tasks
       </p>
       <p style={{ color: '#d1d5db', margin: '0 0 4px' }}>
-        Total: {row.totalMinutes} min ({(row.totalMinutes / 7).toFixed(0)} min/day)
+        Total: {Math.round(row.totalMinutes)} min ({Math.round(row.totalMinutes / 7)} min/day)
       </p>
       {activeTypes.map(t => (
         <p key={t} style={{ color: TASK_TYPE_COLORS[t], margin: '2px 0' }}>
-          {t}: {row.minutesByType[t]} min
+          {t}: {Math.round(row.minutesByType[t]!)} min
         </p>
       ))}
     </div>
@@ -236,39 +236,64 @@ function groupForDisplay(tasks: Task[]): TaskGroupRow[] {
   return Array.from(map.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
 }
 
-function WeekTaskList({ row, onSelectTask }: { row: WeekRow; onSelectTask: (t: Task) => void }) {
+function TaskModal({ row, onClose }: { row: WeekRow; onClose: () => void }) {
   const groups = useMemo(() => groupForDisplay(row.tasks), [row.tasks]);
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
 
   return (
-    <div className="border-t border-gray-700 pt-3 mt-3">
-      <h3 className="text-sm font-semibold text-white mb-2">
-        {row.weekLabel} — {row.taskCount} tasks, {row.totalMinutes} min
-        <span className="text-gray-500 font-normal ml-2">({(row.totalMinutes / 7).toFixed(0)} min/day)</span>
-      </h3>
-      <div className="grid gap-1 max-h-48 overflow-y-auto">
-        {groups.map(group => (
-          <button
-            key={group.type}
-            onClick={() => onSelectTask(group.tasks[0]!)}
-            className="flex items-center gap-2 py-1.5 px-2 rounded bg-gray-800 hover:bg-gray-750 text-xs text-left w-full transition-colors"
-          >
-            <span
-              className="w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: TASK_TYPE_COLORS[group.type] ?? '#6b7280' }}
-            />
-            <span className="text-white flex-1 capitalize">{group.type}</span>
-            {group.tasks[0]?.parameters?.species_name && (
-              <span className="text-gray-500 truncate max-w-24">
-                {group.tasks[0].parameters.species_name as string}
-              </span>
-            )}
-            <span className="text-gray-400 font-mono">{group.count}x</span>
-            <span className="text-gray-400 w-16 text-right shrink-0">
-              {group.totalMinutes >= 60 ? `${(group.totalMinutes / 60).toFixed(1)} hrs` : `${group.totalMinutes} min`}
-            </span>
-            <span className="text-gray-600">&rsaquo;</span>
-          </button>
-        ))}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        className="bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-[90vw] max-w-2xl max-h-[80vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+          <div>
+            <h3 className="text-sm font-semibold text-white">
+              {row.weekLabel} — {row.taskCount} tasks
+            </h3>
+            <div className="text-xs text-gray-400">
+              {Math.round(row.totalMinutes)} min total ({Math.round(row.totalMinutes / 7)} min/day)
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 text-lg px-2">&times;</button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          {detailTask ? (
+            <TaskDetail task={detailTask} onBack={() => setDetailTask(null)} />
+          ) : (
+            <div className="grid gap-1">
+              {groups.map(group => (
+                <button
+                  key={group.type}
+                  onClick={() => setDetailTask(group.tasks[0]!)}
+                  className="flex items-center gap-2 py-2 px-3 rounded bg-gray-800 hover:bg-gray-750 text-xs text-left w-full transition-colors"
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: TASK_TYPE_COLORS[group.type] ?? '#6b7280' }}
+                  />
+                  <span className="text-white flex-1 capitalize">{group.type}</span>
+                  {group.tasks[0]?.parameters?.species_name && (
+                    <span className="text-gray-500 truncate max-w-32">
+                      {group.tasks[0].parameters.species_name as string}
+                    </span>
+                  )}
+                  <span className="text-gray-400 font-mono">{group.count}x</span>
+                  <span className="text-gray-400 w-20 text-right shrink-0">
+                    {group.totalMinutes >= 60 ? `${(group.totalMinutes / 60).toFixed(1)} hrs` : `${Math.round(group.totalMinutes)} min`}
+                  </span>
+                  <span className="text-gray-600">&rsaquo;</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -288,15 +313,11 @@ export function TaskTimeline({ snapshots }: TaskTimelineProps) {
     ...row.minutesByType,
   })), [weekRows]);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleBarClick = useCallback((data: any) => {
     if (data?.activeLabel) {
-      setSelectedWeek(prev => {
-        setSelectedTask(null);
-        return prev === data.activeLabel ? null : data.activeLabel;
-      });
+      setSelectedWeek(prev => prev === data.activeLabel ? null : data.activeLabel);
     }
   }, []);
 
@@ -317,22 +338,21 @@ export function TaskTimeline({ snapshots }: TaskTimelineProps) {
     t => weekRows.some(row => (row.minutesByType[t] ?? 0) > 0),
   );
 
-  const selectedRow = selectedWeek ? chartData.find(r => r.weekLabel === selectedWeek) : null;
-  const hasDetail = selectedRow || selectedTask;
+  const selectedRow = selectedWeek ? weekRows.find(r => r.weekLabel === selectedWeek) : null;
 
   return (
     <div className="bg-gray-900 p-4 h-full flex flex-col">
       <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-xs text-gray-400">
-        <span>Peak: <strong className="text-white">{peakWeek.totalMinutes} min</strong> ({peakWeek.weekLabel})</span>
-        <span>Avg: <strong className="text-white">{avgMinPerWeek.toFixed(0)} min/wk</strong> ({(avgMinPerWeek / 7).toFixed(0)} min/day)</span>
-        <span>Season: <strong className="text-white">{(totalMinutes / 60).toFixed(0)} hrs</strong></span>
+        <span>Peak: <strong className="text-white">{Math.round(peakWeek.totalMinutes)} min</strong> ({peakWeek.weekLabel})</span>
+        <span>Avg: <strong className="text-white">{Math.round(avgMinPerWeek)} min/wk</strong> ({Math.round(avgMinPerWeek / 7)} min/day)</span>
+        <span>Season: <strong className="text-white">{Math.round(totalMinutes / 60)} hrs</strong></span>
         <span>Over budget: <strong className={overBudgetWeeks > 0 ? 'text-red-400' : 'text-emerald-400'}>
           {overBudgetWeeks} weeks
         </strong></span>
         <span>Budget: <strong className="text-emerald-400">20-30 min/day</strong></span>
       </div>
 
-      <div className={hasDetail ? 'h-36 shrink-0' : 'flex-1 min-h-0'}>
+      <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
@@ -386,14 +406,8 @@ export function TaskTimeline({ snapshots }: TaskTimelineProps) {
         </ResponsiveContainer>
       </div>
 
-      {selectedTask && (
-        <div className="border-t border-gray-700 pt-3 mt-3 max-h-48 overflow-y-auto">
-          <TaskDetail task={selectedTask} onBack={() => setSelectedTask(null)} />
-        </div>
-      )}
-
-      {selectedRow && !selectedTask && (
-        <WeekTaskList row={selectedRow} onSelectTask={setSelectedTask} />
+      {selectedRow && (
+        <TaskModal row={selectedRow} onClose={() => setSelectedWeek(null)} />
       )}
     </div>
   );
