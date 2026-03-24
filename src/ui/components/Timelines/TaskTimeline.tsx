@@ -134,8 +134,18 @@ const BUDGET_HIGH_MIN = 30 * 7;  // 210 min/week
 
 // ── Task Detail Panel ─────────────────────────────────────────────────────
 
+interface StepDisplay {
+  name: string;
+  scale: string;
+  minutes: number;
+  count: number;
+  total: number;
+  instructions?: string;
+}
+
 function TaskDetail({ task, onBack }: { task: Task; onBack: () => void }) {
   const params = task.parameters ?? {};
+  const steps = (params.steps as StepDisplay[] | undefined) ?? [];
   return (
     <div className="space-y-2">
       <button onClick={onBack} className="text-xs text-gray-500 hover:text-gray-300">
@@ -151,28 +161,49 @@ function TaskDetail({ task, onBack }: { task: Task; onBack: () => void }) {
       </div>
 
       {params.species_name && (
-        <div className="text-xs text-gray-300">{params.species_name}</div>
+        <div className="text-xs text-gray-300">
+          {params.species_name}
+          {params.plant_count ? ` (${params.plant_count} plants` : ''}
+          {params.row_count ? `, ${params.row_count} rows)` : params.plant_count ? ')' : ''}
+        </div>
       )}
       {params.activity_name && (
         <div className="text-xs text-gray-400">{params.activity_name}</div>
       )}
       {task.estimated_duration_minutes != null && (
         <div className="text-xs text-gray-400">
-          Duration: <span className="text-gray-200 font-mono">{task.estimated_duration_minutes} min</span>
-          {params.plant_count && (
-            <span className="text-gray-500"> ({params.plant_count} plants)</span>
-          )}
+          Total: <span className="text-gray-200 font-mono">{Math.round(task.estimated_duration_minutes)} min</span>
         </div>
       )}
+
+      {steps.length > 0 && (
+        <div className="space-y-1 mt-1">
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Steps</div>
+          {steps.map((step, i) => (
+            <div key={i} className="bg-gray-800/50 rounded px-2 py-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-200">{step.name}</span>
+                <span className="text-gray-400 font-mono shrink-0 ml-2">
+                  {step.total >= 1 ? `${step.total.toFixed(1)} min` : `${(step.total * 60).toFixed(0)}s`}
+                </span>
+              </div>
+              <div className="text-[10px] text-gray-500">
+                {step.scale === 'plant' && `${(step.minutes * 60).toFixed(0)}s × ${step.count} plants`}
+                {step.scale === 'row' && `${step.minutes} min × ${step.count} row${step.count > 1 ? 's' : ''}`}
+                {step.scale === 'fixed' && `${step.minutes} min (setup)`}
+              </div>
+              {step.instructions && (
+                <div className="text-[10px] text-gray-500 mt-0.5 italic">{step.instructions}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {params.equipment && (params.equipment as string[]).length > 0 && (
-        <div className="text-xs">
+        <div className="text-xs mt-1">
           <span className="text-gray-500">Equipment: </span>
           <span className="text-gray-300">{(params.equipment as string[]).join(', ')}</span>
-        </div>
-      )}
-      {params.instructions && (
-        <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded mt-1">
-          {params.instructions as string}
         </div>
       )}
       {task.generated_by_rule && (
