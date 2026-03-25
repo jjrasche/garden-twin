@@ -80,6 +80,12 @@ export const TOMATO_SUN_GOLD: PlantSpecies = {
   ],
 
   data_confidence: 'high',
+  quality: {
+    min_harvest_lbs: 0.1,
+    freshness_curve: { 0: 1.0, 3: 0.9, 5: 0.6, 7: 0.2 },
+    must_harvest_floor: 0.25,
+  },
+
   sources: [
     {
       claim: 'yield, days to maturity',

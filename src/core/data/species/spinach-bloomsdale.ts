@@ -111,6 +111,12 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
   ],
 
   data_confidence: 'high',
+  quality: {
+    min_harvest_lbs: 0.03,
+    freshness_curve: { 0: 1.0, 3: 0.7, 5: 0.3, 7: 0.1 },
+    must_harvest_floor: 0.3,
+  },
+
   sources: [
     {
       claim: 'yield, spacing, bolt resistance',

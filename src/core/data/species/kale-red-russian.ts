@@ -92,6 +92,12 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
   ],
 
   data_confidence: 'high',
+  quality: {
+    min_harvest_lbs: 0.08,
+    freshness_curve: { 0: 1.0, 7: 0.9, 14: 0.5, 21: 0.2 },
+    must_harvest_floor: 0.2,
+  },
+
   sources: [
     {
       claim: 'yield, spacing, frost tolerance',

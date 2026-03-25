@@ -284,6 +284,13 @@ export const PlantSpeciesSchema = z.object({
   // Duration-based stress tolerances (optional)
   stress_tolerances: StressTolerancesSchema.optional(),
 
+  // Quality model — species-specific harvest timing and freshness decay
+  quality: z.object({
+    min_harvest_lbs: z.number().min(0),                          // minimum biomass to be inventory
+    freshness_curve: z.record(z.string(), z.number()).optional(), // days_since_harvestable → freshness 0-1
+    must_harvest_floor: z.number().min(0).max(1),                // quality below this = forced harvest
+  }).optional(),
+
   // Layout optimization profile (optional — not all legacy species have this yet)
   layout: LayoutProfileSchema.optional(),
 

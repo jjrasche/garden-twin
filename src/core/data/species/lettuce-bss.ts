@@ -113,6 +113,12 @@ export const LETTUCE_BSS: PlantSpecies = {
     { factor: 'temperature_f', curve: { 50: 0.9, 60: 1.0, 65: 1.0, 70: 0.8, 75: 0.5, 80: 0.2, 85: 0.0 }, compound: 'sugar' },
   ],
 
+  quality: {
+    min_harvest_lbs: 0.05,
+    freshness_curve: { 0: 1.0, 3: 0.8, 5: 0.4, 7: 0.1 },
+    must_harvest_floor: 0.3,
+  },
+
   sources: [
     {
       claim: 'yield, spacing, days to harvest',

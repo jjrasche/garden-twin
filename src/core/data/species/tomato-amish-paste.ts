@@ -77,6 +77,12 @@ export const TOMATO_AMISH_PASTE: PlantSpecies = {
   ],
 
   data_confidence: 'high',
+  quality: {
+    min_harvest_lbs: 0.2,
+    freshness_curve: { 0: 1.0, 5: 0.9, 7: 0.6, 10: 0.2 },
+    must_harvest_floor: 0.25,
+  },
+
   sources: [
     {
       claim: 'yield, days to maturity',

@@ -90,6 +90,12 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   seed_cost_per_plant: 0.50,
 
   data_confidence: 'high',
+  quality: {
+    min_harvest_lbs: 1.0,
+    freshness_curve: { 0: 1.0, 14: 1.0, 30: 0.9, 45: 0.5 },
+    must_harvest_floor: 0.15,
+  },
+
   sources: [
     {
       claim: 'yield, spacing, days to maturity',

@@ -53,11 +53,27 @@
   .legend-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 600; color: #000; }
 
   .tray-dims { font-size: 0.65rem; color: #777; margin-top: 3px; }
+  .stats-bar { font-size: 0.7rem; color: #ccc; margin-top: 4px; font-family: monospace; }
 
   .light-cfg { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 3px; }
   .light-cfg .btn { font-size: 0.7rem; padding: 2px 7px; }
   .light-cfg .btn.light-only { display: none; }
   .light-cfg.editing .btn.light-only { display: inline-block; }
+
+  .scenarios { margin-top: 8px; }
+  .scenarios h3 { font-size: 0.78rem; margin-bottom: 4px; color: #ccc; }
+  .scenario-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+  .scenario-row .name { flex: 1; font-size: 0.72rem; color: #ddd; cursor: pointer; padding: 2px 5px;
+    border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .scenario-row .name:hover { background: #3a3a5e; }
+  .scenario-row .name.active { background: #3a5a8e; color: #fff; }
+  .scenario-row .del { font-size: 0.65rem; color: #888; cursor: pointer; padding: 0 3px; }
+  .scenario-row .del:hover { color: #ff6b6b; }
+  .scenario-row .summary { font-size: 0.6rem; color: #777; white-space: nowrap; }
+  .save-row { display: flex; gap: 4px; margin-bottom: 6px; }
+  .save-row input { flex: 1; font-size: 0.72rem; padding: 2px 5px; background: #2a2a3e; border: 1px solid #555;
+    border-radius: 3px; color: #ddd; }
+  .save-row input::placeholder { color: #666; }
 
   #tooltip { position: absolute; display: none; background: rgba(0,0,0,0.9); padding: 5px 9px;
     border-radius: 4px; font-size: 0.7rem; pointer-events: none; z-index: 10; border: 1px solid #555; line-height: 1.35; }
@@ -97,6 +113,7 @@
   <canvas id="grid" width="980" height="560"></canvas>
   <div class="legend" id="legend"></div>
   <div class="tray-dims" id="trayDims"></div>
+  <div class="stats-bar" id="statsBar"></div>
 </div>
 
 <div class="side-col">
@@ -128,6 +145,15 @@
     <span style="color:#ffd93d">Yellow</span> = 10-25% outside range.
     <span style="color:#ff6b6b">Red</span> = &gt;25% outside — seedling will be leggy (too dim) or stressed (too bright).</p>
     <p style="margin-top:3px">The number on each block shows <b>actual PPFD</b> in Raw view, or <b>+/- deviation</b> from optimal in Fit view.</p>
+  </div>
+
+  <div class="panel scenarios">
+    <h3>Scenarios</h3>
+    <div class="save-row">
+      <input type="text" id="scenarioName" placeholder="Name this setup...">
+      <button class="btn primary" id="saveScenario">Save</button>
+    </div>
+    <div id="scenarioList"></div>
   </div>
 
   <div class="panel">
@@ -316,6 +342,73 @@ function computeHeatmap(h) {
   }
 }
 
+// ── Contour lines (marching squares) ─────────────────────────────────────────
+
+function marchingSquareSegment(v00, v10, v01, v11, level, ix, iy, cw, ch) {
+  const b00 = v00 >= level ? 1 : 0;
+  const b10 = v10 >= level ? 1 : 0;
+  const b01 = v01 >= level ? 1 : 0;
+  const b11 = v11 >= level ? 1 : 0;
+  const code = b00 | (b10 << 1) | (b01 << 2) | (b11 << 3);
+  if (code === 0 || code === 15) return null;
+  function interpX(va, vb, y) { const t = (level - va) / (vb - va); return [(ix + t) * cw, y * ch]; }
+  function interpY(va, vb, x) { const t = (level - va) / (vb - va); return [x * cw, (iy + t) * ch]; }
+  const top = () => interpX(v00, v10, iy);
+  const bot = () => interpX(v01, v11, iy + 1);
+  const lft = () => interpY(v00, v01, ix);
+  const rgt = () => interpY(v10, v11, ix + 1);
+  let p1, p2;
+  switch (code) {
+    case 1: case 14: p1 = top(); p2 = lft(); break;
+    case 2: case 13: p1 = top(); p2 = rgt(); break;
+    case 3: case 12: p1 = lft(); p2 = rgt(); break;
+    case 4: case 11: p1 = lft(); p2 = bot(); break;
+    case 6: case 9:  p1 = top(); p2 = bot(); break;
+    case 7: case 8:  p1 = rgt(); p2 = bot(); break;
+    case 5: p1 = top(); p2 = lft(); break;
+    case 10: p1 = top(); p2 = rgt(); break;
+    default: return null;
+  }
+  return [p1[0], p1[1], p2[0], p2[1]];
+}
+
+function drawContours(ox, oy, s) {
+  const tw = totalW();
+  const cellW = (tw / HNX) * s;
+  const cellH = (TRAY_L / HNY) * s;
+  const levels = [100, 150, 200, 250, 300];
+  ctx.lineWidth = 1.5;
+  for (const level of levels) {
+    ctx.strokeStyle = level === 300 ? '#ff4444' : level === 200 ? '#fff' : 'rgba(255,255,255,0.45)';
+    ctx.setLineDash(level === 300 ? [4, 4] : []);
+    for (let iy = 0; iy < HNY - 1; iy++) {
+      for (let ix = 0; ix < HNX - 1; ix++) {
+        const pts = marchingSquareSegment(
+          hGrid[iy][ix], hGrid[iy][ix+1], hGrid[iy+1][ix], hGrid[iy+1][ix+1],
+          level, ix, iy, cellW, cellH);
+        if (pts) {
+          ctx.beginPath();
+          ctx.moveTo(ox + pts[0], oy + pts[1]);
+          ctx.lineTo(ox + pts[2], oy + pts[3]);
+          ctx.stroke();
+        }
+      }
+    }
+    // Label at midpoint
+    const midY = HNY / 2 | 0;
+    for (let ix = 0; ix < HNX - 1; ix++) {
+      if ((hGrid[midY][ix] < level) !== (hGrid[midY][ix+1] < level)) {
+        ctx.fillStyle = level === 300 ? '#ff4444' : '#fff';
+        ctx.font = 'bold 9px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(level + '', ox + ix * cellW, oy - 3);
+        break;
+      }
+    }
+  }
+  ctx.setLineDash([]);
+}
+
 // ── Mismatch ────────────────────────────────────────────────────────────────
 
 function mismatch(ppfd, crop) {
@@ -420,6 +513,9 @@ function render() {
     }
   }
 
+  // Contour lines (Raw PPFD view only)
+  if (currentView === 'ppfd') drawContours(ox, oy, s);
+
   // Tray outlines
   ctx.strokeStyle = 'rgba(255,255,255,0.45)';
   ctx.lineWidth = 1.5;
@@ -509,23 +605,23 @@ function render() {
     const [p2x,p2y] = inToP(x2,y2);
 
     if (editingLights) {
-      // Full edit mode: glow + thick bar + drag handle + label
-      ctx.strokeStyle = 'rgba(251,191,36,0.3)';
-      ctx.lineWidth = Math.max(8, 12*s);
+      // Full edit mode: glow + bar + drag handle + label (fixed pixel sizes)
+      ctx.strokeStyle = 'rgba(251,191,36,0.25)';
+      ctx.lineWidth = 10;
       ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(p1x,p1y); ctx.lineTo(p2x,p2y); ctx.stroke();
 
       ctx.strokeStyle = li === dragLight ? '#fff' : '#D97706';
-      ctx.lineWidth = Math.max(3, 5*s);
+      ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(p1x,p1y); ctx.lineTo(p2x,p2y); ctx.stroke();
 
       const [pcx,pcy] = inToP(L.cx, L.cy);
       ctx.fillStyle = li === dragLight ? '#fff' : '#f0c040';
-      ctx.beginPath(); ctx.arc(pcx, pcy, Math.max(4, 6*s), 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(pcx, pcy, 5, 0, Math.PI*2); ctx.fill();
 
-      ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
+      ctx.font = 'bold 9px Segoe UI'; ctx.textAlign = 'center';
       ctx.fillStyle = '#f0c040';
-      ctx.fillText('Bar '+(li+1), pcx, pcy - Math.max(8, 10*s));
+      ctx.fillText('Bar '+(li+1), pcx, pcy - 10);
     } else {
       // Ghost mode: thin dashed line + small endpoint dots
       ctx.save();
@@ -563,6 +659,16 @@ function render() {
   document.getElementById('trayDims').textContent =
     `Tray: ${TRAY_W}" x ${TRAY_L}" | ${COLS}x${ROWS} = ${BPT}/tray | ${trayCount} trays = ${trayCount*BPT} blocks | ` +
     `${lights.length} bar${lights.length!==1?'s':''} (${BAR_LEN}" each)`;
+
+  // Stats summary (min/max/center/DLI)
+  const allPPFD = hGrid.flat();
+  const minP = Math.min(...allPPFD), maxP = Math.max(...allPPFD);
+  const centerP = hGrid[HNY/2|0][HNX/2|0];
+  const dliCenter = (centerP * 16 * 3600 / 1e6).toFixed(1);
+  const dliMin = (minP * 16 * 3600 / 1e6).toFixed(1);
+  document.getElementById('statsBar').textContent =
+    `Center: ${Math.round(centerP)} | Min: ${Math.round(minP)} | Max: ${Math.round(maxP)} | ` +
+    `DLI @16h: center ${dliCenter}, min ${dliMin} mol/m\u00B2/d`;
 
   updateStats();
 }
@@ -818,11 +924,115 @@ document.getElementById('traySlider').addEventListener('input', () => {
   .forEach(s => { const d=document.createElement('div'); d.className='legend-item'; d.style.background=s.c; d.textContent=s.l; el.appendChild(d); });
 })();
 
+// ── Scenarios (localStorage) ─────────────────────────────────────────────
+
+const SCENARIO_KEY = 'ppfd-scenarios';
+let activeScenarioName = null;
+
+function loadScenarios() {
+  try { return JSON.parse(localStorage.getItem(SCENARIO_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveScenarios(all) {
+  localStorage.setItem(SCENARIO_KEY, JSON.stringify(all));
+}
+
+function captureState() {
+  return {
+    trayCount,
+    height: parseFloat(document.getElementById('heightSlider').value),
+    baseline: parseFloat(document.getElementById('baselineSlider').value),
+    lights: lights.map(l => ({ ...l })),
+    blocks: blocks.map(b => ({ tray: b.tray, col: b.col, row: b.row, crop: b.crop })),
+    savedAt: new Date().toISOString(),
+  };
+}
+
+function restoreState(state) {
+  trayCount = state.trayCount;
+  document.getElementById('traySlider').value = trayCount;
+  document.getElementById('trayVal').textContent = trayCount;
+  document.getElementById('heightSlider').value = state.height;
+  document.getElementById('baselineSlider').value = state.baseline;
+  lights = state.lights.map(l => ({ ...l }));
+  blocks = buildBlocks();
+  for (const saved of state.blocks) {
+    const match = blocks.find(b => b.tray === saved.tray && b.col === saved.col && b.row === saved.row);
+    if (match) match.crop = saved.crop;
+  }
+  render();
+}
+
+function scenarioSummary(state) {
+  const placed = state.blocks.filter(b => b.crop).length;
+  return `${state.trayCount}T ${state.lights.length}L h${state.height}" ${placed}blk`;
+}
+
+function renderScenarioList() {
+  const all = loadScenarios();
+  const container = document.getElementById('scenarioList');
+  container.innerHTML = '';
+  const names = Object.keys(all).sort((a, b) => (all[b].savedAt || '').localeCompare(all[a].savedAt || ''));
+  if (!names.length) {
+    container.innerHTML = '<div style="font-size:0.65rem;color:#666">No saved scenarios yet.</div>';
+    return;
+  }
+  for (const name of names) {
+    const row = document.createElement('div');
+    row.className = 'scenario-row';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'name' + (name === activeScenarioName ? ' active' : '');
+    nameEl.textContent = name;
+    nameEl.title = 'Click to load';
+    nameEl.addEventListener('click', () => {
+      activeScenarioName = name;
+      restoreState(all[name]);
+      renderScenarioList();
+    });
+    const summary = document.createElement('span');
+    summary.className = 'summary';
+    summary.textContent = scenarioSummary(all[name]);
+    const del = document.createElement('span');
+    del.className = 'del';
+    del.textContent = '\u00D7';
+    del.title = 'Delete';
+    del.addEventListener('click', (e) => {
+      e.stopPropagation();
+      delete all[name];
+      saveScenarios(all);
+      if (activeScenarioName === name) activeScenarioName = null;
+      renderScenarioList();
+    });
+    row.appendChild(nameEl);
+    row.appendChild(summary);
+    row.appendChild(del);
+    container.appendChild(row);
+  }
+}
+
+document.getElementById('saveScenario').addEventListener('click', () => {
+  const input = document.getElementById('scenarioName');
+  let name = input.value.trim();
+  if (!name) {
+    const all = loadScenarios();
+    const n = Object.keys(all).length + 1;
+    name = 'Scenario ' + n;
+  }
+  const all = loadScenarios();
+  all[name] = captureState();
+  saveScenarios(all);
+  activeScenarioName = name;
+  input.value = '';
+  renderScenarioList();
+});
+
 // ── Init ────────────────────────────────────────────────────────────────────
 
 buildCropButtons();
 blocks = buildBlocks();
 lights = defaultLights(trayCount);
+renderScenarioList();
 render();
 </script>
 </body>
