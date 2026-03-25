@@ -9,9 +9,31 @@ import type { DaySnapshot } from '../engine/simulate';
 import type { GardenState } from '../types/GardenState';
 import { computeAreaFractions } from './Profitability';
 
-/** Aggregate harvest_ready event lbs by species across all snapshots. */
+/**
+ * Aggregate actual harvest lbs by species across all snapshots.
+ *
+ * Uses 'harvested' events (quality-decline forced harvest) as primary source.
+ * Falls back to 'harvest_ready' events for backward compat with old simulations.
+ */
 export function extractHarvestLbs(snapshots: DaySnapshot[]): Map<string, number> {
   const harvestLbs = new Map<string, number>();
+  let hasHarvestedEvents = false;
+
+  // Prefer 'harvested' events (actual harvest with quality tracking)
+  for (const snap of snapshots) {
+    for (const event of snap.events) {
+      if (event.type === 'harvested') {
+        hasHarvestedEvents = true;
+        const plant = snap.plants.find(p => p.plant_id === event.plant_id);
+        const speciesId = plant?.species_id ?? '';
+        if (speciesId) harvestLbs.set(speciesId, (harvestLbs.get(speciesId) ?? 0) + event.harvested_lbs);
+      }
+    }
+  }
+
+  if (hasHarvestedEvents) return harvestLbs;
+
+  // Fallback: legacy 'harvest_ready' events (old auto-harvest simulations)
   for (const snap of snapshots) {
     for (const event of snap.events) {
       if (event.type !== 'harvest_ready') continue;

@@ -204,8 +204,22 @@ export function collectSnapshots(
     const result = tickDay(plants, currentDate, ctx.env, ctx.catalog);
     plants = result.plants;
 
-    // 2. Auto-harvest
-    plants = plants.map(p => p.is_harvestable ? harvestPlant(p, ctx.catalog) : p);
+    // 2. Quality-decline harvest (harvest only when quality demands it)
+    const harvestEvents: GrowthEvent[] = [];
+    plants = plants.map(p => {
+      if (!p.is_harvestable || p.lifecycle === 'dead' || p.lifecycle === 'pulled') return p;
+      const species = ctx.catalog.get(p.species_id);
+      const mustHarvestFloor = species?.quality?.must_harvest_floor ?? 0.3;
+      if (p.quality_score !== undefined && p.quality_score < mustHarvestFloor) {
+        const harvestedLbs = p.accumulated_lbs;
+        harvestEvents.push({
+          type: 'harvested', plant_id: p.plant_id, date: currentDate,
+          harvested_lbs: harvestedLbs, quality_score: p.quality_score,
+        });
+        return { ...harvestPlant(p, ctx.catalog), days_since_harvestable: 0 };
+      }
+      return p;
+    });
 
     // 3. Auto-pull senescent plants (gardener clears them same day they notice)
     plants = plants.map(p => {
@@ -216,7 +230,7 @@ export function collectSnapshots(
     // 4. Succession evaluation
     plants = evaluateAndMaterializeSuccessions(activeSuccessions, plants, currentDate, ctx);
 
-    snapshots.push({ date: currentDate, plants: [...plants], events: result.events });
+    snapshots.push({ date: currentDate, plants: [...plants], events: [...result.events, ...harvestEvents] });
     day.setDate(day.getDate() + 1);
 
     if (plants.every(p => p.lifecycle === 'dead' || p.lifecycle === 'pulled')) break;
@@ -352,7 +366,23 @@ export function simulateWithTasks(
       return { ...task, status: 'completed' as const, completed_at: dateIso };
     });
 
-    // 5. Auto-pull senescent plants (gardener clears them same day)
+    // 5. Quality-decline forced harvest (plants not caught by task-driven harvest)
+    const harvestEvents: GrowthEvent[] = [];
+    plants = plants.map(p => {
+      if (!p.is_harvestable || p.lifecycle === 'dead' || p.lifecycle === 'pulled') return p;
+      const species = ctx.catalog.get(p.species_id);
+      const mustHarvestFloor = species?.quality?.must_harvest_floor ?? 0.3;
+      if (p.quality_score !== undefined && p.quality_score < mustHarvestFloor) {
+        harvestEvents.push({
+          type: 'harvested', plant_id: p.plant_id, date: currentDate,
+          harvested_lbs: p.accumulated_lbs, quality_score: p.quality_score,
+        });
+        return { ...harvestPlant(p, ctx.catalog), days_since_harvestable: 0 };
+      }
+      return p;
+    });
+
+    // 6. Auto-pull senescent plants (gardener clears them same day)
     plants = plants.map(p =>
       p.lifecycle === 'senescent' ? { ...p, lifecycle: 'pulled' as const } : p,
     );
@@ -362,7 +392,7 @@ export function simulateWithTasks(
     snapshots.push({
       date: currentDate,
       plants: [...plants],
-      events: result.events,
+      events: [...result.events, ...harvestEvents],
       tasks: resolvedTasks.length > 0 ? resolvedTasks : undefined,
     });
 
