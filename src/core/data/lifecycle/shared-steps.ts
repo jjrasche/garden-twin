@@ -74,8 +74,8 @@ export const RINSE_AND_STORE: TaskStep = {
 export const FILL_BLOCKS: TaskStep = {
   name: 'Fill and press soil blocks',
   scale: 'plant',
-  minutes: 0.25,
-  instructions: 'Fill block maker with moist mix, press firmly. Eject onto tray.',
+  minutes: 0.125, // Mini 4 makes 4 blocks per press in ~25-30s = 6-7s per block
+  instructions: 'Fill block maker with moist mix, press firmly. Eject onto tray. Mini 4 = 4 blocks per press.',
 };
 
 export const DROP_SEED: TaskStep = {
