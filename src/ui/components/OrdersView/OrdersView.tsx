@@ -65,14 +65,15 @@ function InventoryPanel({ inventory }: { inventory: AvailableSpecies[] }) {
 
 interface OrderFormProps {
   inventory: AvailableSpecies[];
+  validationError: string | null;
   onSubmit: (order: Order) => void;
 }
 
-function OrderForm({ inventory, onSubmit }: OrderFormProps) {
+function OrderForm({ inventory, validationError, onSubmit }: OrderFormProps) {
   const [customerName, setCustomerName] = useState('');
   const [pickupDate, setPickupDate] = useState('');
   const [lines, setLines] = useState<{ species_id: string; lbs: string }[]>([]);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const addLine = () => {
     if (inventory.length === 0) return;
@@ -91,18 +92,18 @@ function OrderForm({ inventory, onSubmit }: OrderFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError(null);
+    setFormError(null);
 
     if (!customerName.trim()) {
-      setValidationError('Customer name is required.');
+      setFormError('Customer name is required.');
       return;
     }
     if (!pickupDate) {
-      setValidationError('Pickup date is required.');
+      setFormError('Pickup date is required.');
       return;
     }
     if (lines.length === 0) {
-      setValidationError('Add at least one item.');
+      setFormError('Add at least one item.');
       return;
     }
 
@@ -114,12 +115,12 @@ function OrderForm({ inventory, onSubmit }: OrderFormProps) {
 
     const invalidLine = orderLines.find(l => l.requested_lbs <= 0);
     if (invalidLine) {
-      setValidationError(`Enter a valid weight for ${speciesName(invalidLine.species_id)}.`);
+      setFormError(`Enter a valid weight for ${speciesName(invalidLine.species_id)}.`);
       return;
     }
 
     const now = new Date().toISOString();
-    const order: Order = {
+    onSubmit({
       order_id: generateOrderId(),
       customer_name: customerName.trim(),
       pickup_date: pickupDate,
@@ -127,25 +128,13 @@ function OrderForm({ inventory, onSubmit }: OrderFormProps) {
       lines: orderLines,
       created_at: now,
       updated_at: now,
-    };
-
-    // Validate against inventory
-    const result = validateOrder(order, inventory, SALES_CONFIG, MARKET_PRICES_2026);
-    if (!result.valid) {
-      const issueMessages = result.issues.map(i =>
-        i.reason === 'not_available'
-          ? `${speciesName(i.species_id)}: not available`
-          : `${speciesName(i.species_id)}: requested ${i.requested_lbs} lbs, only ${i.sellable_lbs.toFixed(1)} available`,
-      );
-      setValidationError(issueMessages.join('. '));
-      return;
-    }
-
-    onSubmit({ ...order, status: 'confirmed', estimated_total_dollars: result.estimated_total });
+    });
     setCustomerName('');
     setPickupDate('');
     setLines([]);
   };
+
+  const displayError = formError ?? validationError;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -216,16 +205,14 @@ function OrderForm({ inventory, onSubmit }: OrderFormProps) {
         </button>
       </div>
 
-      {validationError && (
+      {displayError && (
         <div className="text-xs text-red-400 bg-red-900/30 border border-red-800 rounded px-2 py-1">
-          {validationError}
+          {displayError}
         </div>
       )}
     </form>
   );
 }
-
-// ── Order List ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
   pending: '#f59e0b',
@@ -235,6 +222,55 @@ const STATUS_COLORS: Record<string, string> = {
   picked_up: '#6b7280',
   cancelled: '#ef4444',
 };
+
+// ── Harvest Weight Entry ──────────────────────────────────────────────────────
+
+function HarvestWeightEntry({ order }: { order: Order }) {
+  const fulfillOrder = useOrderStore(s => s.fulfillOrder);
+  const [weights, setWeights] = useState<Record<string, string>>(
+    () => Object.fromEntries(order.lines.map(l => [l.species_id, String(l.requested_lbs)])),
+  );
+
+  const updateWeight = (speciesId: string, value: string) => {
+    setWeights(prev => ({ ...prev, [speciesId]: value }));
+  };
+
+  const handleComplete = () => {
+    const fulfillments = order.lines.map(l => ({
+      species_id: l.species_id,
+      fulfilled_lbs: parseFloat(weights[l.species_id] ?? '0') || 0,
+    }));
+    fulfillOrder(order.order_id, fulfillments);
+  };
+
+  return (
+    <div className="space-y-1.5 border-t border-gray-700 pt-2 mt-1">
+      <div className="text-[10px] text-gray-400 font-medium">Actual harvest weights:</div>
+      {order.lines.map(line => (
+        <div key={line.species_id} className="flex items-center gap-2">
+          <span className="flex-1 text-[11px] text-gray-400">{speciesName(line.species_id)}</span>
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            value={weights[line.species_id] ?? ''}
+            onChange={e => updateWeight(line.species_id, e.target.value)}
+            className="w-20 bg-gray-900 border border-gray-600 rounded px-2 py-0.5 text-[11px] text-gray-200 text-right font-mono"
+          />
+          <span className="text-[10px] text-gray-500">lbs</span>
+        </div>
+      ))}
+      <button
+        onClick={handleComplete}
+        className="text-[10px] px-2 py-0.5 bg-purple-700 hover:bg-purple-600 text-white rounded"
+      >
+        Complete Harvest
+      </button>
+    </div>
+  );
+}
+
+// ── Order List ───────────────────────────────────────────────────────────────
 
 function OrderList() {
   const orders = useOrderStore(s => s.orders);
@@ -275,7 +311,14 @@ function OrderList() {
             {order.lines.map((line, i) => (
               <div key={i} className="flex items-center justify-between text-[11px]">
                 <span className="text-gray-400">{speciesName(line.species_id)}</span>
-                <span className="text-gray-300 font-mono">{line.requested_lbs} lbs</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-300 font-mono">{line.requested_lbs} lbs</span>
+                  {line.fulfilled_lbs > 0 && (
+                    <span className="text-emerald-400 font-mono text-[10px]">
+                      ({line.fulfilled_lbs} actual)
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -286,6 +329,8 @@ function OrderList() {
             </div>
           )}
 
+          {order.status === 'harvesting' && <HarvestWeightEntry order={order} />}
+
           <div className="flex items-center gap-1 pt-1">
             {order.status === 'confirmed' && (
               <button
@@ -293,14 +338,6 @@ function OrderList() {
                 className="text-[10px] px-2 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded"
               >
                 Start Harvest
-              </button>
-            )}
-            {order.status === 'harvesting' && (
-              <button
-                onClick={() => updateStatus(order.order_id, 'packaged')}
-                className="text-[10px] px-2 py-0.5 bg-purple-700 hover:bg-purple-600 text-white rounded"
-              >
-                Mark Packaged
               </button>
             )}
             {order.status === 'packaged' && (
@@ -343,11 +380,27 @@ interface OrdersViewProps {
 
 export function OrdersView({ snapshots, selectedDate }: OrdersViewProps) {
   const addOrder = useOrderStore(s => s.addOrder);
+  const [inventoryError, setInventoryError] = useState<string | null>(null);
 
   const inventory = useMemo(() => {
     if (!selectedDate || snapshots.length === 0) return [];
     return getAvailableHarvest(snapshots, selectedDate);
   }, [snapshots, selectedDate]);
+
+  const confirmOrder = (pendingOrder: Order) => {
+    setInventoryError(null);
+    const result = validateOrder(pendingOrder, inventory, SALES_CONFIG, MARKET_PRICES_2026);
+    if (!result.valid) {
+      const issueMessages = result.issues.map(i =>
+        i.reason === 'not_available'
+          ? `${speciesName(i.species_id)}: not available`
+          : `${speciesName(i.species_id)}: requested ${i.requested_lbs} lbs, only ${i.sellable_lbs.toFixed(1)} available`,
+      );
+      setInventoryError(issueMessages.join('. '));
+      return;
+    }
+    addOrder({ ...pendingOrder, status: 'confirmed', estimated_total_dollars: result.estimated_total });
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
@@ -370,7 +423,7 @@ export function OrdersView({ snapshots, selectedDate }: OrdersViewProps) {
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
             New Order
           </h2>
-          <OrderForm inventory={inventory} onSubmit={addOrder} />
+          <OrderForm inventory={inventory} validationError={inventoryError} onSubmit={confirmOrder} />
         </section>
 
         {/* Order List */}
