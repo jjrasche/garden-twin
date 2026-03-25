@@ -91,6 +91,8 @@
   <span class="value" id="baselineVal">560</span></label>
   <label>Trays: <input type="range" id="traySlider" min="3" max="6" step="1" value="4">
   <span class="value" id="trayVal">4</span></label>
+  <label>Margin: <input type="range" id="marginSlider" min="0" max="24" step="2" value="6">
+  <span class="value" id="marginVal">6"</span></label>
 </div>
 
 <div class="layout">
@@ -171,12 +173,11 @@
 // ── Crop config ─────────────────────────────────────────────────────────────
 
 const CROPS = {
-  tomato:   { label: 'Tomato',   color: '#ff5050', optimal: [200, 250], target: 21 },
-  marigold: { label: 'Marigold', color: '#ffd232', optimal: [150, 235], target: 35 },
+  tomato:   { label: 'Tomato',   color: '#ff5050', optimal: [200, 250], target: 28 },
   kale:     { label: 'Kale',     color: '#50c864', optimal: [140, 210], target: 123 },
 };
-// 35 marigold blocks (34 plants from companion planting geometry: 18" visual confusion
-// radius, 36" spacing along kale/potato zone borders + 2 internal interplant rows).
+// Marigold removed — direct sow in field, no soil blocks needed.
+// Tomato: 11 Amish Paste + 8 Sun Gold = 19 blocks.
 const CROP_IDS = Object.keys(CROPS);
 
 // ── Tray geometry (measured) ────────────────────────────────────────────────
@@ -212,6 +213,9 @@ let trayCount = 4;
 let blocks = [];
 
 function totalW() { return trayCount * TRAY_W; }
+function viewMargin() { return parseFloat(document.getElementById('marginSlider').value); }
+function viewW() { return totalW() + 2 * viewMargin(); }
+function viewH() { return TRAY_L + 2 * viewMargin(); }
 
 function buildBlocks() {
   const old = blocks;
@@ -242,16 +246,18 @@ const PW = canvas.width - ML - MR;
 const PH = canvas.height - MT - MB;
 
 // Map inches to pixels, maintaining aspect ratio
+// View = tray area + margin on all sides. Origin (0,0) = tray top-left corner.
 function getScale() {
-  const tw = totalW();
-  const scaleX = PW / tw;
-  const scaleY = PH / TRAY_L;
+  const scaleX = PW / viewW();
+  const scaleY = PH / viewH();
   return Math.min(scaleX, scaleY);
 }
 function plotOrigin() {
+  // Origin maps to the tray (0,0) corner, offset by the margin
   const s = getScale();
-  const usedW = totalW() * s, usedH = TRAY_L * s;
-  return [ML + (PW - usedW) / 2, MT + (PH - usedH) / 2];
+  const usedW = viewW() * s, usedH = viewH() * s;
+  const m = viewMargin();
+  return [ML + (PW - usedW) / 2 + m * s, MT + (PH - usedH) / 2 + m * s];
 }
 function inToP(xIn, yIn) {
   const s = getScale();
@@ -330,14 +336,18 @@ function computeAll() {
 
 const HNX = 80, HNY = 40;
 let hGrid = [];
+// hGrid covers the full view area (trays + margin)
+let hGridXMin, hGridXMax, hGridYMin, hGridYMax;
 function computeHeatmap(h) {
-  const tw = totalW();
+  const m = viewMargin();
+  hGridXMin = -m; hGridXMax = totalW() + m;
+  hGridYMin = -m; hGridYMax = TRAY_L + m;
   hGrid = [];
   for (let iy = 0; iy < HNY; iy++) {
     hGrid[iy] = [];
-    const py = (iy / (HNY - 1)) * TRAY_L;
+    const py = hGridYMin + (iy / (HNY - 1)) * (hGridYMax - hGridYMin);
     for (let ix = 0; ix < HNX; ix++) {
-      const px = (ix / (HNX - 1)) * tw;
+      const px = hGridXMin + (ix / (HNX - 1)) * (hGridXMax - hGridXMin);
       hGrid[iy][ix] = computePPFD(px, py, h);
     }
   }
@@ -373,10 +383,9 @@ function marchingSquareSegment(v00, v10, v01, v11, level, ix, iy, cw, ch) {
   return [p1[0], p1[1], p2[0], p2[1]];
 }
 
-function drawContours(ox, oy, s) {
-  const tw = totalW();
-  const cellW = (tw / HNX) * s;
-  const cellH = (TRAY_L / HNY) * s;
+function drawContours(hOx, hOy, s) {
+  const cellW = (viewW() / HNX) * s;
+  const cellH = (viewH() / HNY) * s;
   const levels = [100, 150, 200, 250, 300];
   ctx.lineWidth = 1.5;
   for (const level of levels) {
@@ -389,8 +398,8 @@ function drawContours(ox, oy, s) {
           level, ix, iy, cellW, cellH);
         if (pts) {
           ctx.beginPath();
-          ctx.moveTo(ox + pts[0], oy + pts[1]);
-          ctx.lineTo(ox + pts[2], oy + pts[3]);
+          ctx.moveTo(hOx + pts[0], hOy + pts[1]);
+          ctx.lineTo(hOx + pts[2], hOy + pts[3]);
           ctx.stroke();
         }
       }
@@ -402,7 +411,7 @@ function drawContours(ox, oy, s) {
         ctx.fillStyle = level === 300 ? '#ff4444' : '#fff';
         ctx.font = 'bold 9px Segoe UI';
         ctx.textAlign = 'center';
-        ctx.fillText(level + '', ox + ix * cellW, oy - 3);
+        ctx.fillText(level + '', hOx + ix * cellW, hOy - 3);
         break;
       }
     }
@@ -503,19 +512,22 @@ function render() {
   const s = getScale();
   const [ox, oy] = plotOrigin();
 
-  // Heatmap background
-  const cellW = (tw / HNX) * s, cellH = (TRAY_L / HNY) * s;
+  // Heatmap background (covers full view area including margin)
+  const m = viewMargin();
+  const hW = viewW(), hH = viewH();
+  const cellW = (hW / HNX) * s, cellH = (hH / HNY) * s;
+  const [hOx, hOy] = inToP(-m, -m); // top-left of view area
   const dim = currentView !== 'ppfd' ? 0.2 : 0.9;
   for (let iy = 0; iy < HNY; iy++) {
     for (let ix = 0; ix < HNX; ix++) {
       const c = ppfdColor(hGrid[iy][ix]);
       ctx.fillStyle = `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${dim})`;
-      ctx.fillRect(ox + ix * cellW, oy + iy * cellH, cellW + 0.5, cellH + 0.5);
+      ctx.fillRect(hOx + ix * cellW, hOy + iy * cellH, cellW + 0.5, cellH + 0.5);
     }
   }
 
   // Contour lines (Raw PPFD view only)
-  if (currentView === 'ppfd') drawContours(ox, oy, s);
+  if (currentView === 'ppfd') drawContours(hOx, hOy, s);
 
   // Tray outlines
   ctx.strokeStyle = 'rgba(255,255,255,0.45)';
@@ -662,9 +674,17 @@ function render() {
     `Tray: ${TRAY_W}" x ${TRAY_L}" | ${COLS}x${ROWS} = ${BPT}/tray | ${trayCount} trays = ${trayCount*BPT} blocks | ` +
     `${lights.length} bar${lights.length!==1?'s':''} (${BAR_LEN}" each)`;
 
-  // Stats summary (min/max/center/DLI)
-  const allPPFD = hGrid.flat();
-  const minP = Math.min(...allPPFD), maxP = Math.max(...allPPFD);
+  // Stats summary (min/max/center/DLI — within tray area only)
+  const mFrac = m / viewH(); // margin fraction of grid
+  const iyLo = Math.round(mFrac * HNY), iyHi = HNY - iyLo;
+  const mFracX = m / viewW();
+  const ixLo = Math.round(mFracX * HNX), ixHi = HNX - ixLo;
+  let minP = Infinity, maxP = 0;
+  for (let iy = iyLo; iy < iyHi; iy++)
+    for (let ix = ixLo; ix < ixHi; ix++) {
+      const v = hGrid[iy][ix];
+      if (v < minP) minP = v; if (v > maxP) maxP = v;
+    }
   const centerP = hGrid[HNY/2|0][HNX/2|0];
   const dliCenter = (centerP * 16 * 3600 / 1e6).toFixed(1);
   const dliMin = (minP * 16 * 3600 / 1e6).toFixed(1);
@@ -916,6 +936,10 @@ document.getElementById('traySlider').addEventListener('input', () => {
   blocks = buildBlocks();
   render();
 });
+document.getElementById('marginSlider').addEventListener('input', () => {
+  document.getElementById('marginVal').textContent = viewMargin() + '"';
+  render();
+});
 
 // ── Legend ───────────────────────────────────────────────────────────────────
 
@@ -945,6 +969,7 @@ function captureState() {
     trayCount,
     height: parseFloat(document.getElementById('heightSlider').value),
     baseline: parseFloat(document.getElementById('baselineSlider').value),
+    margin: viewMargin(),
     lights: lights.map(l => ({ ...l })),
     blocks: blocks.map(b => ({ tray: b.tray, col: b.col, row: b.row, crop: b.crop })),
     savedAt: new Date().toISOString(),
@@ -957,6 +982,10 @@ function restoreState(state) {
   document.getElementById('trayVal').textContent = trayCount;
   document.getElementById('heightSlider').value = state.height;
   document.getElementById('baselineSlider').value = state.baseline;
+  if (state.margin != null) {
+    document.getElementById('marginSlider').value = state.margin;
+    document.getElementById('marginVal').textContent = state.margin + '"';
+  }
   lights = state.lights.map(l => ({ ...l }));
   blocks = buildBlocks();
   for (const saved of state.blocks) {
