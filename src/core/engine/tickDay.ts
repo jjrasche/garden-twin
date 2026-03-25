@@ -10,7 +10,8 @@
  *   3. updateStress       — duration-based stress counters
  *   4. accumulateDev      — GDD × development_rate modifiers → stage transitions
  *   5. accumulateBiomass  — growth in productive stages only
- *   6. checkHarvestReady  — biomass >= threshold?
+ *   6. computeQuality     — flavor × freshness × biomass readiness
+ *   7. checkHarvestReady  — biomass >= min_harvest_lbs? (backward compat)
  */
 
 import type { PlantSpecies } from '../types/PlantSpecies';
@@ -18,6 +19,7 @@ import type { PlantState, GrowthEvent, StressCounters } from '../types/PlantStat
 import type { GrowthStage } from '../types/GardenState';
 import type { ConditionsResolver } from '../environment/types';
 import { computeDailyGdd, determineStage } from '../calculators/gddEngine';
+import { computeQuality, isHarvestable as checkMinBiomass } from '../calculators/qualityModel';
 import { computeDevelopmentModifier, computeGrowthModifier, computeSurvivalModifier } from '../calculators/yieldModel';
 import { interpolate } from '../calculators/interpolate';
 import { resolveHarvestStrategy } from '../calculators/strategyResolver';
@@ -280,8 +282,21 @@ export function tickPlant(
     new_accumulated_lbs += computeBiomass(species, effective_vigor, plant.daily_potential, conditions);
   }
 
-  // 6. Harvest readiness
-  const is_harvestable = checkHarvestReady(clamped_stage, new_accumulated_lbs, plant, species, strategy);
+  // 6. Quality computation (flavor × freshness × biomass readiness)
+  const minHarvestLbs = species.quality?.min_harvest_lbs ?? 0;
+  const currentlyHarvestable = minHarvestLbs > 0
+    ? checkMinBiomass(new_accumulated_lbs, minHarvestLbs)
+    : checkHarvestReady(clamped_stage, new_accumulated_lbs, plant, species, strategy);
+  const newDaysSinceHarvestable = currentlyHarvestable
+    ? (plant.days_since_harvestable ?? 0) + 1
+    : 0;
+
+  const qualityResult = species.quality
+    ? computeQuality(species, conditions, new_accumulated_lbs, minHarvestLbs, newDaysSinceHarvestable)
+    : undefined;
+
+  // 7. Harvest readiness (backward compat — kept for lifecycle triggers)
+  const is_harvestable = currentlyHarvestable;
 
   if (is_harvestable && !plant.is_harvestable) {
     events.push({
@@ -301,6 +316,8 @@ export function tickPlant(
       accumulated_gdd: new_accumulated_gdd,
       accumulated_lbs: new_accumulated_lbs,
       stress: stress_result.stress,
+      quality_score: qualityResult?.quality_score,
+      days_since_harvestable: newDaysSinceHarvestable,
       is_harvestable,
     },
     events,

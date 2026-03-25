@@ -88,9 +88,13 @@ export const PlantStateSchema = z.object({
   // Fed into spacing_plants_per_sq_ft growth_response curves.
   density_plants_per_sqft: z.number().min(0).optional(),
 
+  // Quality (computed each tick from flavor + freshness + biomass)
+  quality_score: z.number().min(0).max(1).optional(),
+  days_since_harvestable: z.number().int().min(0).default(0),
+
   // Lifecycle status (set by engine)
   lifecycle: z.enum(['growing', 'stressed', 'senescent', 'pulled', 'dead']),
-  is_harvestable: z.boolean(),
+  is_harvestable: z.boolean(),  // Derived: accumulated_lbs >= min_harvest_lbs (kept for backward compat)
 });
 
 export type PlantState = z.infer<typeof PlantStateSchema>;
@@ -102,6 +106,7 @@ export type PlantState = z.infer<typeof PlantStateSchema>;
 export type GrowthEvent =
   | { type: 'stage_changed'; plant_id: string; from: string; to: string; date: Date }
   | { type: 'harvest_ready'; plant_id: string; date: Date; accumulated_lbs: number }
+  | { type: 'harvested'; plant_id: string; date: Date; harvested_lbs: number; quality_score: number }
   | { type: 'plant_senescent'; plant_id: string; date: Date; cause: string }
   | { type: 'plant_pulled'; plant_id: string; date: Date }
   | { type: 'plant_died'; plant_id: string; date: Date; cause: string };
