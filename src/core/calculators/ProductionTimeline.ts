@@ -109,9 +109,10 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   // ── Warm season ─────────────────────────────────────────────────────────
 
   // Tomatoes — transplant May 15 (after last frost). Seed blocks April 1 (6 weeks in 2" block).
-  // Trellis tomatoes — linear along channel, ~80 linear ft ≈ 53 sq ft (18" wide footprint)
-  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 11, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 53 },
-  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 53 },
+  // Two 10ft trellises, 14 plants each (7 per side × 18" spacing).
+  // East trellis: Amish Paste. West trellis: Sun Gold.
+  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 14, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 26 },
+  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 14, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 26 },
 
   // Potato — plant after last frost (May 15), soil temp 60°F+.
   { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 250 },
