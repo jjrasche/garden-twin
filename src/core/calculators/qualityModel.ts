@@ -70,17 +70,18 @@ export function computeQuality(
 ): QualityResult {
   const biomassReadiness = computeBiomassReadiness(accumulatedLbs, minHarvestLbs);
 
-  // Not enough biomass to harvest — quality is 0
+  const flavorScore = computeFlavorScore(species, conditions);
+
+  // Not enough biomass to harvest — quality is 0 but flavor is still computable
+  // (lets UI show "this plant will taste great once it's big enough")
   if (biomassReadiness < 1.0) {
     return {
       quality_score: 0,
-      flavor_score: 0,
+      flavor_score: flavorScore,
       biomass_readiness: biomassReadiness,
       freshness: 1.0,
     };
   }
-
-  const flavorScore = computeFlavorScore(species, conditions);
   const freshnessCurve = species.quality?.freshness_curve;
   const freshness = freshnessCurve
     ? computeFreshnessFactor(daysSinceHarvestable, freshnessCurve)

@@ -95,9 +95,10 @@ describe('computeQuality', () => {
   // Hot conditions for lettuce (bad flavor — bitter)
   const hotConditions = { temperature_f: 85, soil_temp_f: 75, photoperiod_h: 15, sun_hours: 10 };
 
-  test('quality is 0 when biomass below minimum', () => {
+  test('quality is 0 when biomass below minimum, but flavor still computed', () => {
     const result = computeQuality(LETTUCE_BSS, warmConditions, 0.01, 0.05, 0);
     expect(result.quality_score).toBe(0);
+    expect(result.flavor_score).toBeGreaterThan(0);  // Flavor computable even without enough biomass
     expect(result.biomass_readiness).toBeLessThan(1.0);
   });
 
