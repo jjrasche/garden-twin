@@ -246,10 +246,10 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
     );
   }
 
-  const totalDeliveredRevenue = profitability.reduce((s, r) => s + r.sales.net_revenue, 0);
-  const totalCost = profitability.reduce((s, r) => s + r.costs.total, 0);
-  const totalDeliveredProfit = profitability.reduce((s, r) => s + r.delivered_profit, 0);
-  const totalHours = profitability.reduce((s, r) => s + r.total_labor_hours, 0);
+  const totalDeliveredRevenue = profitability.reduce((sum, row) => sum + row.sales.net_revenue, 0);
+  const totalCost = profitability.reduce((sum, row) => sum + row.costs.total, 0);
+  const totalDeliveredProfit = profitability.reduce((sum, row) => sum + row.delivered_profit, 0);
+  const totalHours = profitability.reduce((sum, row) => sum + row.total_labor_hours, 0);
   const overallProfitPerHour = totalHours > 0 ? totalDeliveredProfit / totalHours : 0;
 
   // Max profit/hr for bar width scaling (exclude Infinity)

@@ -88,12 +88,13 @@ export function getInventoryForecast(
 ): WeekForecast[] {
   const forecasts: WeekForecast[] = [];
 
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+
   for (let w = 0; w < weeks; w++) {
-    const weekDate = new Date(startDate);
-    weekDate.setDate(weekDate.getDate() + w * 7);
+    const weekDate = new Date(startDate.getTime() + w * MS_PER_WEEK);
 
     const species = getAvailableHarvest(snapshots, weekDate);
-    const totalLbs = species.reduce((s, sp) => s + sp.available_lbs, 0);
+    const totalLbs = species.reduce((sum, sp) => sum + sp.available_lbs, 0);
 
     forecasts.push({
       date: weekDate,

@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { validateOrderWithPrices as validateOrder, generateOrderTasks } from '../../src/core/engine/orderPipeline';
+import { validateOrder, generateOrderTasks } from '../../src/core/engine/orderPipeline';
 import type { Order } from '../../src/core/types/Order';
 import type { AvailableSpecies } from '../../src/core/calculators/Inventory';
 import type { MarketPrice } from '../../src/core/types/Expenditure';
