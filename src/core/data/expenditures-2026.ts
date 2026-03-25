@@ -105,7 +105,7 @@ const SEEDS: Expenditure[] = [
     category: 'seed',
     useful_life_years: 1,
     recurring: true,
-    allocations: [{ species_id: 'nasturtium_trailing', allocation_pct: 1.0 }],
+    allocations: [{ species_id: 'nasturtium', allocation_pct: 1.0 }],
   },
   {
     id: 'seed_calendula',
@@ -115,7 +115,7 @@ const SEEDS: Expenditure[] = [
     category: 'seed',
     useful_life_years: 1,
     recurring: true,
-    allocations: [{ species_id: 'calendula_alpha', allocation_pct: 1.0 }],
+    allocations: [{ species_id: 'calendula', allocation_pct: 1.0 }],
   },
 ];
 
@@ -435,6 +435,6 @@ export const SALES_CONFIG: SpeciesSalesConfig[] = [
 
   // Companions: no harvest
   { species_id: 'marigold_french',       family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
-  { species_id: 'nasturtium_trailing',   family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
-  { species_id: 'calendula_alpha',       family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'nasturtium',             family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'calendula',             family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
 ];

@@ -27,6 +27,9 @@ import { TOMATO_SUN_GOLD } from '../data/species/tomato-sun-gold';
 
 import { POTATO_KENNEBEC } from '../data/species/potato-kennebec';
 import { CORN_NOTHSTINE_DENT } from '../data/species/corn-nothstine-dent';
+import { MARIGOLD_FRENCH } from '../data/species/marigold-french';
+import { NASTURTIUM } from '../data/species/nasturtium-trailing';
+import { CALENDULA } from '../data/species/calendula-alpha';
 
 export interface SuccessorSpec {
   species: PlantSpecies;
@@ -77,6 +80,9 @@ const DISPLAY_GROUPS = [
   'Cherry',
   'Potato',
   'Corn',
+  'Marigold',
+  'Nasturtium',
+  'Calendula',
 ] as const;
 
 export type DisplayGroup = (typeof DISPLAY_GROUPS)[number];
@@ -112,6 +118,14 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
 
   // Corn — needs warm soil 60°F+. Plant 10 days after frost.
   { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2026-05-25', zone: 'full_sun', zone_area_sqft: 595 },
+
+  // ── Companion plants — pest deterrence, no harvest revenue ────────────
+  // Marigold — direct sow alongside tomato transplant. Whitefly deterrence via limonene.
+  { species: MARIGOLD_FRENCH, display_group: 'Marigold', plant_count: 30, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 15 },
+  // Nasturtium — trailing trap crop for aphids. Border planting.
+  { species: NASTURTIUM, display_group: 'Nasturtium', plant_count: 20, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 20 },
+  // Calendula — beneficial insect attractor. Border/interplant.
+  { species: CALENDULA, display_group: 'Calendula', plant_count: 20, planting_date: '2026-05-01', zone: 'full_sun', zone_area_sqft: 15 },
 ];
 
 // ── Weekly Consumption Targets (lbs/week) ───────────────────────────────────
@@ -135,6 +149,9 @@ const SPECIES_DISPLAY_GROUP: Record<string, DisplayGroup> = {
   tomato_sun_gold: 'Cherry',
   potato_kennebec: 'Potato',
   corn_nothstine_dent: 'Corn',
+  marigold_french: 'Marigold',
+  nasturtium: 'Nasturtium',
+  calendula: 'Calendula',
 };
 
 // ── Plan → PlantInstance Expansion ──────────────────────────────────────────

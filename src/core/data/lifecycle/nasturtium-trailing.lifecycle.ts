@@ -3,7 +3,7 @@ import { PRESS_LARGE_SEEDS, WATER_IN_ROW } from './shared-steps';
 
 /** Trailing nasturtium — direct sow, trap crop for aphids. Large seeds, fast germination. */
 export const NASTURTIUM_TRAILING_LIFECYCLE: LifecycleSpec = {
-  species_id: 'nasturtium_trailing',
+  species_id: 'nasturtium',
   activities: [
     {
       activity_id: 'direct_sow',

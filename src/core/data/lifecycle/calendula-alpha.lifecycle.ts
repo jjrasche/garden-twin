@@ -3,7 +3,7 @@ import { PRESS_SEEDS, WATER_IN_ROW } from './shared-steps';
 
 /** Calendula — direct sow or 3-4 week block start. Beneficial insect attractor, mild pest deterrent. */
 export const CALENDULA_ALPHA_LIFECYCLE: LifecycleSpec = {
-  species_id: 'calendula_alpha',
+  species_id: 'calendula',
   activities: [
     {
       activity_id: 'direct_sow',
