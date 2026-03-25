@@ -10,9 +10,10 @@ import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
 import type { ConditionsResolver } from '@core/environment/types';
 import type { PlantSpecies } from '@core/types/PlantSpecies';
-import type { Task } from '@core/types/Task';
+import { getAvailableHarvest } from '@core/calculators/Inventory';
+import { SALES_CONFIG, MARKET_PRICES_2026 } from '@core/data/expenditures-2026';
 
-type PanelTab = 'conditions' | 'accumulation' | 'tasks';
+type PanelTab = 'conditions' | 'accumulation' | 'inventory';
 
 interface ConditionsPanelProps {
   snapshot: DaySnapshot | null;
@@ -72,41 +73,6 @@ function countByStage(snapshot: DaySnapshot): Record<string, number> {
   return counts;
 }
 
-const TASK_CATEGORY_COLORS: Record<string, string> = {
-  harvest: '#22c55e',
-  water: '#3b82f6',
-  thin: '#a78bfa',
-  prune: '#f59e0b',
-  plant: '#10b981',
-  inspect: '#6b7280',
-  weed: '#84cc16',
-  mulch: '#92400e',
-  hill: '#d97706',
-  sow: '#10b981',
-  fertilize: '#8b5cf6',
-};
-
-/** Sum estimated_duration_minutes for all tasks up through dayIndex. */
-function sumTaskMinutesThrough(snapshots: DaySnapshot[], dayIndex: number): number {
-  let total = 0;
-  for (let i = 0; i <= dayIndex && i < snapshots.length; i++) {
-    for (const task of snapshots[i]!.tasks ?? []) {
-      total += task.estimated_duration_minutes ?? 0;
-    }
-  }
-  return total;
-}
-
-/** Group tasks by type for display. */
-function groupTasksByType(tasks: Task[]): Map<string, Task[]> {
-  const groups = new Map<string, Task[]>();
-  for (const task of tasks) {
-    const existing = groups.get(task.type) ?? [];
-    existing.push(task);
-    groups.set(task.type, existing);
-  }
-  return groups;
-}
 
 function ConditionRow({ label, value, unit }: { label: string; value: string | number; unit?: string }) {
   return (
@@ -135,24 +101,12 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
     [snapshot],
   );
 
-  const todayTasks = useMemo(
-    () => snapshot?.tasks ?? [],
-    [snapshot],
-  );
+  const salesMap = useMemo(() => new Map(SALES_CONFIG.map(s => [s.species_id, s])), []);
+  const priceMap = useMemo(() => new Map(MARKET_PRICES_2026.map(p => [p.species_id, p])), []);
 
-  const taskGroups = useMemo(
-    () => groupTasksByType(todayTasks),
-    [todayTasks],
-  );
-
-  const laborMinutesToDate = useMemo(
-    () => sumTaskMinutesThrough(snapshots, dayIndex),
-    [snapshots, dayIndex],
-  );
-
-  const todayMinutes = useMemo(
-    () => todayTasks.reduce((s, t) => s + (t.estimated_duration_minutes ?? 0), 0),
-    [todayTasks],
+  const availableHarvest = useMemo(
+    () => snapshot ? getAvailableHarvest(snapshots, snapshot.date) : [],
+    [snapshots, snapshot],
   );
 
   if (!snapshot) {
@@ -185,8 +139,8 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
 
       {/* Tab buttons */}
       <div className="flex border-b border-gray-700">
-        {(['conditions', 'accumulation', 'tasks'] as PanelTab[]).map(tab => {
-          const label = tab === 'conditions' ? 'Conditions' : tab === 'accumulation' ? 'Harvest' : 'Tasks';
+        {(['conditions', 'accumulation', 'inventory'] as PanelTab[]).map(tab => {
+          const label = tab === 'conditions' ? 'Conditions' : tab === 'accumulation' ? 'Harvest' : 'Inventory';
           return (
             <button
               key={tab}
@@ -278,54 +232,71 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
           </div>
         )}
 
-        {activeTab === 'tasks' && (
+        {activeTab === 'inventory' && (
           <div className="space-y-3">
             <div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Season-to-Date</div>
-              <ConditionRow label="Total hours" value={(laborMinutesToDate / 60).toFixed(1)} unit=" h" />
-            </div>
-
-            <div>
               <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
-                Today ({todayTasks.length} tasks, {todayMinutes} min)
+                Available to Harvest
               </div>
-              {todayTasks.length === 0 ? (
-                <div className="text-[10px] text-gray-600">No tasks today</div>
+              {availableHarvest.length === 0 ? (
+                <div className="text-[10px] text-gray-600">Nothing harvestable on this date</div>
               ) : (
-                Array.from(taskGroups.entries()).map(([type, tasks]) => (
-                  <div key={type} className="mb-2">
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <span
-                        className="w-2 h-2 rounded-sm inline-block"
-                        style={{ backgroundColor: TASK_CATEGORY_COLORS[type] ?? '#6b7280' }}
-                      />
-                      <span className="text-[10px] text-gray-300 font-medium capitalize">{type}</span>
-                      <span className="text-[10px] text-gray-600">({tasks.length})</span>
-                    </div>
-                    {tasks.slice(0, 5).map(task => {
-                      const targetLabel = task.target.target_type === 'plant'
-                        ? task.target.plant_id.replace(/_\d+$/, '').replace(/_/g, ' ')
-                        : task.target.target_type === 'garden'
-                          ? 'garden'
-                          : task.target.target_type;
-                      return (
-                        <div key={task.task_id} className="text-[10px] text-gray-400 py-0.5 flex justify-between pl-3">
-                          <span className="truncate mr-1">{targetLabel}</span>
-                          {task.estimated_duration_minutes != null && (
-                            <span className="text-gray-500 font-mono shrink-0">
-                              {task.estimated_duration_minutes}m
-                            </span>
+                availableHarvest.map(species => {
+                  const speciesData = catalog.get(species.species_id);
+                  const speciesName = speciesData?.name ?? species.species_id.replace(/_/g, ' ');
+                  const salesConfig = salesMap.get(species.species_id);
+                  const familyFraction = salesConfig?.family_fraction ?? 1.0;
+                  const sellableLbs = species.available_lbs * (1 - familyFraction);
+                  const price = priceMap.get(species.species_id);
+                  const effectivePrice = (price?.price_per_lb ?? 0) * (salesConfig?.price_premium ?? 1.0);
+                  const group = SPECIES_DISPLAY_GROUP[species.species_id];
+                  const color = group ? GROUP_COLORS[group] : '#6b7280';
+
+                  return (
+                    <div key={species.species_id} className="bg-gray-900/50 rounded px-2 py-1.5 mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                        <span className="text-xs text-gray-200 truncate">{speciesName}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-gray-400 mt-0.5 pl-3.5">
+                        <span>{species.available_lbs.toFixed(1)} lbs ({species.harvestable_plant_count} plants)</span>
+                      </div>
+                      {sellableLbs > 0 && (
+                        <div className="flex justify-between text-[10px] pl-3.5 mt-0.5">
+                          <span className="text-emerald-500">Sellable: {sellableLbs.toFixed(1)} lbs</span>
+                          {effectivePrice > 0 && (
+                            <span className="text-emerald-500 font-mono">${(sellableLbs * effectivePrice).toFixed(0)}</span>
                           )}
                         </div>
-                      );
-                    })}
-                    {tasks.length > 5 && (
-                      <div className="text-[10px] text-gray-600 pl-3">+{tasks.length - 5} more</div>
-                    )}
-                  </div>
-                ))
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
+
+            {availableHarvest.length > 0 && (
+              <div className="border-t border-gray-700 pt-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Total available</span>
+                  <span className="text-gray-200 font-mono">
+                    {availableHarvest.reduce((sum, sp) => sum + sp.available_lbs, 0).toFixed(1)} lbs
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs mt-0.5">
+                  <span className="text-gray-400">Sellable value</span>
+                  <span className="text-emerald-400 font-mono">
+                    ${availableHarvest.reduce((sum, sp) => {
+                      const salesConfig = salesMap.get(sp.species_id);
+                      const sellable = sp.available_lbs * (1 - (salesConfig?.family_fraction ?? 1.0));
+                      const price = priceMap.get(sp.species_id);
+                      const effective = (price?.price_per_lb ?? 0) * (salesConfig?.price_premium ?? 1.0);
+                      return sum + sellable * effective;
+                    }, 0).toFixed(0)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
