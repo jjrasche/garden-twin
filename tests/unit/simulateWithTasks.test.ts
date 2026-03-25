@@ -49,8 +49,8 @@ function makeLettucePlant(id: string): PlantInstance {
   return {
     plant_id: id,
     species_id: 'lettuce_bss',
-    root_subcell_id: `sub_100_${id === 'lettuce_1' ? 50 : 56}`,
-    occupied_subcells: [`sub_100_${id === 'lettuce_1' ? 50 : 56}`],
+    root_subcell_id: `sub_100_${50 + parseInt(id.split('_')[1]!) * 6}`,
+    occupied_subcells: [`sub_100_${50 + parseInt(id.split('_')[1]!) * 6}`],
     planted_date: '2026-05-15',
     harvest_strategy_id: 'lettuce_cut',
     current_stage: 'seed',
@@ -83,6 +83,7 @@ describe('simulateWithTasks end-to-end', () => {
     const gardenState = makeGardenState([
       makeLettucePlant('lettuce_1'),
       makeLettucePlant('lettuce_2'),
+      makeLettucePlant('lettuce_3'),
     ]);
 
     const ctx: SimulationContext & { lifecycles: Map<string, LifecycleSpec> } = {
@@ -120,17 +121,11 @@ describe('simulateWithTasks end-to-end', () => {
     expect(harvestEvents.length).toBeGreaterThan(0);
 
     const finalSnapshot = snapshots[snapshots.length - 1]!;
-    const lettuce1 = finalSnapshot.plants.find(p => p.plant_id === 'lettuce_1');
-    const lettuce2 = finalSnapshot.plants.find(p => p.plant_id === 'lettuce_2');
-
-    expect(lettuce1).toBeDefined();
-    expect(lettuce2).toBeDefined();
-
     // At least one plant should survive and get harvested by quality-decline.
-    // Stochastic survival in initPlantStates may kill some plants early.
-    const survivors = [lettuce1!, lettuce2!].filter(p => p.lifecycle !== 'dead' || p.cut_number > 0);
-    expect(survivors.length).toBeGreaterThan(0);
-    const harvested = survivors.filter(p => p.cut_number > 0);
+    // Three plants buffer against stochastic survival killing some early.
+    const allLettuce = finalSnapshot.plants.filter(p => p.species_id === 'lettuce_bss');
+    expect(allLettuce.length).toBe(3);
+    const harvested = allLettuce.filter(p => p.cut_number > 0);
     expect(harvested.length).toBeGreaterThan(0);
   });
 

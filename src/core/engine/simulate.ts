@@ -47,6 +47,17 @@ export interface SimulationContext {
 
 // ── Leaf Functions ──────────────────────────────────────────────────────────
 
+/** Resolve strategy type for a species. Returns null if species unknown. */
+function resolveStrategyType(
+  speciesId: string,
+  catalog: Map<string, PlantSpecies>,
+  strategyOverride?: string,
+): string | null {
+  const species = catalog.get(speciesId);
+  if (!species) return null;
+  return resolveHarvestStrategy(strategyOverride, species)?.type ?? null;
+}
+
 /** Check if a harvest task targets a bulk-harvest species (potato, corn). */
 function isBulkHarvest(
   task: Task,
@@ -54,23 +65,17 @@ function isBulkHarvest(
   catalog: Map<string, PlantSpecies>,
 ): boolean {
   const speciesId = task.parameters?.species_id as string | undefined;
-  if (!speciesId) {
-    // Single-plant target — look up species from plant
-    const plantId = task.target.target_type === 'plant'
-      ? (task.target as { plant_id: string }).plant_id
-      : undefined;
-    if (!plantId) return false;
-    const plant = plants.find(p => p.plant_id === plantId);
-    if (!plant) return false;
-    const species = catalog.get(plant.species_id);
-    if (!species) return false;
-    const strategy = resolveHarvestStrategy(plant.harvest_strategy_id, species);
-    return strategy?.type === 'bulk';
+  if (speciesId) {
+    return resolveStrategyType(speciesId, catalog) === 'bulk';
   }
-  const species = catalog.get(speciesId);
-  if (!species) return false;
-  const strategy = resolveHarvestStrategy(undefined, species);
-  return strategy?.type === 'bulk';
+  // Single-plant target — look up species from plant
+  const plantId = task.target.target_type === 'plant'
+    ? (task.target as { plant_id: string }).plant_id
+    : undefined;
+  if (!plantId) return false;
+  const plant = plants.find(p => p.plant_id === plantId);
+  if (!plant) return false;
+  return resolveStrategyType(plant.species_id, catalog, plant.harvest_strategy_id) === 'bulk';
 }
 
 /** Emit 'harvested' events for plants that were harvested by task auto-resolution. */
