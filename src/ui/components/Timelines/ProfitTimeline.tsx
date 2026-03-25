@@ -7,9 +7,9 @@
 
 import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
-import type { SpeciesProfitability, CostLineItem, ChannelEconomics } from '@core/types/Expenditure';
-import { computeProfitability, computeAreaFractions, computeAllDeliveredProfitability } from '@core/calculators/Profitability';
-import { EXPENDITURES_2026, MARKET_PRICES_2026, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT } from '@core/data/expenditures-2026';
+import type { SpeciesProfitability, CostLineItem } from '@core/types/Expenditure';
+import { computeProfitability, computeAreaFractions } from '@core/calculators/Profitability';
+import { EXPENDITURES_2026, MARKET_PRICES_2026, SALES_CONFIG, PICKUP_OPERATION } from '@core/data/expenditures-2026';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
 import type { GardenState } from '@core/types/GardenState';
 
@@ -155,36 +155,32 @@ function CostDetailModal({ row, onClose }: { row: SpeciesProfitability; onClose:
             </div>
           </div>
 
-          {/* Distribution channels */}
-          {row.distribution.channels.length > 0 && (
+          {/* Sales breakdown */}
+          {row.sales.sold_lbs > 0 && (
             <div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Distribution</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Pickup Sales</div>
               <div className="space-y-1">
-                {row.distribution.channels.map(ch => (
-                  <div key={ch.channel_id} className="bg-gray-800/50 rounded px-3 py-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-300">{ch.channel_name}</span>
-                      <span className="text-gray-400 font-mono">{Math.round(ch.fraction * 100)}%</span>
-                    </div>
-                    {ch.harvest_lbs > 0 && (
-                      <div className="flex justify-between text-[10px] text-gray-500 mt-0.5">
-                        <span>
-                          {Math.round(ch.harvest_lbs)} lbs
-                          {ch.effective_price_per_lb > 0 ? ` × ${formatDollars(ch.effective_price_per_lb)}/lb` : ''}
-                        </span>
-                        <span className="font-mono">
-                          {ch.gross_revenue > 0 ? formatDollars(ch.gross_revenue) : 'consumed'}
-                          {ch.packaging_cost > 0 ? ` - ${formatDollars(ch.packaging_cost)} pkg` : ''}
-                        </span>
-                      </div>
-                    )}
-                    {ch.packaging_labor_hours > 0 && (
-                      <div className="text-[10px] text-gray-600">
-                        +{ch.packaging_labor_hours.toFixed(1)} hrs packaging
-                      </div>
-                    )}
+                <div className="bg-gray-800/50 rounded px-3 py-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-300">Family</span>
+                    <span className="text-gray-400 font-mono">{Math.round(row.sales.family_lbs)} lbs consumed</span>
                   </div>
-                ))}
+                </div>
+                <div className="bg-gray-800/50 rounded px-3 py-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-300">Sold (pickup orders)</span>
+                    <span className="text-emerald-400 font-mono">{Math.round(row.sales.sold_lbs)} lbs × {formatDollars(row.sales.effective_price_per_lb)}/lb</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-500 mt-0.5">
+                    <span>Gross: {formatDollars(row.sales.gross_revenue)}</span>
+                    <span>Pkg: -{formatDollars(row.sales.packaging_cost)} ({row.sales.packaging_labor_hours.toFixed(1)} hrs)</span>
+                  </div>
+                  {row.sales.pickup_overhead_hours > 0 && (
+                    <div className="text-[10px] text-gray-600">
+                      Pickup window: {row.sales.pickup_overhead_hours.toFixed(1)} hrs allocated
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -231,20 +227,15 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
 
   const profitability = useMemo(() => {
     if (snapshots.length === 0 || !gardenState) return [];
-    const farmGate = computeProfitability({
+    return computeProfitability({
       expenditures: EXPENDITURES_2026,
       marketPrices: MARKET_PRICES_2026,
       harvestLbs: extractHarvestLbs(snapshots),
       laborHours: extractLaborHours(snapshots),
       areaFractions: extractAreaFractions(gardenState),
+      salesConfigs: SALES_CONFIG,
+      pickupOperation: PICKUP_OPERATION,
     });
-    // Layer distribution economics — batch to share channel staffing costs
-    const delivered = computeAllDeliveredProfitability(
-      farmGate, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT,
-    );
-    // Re-sort by delivered profit/hr
-    delivered.sort((a, b) => b.delivered_profit_per_hour - a.delivered_profit_per_hour);
-    return delivered;
   }, [snapshots, gardenState]);
 
   if (profitability.length === 0) {
@@ -255,7 +246,7 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
     );
   }
 
-  const totalDeliveredRevenue = profitability.reduce((s, r) => s + r.distribution.total_net_revenue, 0);
+  const totalDeliveredRevenue = profitability.reduce((s, r) => s + r.sales.net_revenue, 0);
   const totalCost = profitability.reduce((s, r) => s + r.costs.total, 0);
   const totalDeliveredProfit = profitability.reduce((s, r) => s + r.delivered_profit, 0);
   const totalHours = profitability.reduce((s, r) => s + r.total_labor_hours, 0);

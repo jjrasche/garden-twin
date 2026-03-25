@@ -6,7 +6,16 @@
 
 import { describe, test, expect } from 'vitest';
 import { computeProfitability, allocateCosts, computeAreaFractions } from '../../src/core/calculators/Profitability';
-import type { Expenditure, MarketPrice } from '../../src/core/types/Expenditure';
+import type { Expenditure, MarketPrice, SpeciesSalesConfig, PickupOperation } from '../../src/core/types/Expenditure';
+
+// Default sales config: 100% family (no sales) — preserves existing test expectations
+const NO_SALES: SpeciesSalesConfig[] = [
+  { species_id: 'tomato_paste', family_fraction: 1.0, price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'kale', family_fraction: 1.0, price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'potato', family_fraction: 1.0, price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+];
+
+const NO_PICKUP: PickupOperation = { weekly_window_minutes: 0, weeks_per_season: 0, supplies_per_season: 0 };
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -161,6 +170,8 @@ describe('computeProfitability', () => {
       harvestLbs: HARVEST_LBS,
       laborHours: LABOR_HOURS,
       areaFractions: AREA_FRACTIONS,
+      salesConfigs: NO_SALES,
+      pickupOperation: NO_PICKUP,
     });
 
     expect(results.length).toBe(3);
@@ -193,6 +204,8 @@ describe('computeProfitability', () => {
       harvestLbs: noHarvest,
       laborHours: LABOR_HOURS,
       areaFractions: AREA_FRACTIONS,
+      salesConfigs: NO_SALES,
+      pickupOperation: NO_PICKUP,
     });
 
     const tomato = results.find(r => r.species_id === 'tomato_paste')!;
@@ -213,23 +226,27 @@ describe('computeProfitability', () => {
       harvestLbs: HARVEST_LBS,
       laborHours: noLabor,
       areaFractions: AREA_FRACTIONS,
+      salesConfigs: NO_SALES,
+      pickupOperation: NO_PICKUP,
     });
 
     const potato = results.find(r => r.species_id === 'potato')!;
     expect(potato.profit_per_hour).toBe(Infinity);
   });
 
-  test('results sorted by profit_per_hour descending', () => {
+  test('results sorted by delivered_profit_per_hour descending', () => {
     const results = computeProfitability({
       expenditures: EXPENDITURES,
       marketPrices: MARKET_PRICES,
       harvestLbs: HARVEST_LBS,
       laborHours: LABOR_HOURS,
       areaFractions: AREA_FRACTIONS,
+      salesConfigs: NO_SALES,
+      pickupOperation: NO_PICKUP,
     });
 
     for (let i = 1; i < results.length; i++) {
-      expect(results[i - 1].profit_per_hour).toBeGreaterThanOrEqual(results[i].profit_per_hour);
+      expect(results[i - 1].delivered_profit_per_hour).toBeGreaterThanOrEqual(results[i].delivered_profit_per_hour);
     }
   });
 });

@@ -6,8 +6,8 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { computeProfitability, computeAreaFractions, computeAllDeliveredProfitability } from '../../src/core/calculators/Profitability';
-import { EXPENDITURES_2026, MARKET_PRICES_2026, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT } from '../../src/core/data/expenditures-2026';
+import { computeProfitability, computeAreaFractions } from '../../src/core/calculators/Profitability';
+import { EXPENDITURES_2026, MARKET_PRICES_2026, SALES_CONFIG, PICKUP_OPERATION } from '../../src/core/data/expenditures-2026';
 import { GARDEN_SPECIES_MAP } from '../../src/core/data/species';
 import { createGardenStateFromPlan } from '../../src/core/data/sampleGarden';
 import { PRODUCTION_PLAN, SEASON_RANGE } from '../../src/core/calculators/ProductionTimeline';
@@ -65,6 +65,8 @@ describe('Economics tab data pipeline', () => {
       harvestLbs,
       laborHours,
       areaFractions: computeAreaFractions(subcellCounts),
+      salesConfigs: SALES_CONFIG,
+      pickupOperation: PICKUP_OPERATION,
     });
 
     // Should have results for species that have market prices
@@ -76,46 +78,36 @@ describe('Economics tab data pipeline', () => {
       expect(r.costs.total).not.toBeNaN();
       expect(r.profit).not.toBeNaN();
       expect(r.labor_hours).not.toBeNaN();
+      expect(r.delivered_profit_per_hour).not.toBeNaN();
     }
 
-    // Potato should have highest profit/hr (low labor, decent yield)
+    // Potato should be profitable
     const potato = results.find(r => r.species_id === 'potato_kennebec');
     expect(potato).toBeDefined();
     expect(potato!.harvest_lbs).toBeGreaterThan(0);
     expect(potato!.profit).toBeGreaterThan(0);
 
-    // Total revenue should be in reasonable range ($1500-$3500)
+    // Sold species should have packaging labor > 0
+    const potatoSales = potato!.sales;
+    expect(potatoSales.sold_lbs).toBeGreaterThan(0);
+    expect(potatoSales.packaging_labor_hours).toBeGreaterThan(0);
+    // Delivered $/hr should be lower than farm-gate (packaging adds labor)
+    expect(potato!.delivered_profit_per_hour).toBeLessThan(potato!.profit_per_hour);
+
+    // Total farm-gate revenue in reasonable range
     const totalRevenue = results.reduce((s, r) => s + r.revenue, 0);
     expect(totalRevenue).toBeGreaterThan(1500);
     expect(totalRevenue).toBeLessThan(3500);
 
-    // Layer distribution economics — batch for shared channel cost allocation
-    const delivered = computeAllDeliveredProfitability(
-      results, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT,
-    );
-
-    // Delivered profit should be less than farm-gate (distribution adds costs)
-    for (const d of delivered) {
-      if (d.harvest_lbs > 0 && d.distribution.total_net_revenue > 0) {
-        expect(d.total_labor_hours).toBeGreaterThanOrEqual(d.labor_hours);
-        expect(d.delivered_profit_per_hour).not.toBeNaN();
-      }
-    }
-
-    // Potato with 50% family, 40% farm stand should have lower delivered $/hr
-    const potatoD = delivered.find(r => r.species_id === 'potato_kennebec');
-    expect(potatoD).toBeDefined();
-    expect(potatoD!.distribution.channels.length).toBeGreaterThan(0);
-    expect(potatoD!.delivered_profit_per_hour).toBeLessThan(potatoD!.profit_per_hour);
-
     // Log for debugging
-    console.log('\n=== Economics Tab Verified (with distribution) ===');
-    for (const r of delivered) {
+    console.log('\n=== Economics Tab Verified (pickup model) ===');
+    for (const r of results) {
       const name = GARDEN_SPECIES_MAP.get(r.species_id)?.name ?? r.species_id;
       const fg = isFinite(r.profit_per_hour) ? `$${Math.round(r.profit_per_hour)}/hr` : '--';
       const del = isFinite(r.delivered_profit_per_hour) ? `$${Math.round(r.delivered_profit_per_hour)}/hr` : '--';
-      const chans = r.distribution.channels.filter(c => c.channel_id !== 'family').map(c => `${c.channel_name} ${Math.round(c.fraction*100)}%`).join(', ');
-      console.log(`  ${name.padEnd(25)} farm:${fg.padStart(7)}  delivered:${del.padStart(7)}  ${chans}`);
+      const sold = Math.round(r.sales.sold_lbs);
+      const pkg = r.sales.packaging_labor_hours.toFixed(1);
+      console.log(`  ${name.padEnd(25)} farm:${fg.padStart(7)}  pickup:${del.padStart(7)}  sell:${sold}lbs  pkg:${pkg}h`);
     }
   });
 });

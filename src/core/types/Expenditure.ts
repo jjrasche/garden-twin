@@ -59,63 +59,39 @@ export const MarketPriceSchema = z.object({
 export type MarketPrice = z.infer<typeof MarketPriceSchema>;
 
 // =============================================================================
-// Distribution Channel — how harvest reaches customers
-// =============================================================================
-
-export const DistributionChannelSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-
-  // Per-lb costs (packaging, labeling, washing for sale)
-  packaging_minutes_per_lb: z.number().min(0),
-  packaging_cost_per_lb: z.number().min(0),  // bags, labels, pint containers
-
-  // Per-event costs (each market day, each delivery run)
-  fixed_cost_per_event: z.number().min(0),   // booth fee, gas, table rental
-  staffing_hours_per_event: z.number().min(0),
-  events_per_season: z.number().int().min(0),
-
-  // Price effect relative to base market price
-  price_modifier: z.number().min(0),  // 1.0 = base, 0.67 = discount (u-pick), 1.33 = premium (delivery)
-});
-
-export type DistributionChannel = z.infer<typeof DistributionChannelSchema>;
-
-// =============================================================================
-// Species Channel Assignment — what fraction goes where
+// Species Sales Config — per-species pickup order economics
 // =============================================================================
 
 /**
- * Maps a species to one or more distribution channels.
- * Fractions must sum to 1.0 across all assignments for a species.
- *
- * Example: Sun Gold → 60% family, 30% farm_stand, 10% u_pick
+ * Simple sales model: family eats a fraction, rest is sold via pickup orders.
+ * Packaging time and cost are species-specific (potatoes ≠ greens).
+ * Price premium reflects the "harvested 1 hour ago" story.
  */
-export const SpeciesChannelAssignmentSchema = z.object({
+export const SpeciesSalesConfigSchema = z.object({
   species_id: z.string(),
-  channel_id: z.string(),  // References DistributionChannel.id
-  fraction: z.number().min(0).max(1),
+  family_fraction: z.number().min(0).max(1),  // consumed at home, no revenue
+  price_premium: z.number().min(0),            // multiplier on base market price (1.2 = 20% premium)
+  packaging_minutes_per_lb: z.number().min(0), // species-specific packaging time
+  packaging_cost_per_lb: z.number().min(0),    // bags, containers, labels
 });
 
-export type SpeciesChannelAssignment = z.infer<typeof SpeciesChannelAssignmentSchema>;
+export type SpeciesSalesConfig = z.infer<typeof SpeciesSalesConfigSchema>;
 
 // =============================================================================
-// Channel Economics — computed per species × channel
+// Pickup Operation — fixed costs for running pickup orders
 // =============================================================================
 
-export interface ChannelEconomics {
-  channel_id: string;
-  channel_name: string;
-  fraction: number;
-  harvest_lbs: number;         // species harvest × fraction
-  effective_price_per_lb: number;  // base price × channel price_modifier
-  gross_revenue: number;
-  packaging_labor_hours: number;
-  packaging_cost: number;
-  channel_fixed_cost: number;  // allocated share of booth fees etc.
-  channel_staffing_hours: number;
-  net_revenue: number;         // gross - packaging - fixed
-}
+/**
+ * Shared pickup operation costs. Not per-species — split across all sold species
+ * by revenue share.
+ */
+export const PickupOperationSchema = z.object({
+  weekly_window_minutes: z.number().min(0),  // time spent per pickup window
+  weeks_per_season: z.number().int().min(0), // how many weeks you run pickups
+  supplies_per_season: z.number().min(0),    // boxes, tape, signage
+});
+
+export type PickupOperation = z.infer<typeof PickupOperationSchema>;
 
 // =============================================================================
 // Species Profitability — computed rollup
@@ -127,7 +103,7 @@ export interface SpeciesProfitability {
   price_per_lb: number;
 
   // Production economics (farm-gate)
-  revenue: number;             // harvest × base price (before distribution)
+  revenue: number;             // harvest × base price (all lbs, before family split)
   costs: {
     direct: number;            // Seeds, species-specific items
     allocated: number;         // Share of garden-wide/infrastructure costs
@@ -137,19 +113,22 @@ export interface SpeciesProfitability {
   labor_hours: number;         // Production labor only
   profit_per_hour: number;     // Farm-gate profit / production labor
 
-  // Distribution economics (post farm-gate)
-  distribution: {
-    channels: ChannelEconomics[];
-    total_net_revenue: number;       // Sum of channel net revenues
-    total_packaging_cost: number;
-    total_packaging_labor_hours: number;
-    total_channel_fixed_cost: number;
-    total_channel_staffing_hours: number;
+  // Sales economics (post farm-gate)
+  sales: {
+    family_lbs: number;
+    sold_lbs: number;
+    effective_price_per_lb: number;   // base × premium
+    gross_revenue: number;            // sold_lbs × effective_price
+    packaging_cost: number;
+    packaging_labor_hours: number;
+    pickup_overhead_hours: number;    // allocated share of weekly pickup windows
+    pickup_overhead_cost: number;     // allocated share of supplies
+    net_revenue: number;              // gross - packaging - overhead
   };
 
-  // Delivered economics (production + distribution combined)
-  delivered_profit: number;          // total_net_revenue - production costs
-  total_labor_hours: number;         // production + packaging + staffing
+  // Delivered economics (production + sales combined)
+  delivered_profit: number;          // net_revenue - production costs
+  total_labor_hours: number;         // production + packaging + pickup overhead
   delivered_profit_per_hour: number; // delivered_profit / total_labor_hours
 
   cost_breakdown: CostLineItem[];

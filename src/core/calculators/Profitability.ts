@@ -2,7 +2,7 @@
  * Profitability calculator — per-species cost allocation and profit computation.
  *
  * Pure functions. No side effects. Consumes expenditures + simulation results,
- * produces per-species profitability rollups.
+ * produces per-species profitability rollups with pickup order economics.
  */
 
 import type {
@@ -11,9 +11,8 @@ import type {
   SpeciesProfitability,
   CostLineItem,
   ExpenditureCategory,
-  DistributionChannel,
-  SpeciesChannelAssignment,
-  ChannelEconomics,
+  SpeciesSalesConfig,
+  PickupOperation,
 } from '../types/Expenditure';
 
 const DIRECT_CATEGORIES: Set<ExpenditureCategory> = new Set(['seed', 'media']);
@@ -57,9 +56,8 @@ export function allocateCosts(
 
     for (const alloc of exp.allocations) {
       if (alloc.species_id !== null) {
-        // Direct allocation to named species
         const items = costsBySpecies.get(alloc.species_id);
-        if (!items) continue;  // Species not in our set
+        if (!items) continue;
         items.push({
           expenditure_id: exp.id,
           name: exp.name,
@@ -68,7 +66,6 @@ export function allocateCosts(
           allocated_cost: annualCost * alloc.allocation_pct,
         });
       } else {
-        // Garden-wide — split by area fraction
         for (const [speciesId, fraction] of areaFractions) {
           const items = costsBySpecies.get(speciesId)!;
           items.push({
@@ -94,26 +91,42 @@ export interface ProfitabilityInput {
   harvestLbs: Map<string, number>;
   laborHours: Map<string, number>;
   areaFractions: Map<string, number>;
+  salesConfigs: SpeciesSalesConfig[];
+  pickupOperation: PickupOperation;
 }
 
-/** Compute per-species profitability, sorted by profit_per_hour descending. */
+/**
+ * Compute per-species profitability with pickup order economics.
+ *
+ * Handles everything in one pass:
+ * 1. Farm-gate: production costs, production labor
+ * 2. Sales: family/pickup split, packaging, premium pricing
+ * 3. Pickup overhead: shared window staffing + supplies, allocated by revenue share
+ *
+ * Sorted by delivered_profit_per_hour descending.
+ */
 export function computeProfitability(input: ProfitabilityInput): SpeciesProfitability[] {
-  const { expenditures, marketPrices, harvestLbs, laborHours, areaFractions } = input;
+  const { expenditures, marketPrices, harvestLbs, laborHours, areaFractions, salesConfigs, pickupOperation } = input;
 
   const costsBySpecies = allocateCosts(expenditures, areaFractions);
   const priceMap = new Map(marketPrices.map(p => [p.species_id, p.price_per_lb]));
+  const salesMap = new Map(salesConfigs.map(s => [s.species_id, s]));
 
-  const results: SpeciesProfitability[] = [];
+  // First pass: compute per-species sales economics
+  const intermediate: {
+    result: SpeciesProfitability;
+    grossRevenue: number;
+  }[] = [];
 
   for (const [speciesId, costItems] of costsBySpecies) {
     const harvest = harvestLbs.get(speciesId) ?? 0;
-    const pricePerLb = priceMap.get(speciesId) ?? 0;
-    const revenue = harvest * pricePerLb;
+    const basePrice = priceMap.get(speciesId) ?? 0;
+    const revenue = harvest * basePrice;
     const hours = laborHours.get(speciesId) ?? 0;
+    const sales = salesMap.get(speciesId);
 
     let directCost = 0;
     let allocatedCost = 0;
-
     for (const item of costItems) {
       if (DIRECT_CATEGORIES.has(item.category)) {
         directCost += item.allocated_cost;
@@ -121,173 +134,70 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
         allocatedCost += item.allocated_cost;
       }
     }
-
     const totalCost = directCost + allocatedCost;
     const profit = revenue - totalCost;
     const profitPerHour = hours === 0 ? Infinity : profit / hours;
 
-    const emptyDistribution = {
-      channels: [],
-      total_net_revenue: 0,
-      total_packaging_cost: 0,
-      total_packaging_labor_hours: 0,
-      total_channel_fixed_cost: 0,
-      total_channel_staffing_hours: 0,
-    };
+    // Sales split
+    const familyFraction = sales?.family_fraction ?? 1.0;
+    const familyLbs = harvest * familyFraction;
+    const soldLbs = harvest * (1 - familyFraction);
+    const effectivePrice = basePrice * (sales?.price_premium ?? 1.0);
+    const grossRevenue = soldLbs * effectivePrice;
+    const packagingCost = soldLbs * (sales?.packaging_cost_per_lb ?? 0);
+    const packagingLaborHours = (soldLbs * (sales?.packaging_minutes_per_lb ?? 0)) / 60;
 
-    results.push({
-      species_id: speciesId,
-      harvest_lbs: harvest,
-      price_per_lb: pricePerLb,
-      revenue,
-      costs: { direct: directCost, allocated: allocatedCost, total: totalCost },
-      profit,
-      labor_hours: hours,
-      profit_per_hour: profitPerHour,
-      distribution: emptyDistribution,
-      delivered_profit: profit,          // Without distribution, same as farm-gate
-      total_labor_hours: hours,
-      delivered_profit_per_hour: profitPerHour,
-      cost_breakdown: costItems,
+    intermediate.push({
+      grossRevenue,
+      result: {
+        species_id: speciesId,
+        harvest_lbs: harvest,
+        price_per_lb: basePrice,
+        revenue,
+        costs: { direct: directCost, allocated: allocatedCost, total: totalCost },
+        profit,
+        labor_hours: hours,
+        profit_per_hour: profitPerHour,
+        sales: {
+          family_lbs: familyLbs,
+          sold_lbs: soldLbs,
+          effective_price_per_lb: effectivePrice,
+          gross_revenue: grossRevenue,
+          packaging_cost: packagingCost,
+          packaging_labor_hours: packagingLaborHours,
+          pickup_overhead_hours: 0,  // Filled in second pass
+          pickup_overhead_cost: 0,
+          net_revenue: grossRevenue - packagingCost,
+        },
+        delivered_profit: 0,
+        total_labor_hours: 0,
+        delivered_profit_per_hour: 0,
+        cost_breakdown: costItems,
+      },
     });
   }
 
-  results.sort((a, b) => b.profit_per_hour - a.profit_per_hour);
+  // Second pass: allocate pickup overhead by revenue share
+  const totalGrossRevenue = intermediate.reduce((s, i) => s + i.grossRevenue, 0);
+  const totalPickupHours = (pickupOperation.weekly_window_minutes * pickupOperation.weeks_per_season) / 60;
+  const totalPickupCost = pickupOperation.supplies_per_season;
+
+  for (const item of intermediate) {
+    const share = totalGrossRevenue > 0 ? item.grossRevenue / totalGrossRevenue : 0;
+    const overheadHours = totalPickupHours * share;
+    const overheadCost = totalPickupCost * share;
+
+    const r = item.result;
+    r.sales.pickup_overhead_hours = overheadHours;
+    r.sales.pickup_overhead_cost = overheadCost;
+    r.sales.net_revenue = r.sales.gross_revenue - r.sales.packaging_cost - overheadCost;
+
+    r.delivered_profit = r.sales.net_revenue - r.costs.total;
+    r.total_labor_hours = r.labor_hours + r.sales.packaging_labor_hours + overheadHours;
+    r.delivered_profit_per_hour = r.total_labor_hours === 0 ? Infinity : r.delivered_profit / r.total_labor_hours;
+  }
+
+  const results = intermediate.map(i => i.result);
+  results.sort((a, b) => b.delivered_profit_per_hour - a.delivered_profit_per_hour);
   return results;
-}
-
-// ── Distribution Economics ──────────────────────────────────────────────────
-
-/**
- * Compute per-channel economics for a single species.
- *
- * Splits harvest across assigned channels, applies channel-specific
- * pricing, packaging costs, and staffing. Channel fixed costs (booth fees)
- * are reported at full season total — cross-species allocation is the
- * caller's responsibility.
- */
-export function computeDistribution(
-  speciesId: string,
-  harvestLbs: number,
-  basePricePerLb: number,
-  channels: DistributionChannel[],
-  assignments: SpeciesChannelAssignment[],
-): SpeciesProfitability['distribution'] {
-  const channelMap = new Map(channels.map(c => [c.id, c]));
-  const speciesAssignments = assignments.filter(a => a.species_id === speciesId);
-
-  // Default to 100% family if no assignments
-  const effectiveAssignments = speciesAssignments.length > 0
-    ? speciesAssignments
-    : [{ species_id: speciesId, channel_id: 'family', fraction: 1.0 }];
-
-  const channelResults: ChannelEconomics[] = [];
-
-  for (const assignment of effectiveAssignments) {
-    const channel = channelMap.get(assignment.channel_id);
-    if (!channel) continue;
-
-    const lbs = harvestLbs * assignment.fraction;
-    const effectivePrice = basePricePerLb * channel.price_modifier;
-    const grossRevenue = lbs * effectivePrice;
-    const packagingLaborHours = (lbs * channel.packaging_minutes_per_lb) / 60;
-    const packagingCost = lbs * channel.packaging_cost_per_lb;
-    const channelFixedCost = channel.fixed_cost_per_event * channel.events_per_season;
-    const channelStaffingHours = channel.staffing_hours_per_event * channel.events_per_season;
-    const netRevenue = grossRevenue - packagingCost;
-
-    channelResults.push({
-      channel_id: channel.id,
-      channel_name: channel.name,
-      fraction: assignment.fraction,
-      harvest_lbs: lbs,
-      effective_price_per_lb: effectivePrice,
-      gross_revenue: grossRevenue,
-      packaging_labor_hours: packagingLaborHours,
-      packaging_cost: packagingCost,
-      channel_fixed_cost: channelFixedCost,
-      channel_staffing_hours: channelStaffingHours,
-      net_revenue: netRevenue,
-    });
-  }
-
-  return {
-    channels: channelResults,
-    total_net_revenue: channelResults.reduce((s, c) => s + c.net_revenue, 0),
-    total_packaging_cost: channelResults.reduce((s, c) => s + c.packaging_cost, 0),
-    total_packaging_labor_hours: channelResults.reduce((s, c) => s + c.packaging_labor_hours, 0),
-    total_channel_fixed_cost: channelResults.reduce((s, c) => s + c.channel_fixed_cost, 0),
-    total_channel_staffing_hours: channelResults.reduce((s, c) => s + c.channel_staffing_hours, 0),
-  };
-}
-
-/**
- * Extend farm-gate profitability with distribution economics for all species at once.
- *
- * Channel staffing/fixed costs are shared across all species selling through
- * that channel, allocated proportionally by each species' gross revenue share.
- * This must be computed across all species simultaneously.
- */
-export function computeAllDeliveredProfitability(
-  farmGateResults: SpeciesProfitability[],
-  channels: DistributionChannel[],
-  assignments: SpeciesChannelAssignment[],
-): SpeciesProfitability[] {
-  // First pass: compute per-species distribution (raw, unshared staffing)
-  const withDist = farmGateResults.map(fg => ({
-    fg,
-    dist: computeDistribution(fg.species_id, fg.harvest_lbs, fg.price_per_lb, channels, assignments),
-  }));
-
-  // Compute total gross revenue per channel across all species
-  const channelTotalRevenue = new Map<string, number>();
-  for (const { dist } of withDist) {
-    for (const ch of dist.channels) {
-      channelTotalRevenue.set(ch.channel_id, (channelTotalRevenue.get(ch.channel_id) ?? 0) + ch.gross_revenue);
-    }
-  }
-
-  // Second pass: allocate shared channel costs by revenue share
-  return withDist.map(({ fg, dist }) => {
-    let allocatedStaffingHours = 0;
-    let allocatedFixedCost = 0;
-
-    for (const ch of dist.channels) {
-      const totalRev = channelTotalRevenue.get(ch.channel_id) ?? 0;
-      const share = totalRev > 0 ? ch.gross_revenue / totalRev : 0;
-      allocatedStaffingHours += ch.channel_staffing_hours * share;
-      allocatedFixedCost += ch.channel_fixed_cost * share;
-    }
-
-    // Override totals with allocated values
-    const adjustedDist = {
-      ...dist,
-      total_channel_staffing_hours: allocatedStaffingHours,
-      total_channel_fixed_cost: allocatedFixedCost,
-    };
-
-    const deliveredProfit = dist.total_net_revenue - fg.costs.total - allocatedFixedCost;
-    const totalLaborHours = fg.labor_hours + dist.total_packaging_labor_hours + allocatedStaffingHours;
-    const deliveredProfitPerHour = totalLaborHours === 0 ? Infinity : deliveredProfit / totalLaborHours;
-
-    return {
-      ...fg,
-      distribution: adjustedDist,
-      delivered_profit: deliveredProfit,
-      total_labor_hours: totalLaborHours,
-      delivered_profit_per_hour: deliveredProfitPerHour,
-    };
-  });
-}
-
-/**
- * Single-species convenience wrapper. Uses full channel staffing (no sharing).
- * Prefer computeAllDeliveredProfitability for cross-species allocation.
- */
-export function computeDeliveredProfitability(
-  farmGate: SpeciesProfitability,
-  channels: DistributionChannel[],
-  assignments: SpeciesChannelAssignment[],
-): SpeciesProfitability {
-  return computeAllDeliveredProfitability([farmGate], channels, assignments)[0]!;
 }
