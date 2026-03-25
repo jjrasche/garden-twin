@@ -112,7 +112,9 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
   const priceMap = new Map(marketPrices.map(p => [p.species_id, p.price_per_lb]));
   const salesMap = new Map(salesConfigs.map(s => [s.species_id, s]));
 
-  // First pass: compute per-species sales economics (pickup overhead allocated in second pass)
+  // Two-pass strategy: first pass computes per-species economics with overhead = 0,
+  // second pass allocates shared pickup window costs by revenue share.
+  // Pass 1 MUST complete before pass 2 reads totalGrossRevenue.
   const speciesWithRevenue: {
     profitability: SpeciesProfitability;
     grossRevenue: number;
@@ -127,11 +129,11 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
 
     let directCost = 0;
     let allocatedCost = 0;
-    for (const item of costItems) {
-      if (DIRECT_CATEGORIES.has(item.category)) {
-        directCost += item.allocated_cost;
+    for (const costLine of costItems) {
+      if (DIRECT_CATEGORIES.has(costLine.category)) {
+        directCost += costLine.allocated_cost;
       } else {
-        allocatedCost += item.allocated_cost;
+        allocatedCost += costLine.allocated_cost;
       }
     }
     const totalCost = directCost + allocatedCost;
@@ -178,16 +180,16 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
   }
 
   // Second pass: allocate pickup overhead by revenue share
-  const totalGrossRevenue = speciesWithRevenue.reduce((sum, entry) => sum + entry.grossRevenue, 0);
+  const totalGrossRevenue = speciesWithRevenue.reduce((sum, speciesRow) => sum + speciesRow.grossRevenue, 0);
   const totalPickupHours = (pickupOperation.weekly_window_minutes * pickupOperation.weeks_per_season) / 60;
   const totalPickupCost = pickupOperation.supplies_per_season;
 
-  for (const entry of speciesWithRevenue) {
-    const revenueShare = totalGrossRevenue > 0 ? entry.grossRevenue / totalGrossRevenue : 0;
+  for (const speciesRow of speciesWithRevenue) {
+    const revenueShare = totalGrossRevenue > 0 ? speciesRow.grossRevenue / totalGrossRevenue : 0;
     const overheadHours = totalPickupHours * revenueShare;
     const overheadCost = totalPickupCost * revenueShare;
 
-    const species = entry.profitability;
+    const species = speciesRow.profitability;
     species.sales.pickup_overhead_hours = overheadHours;
     species.sales.pickup_overhead_cost = overheadCost;
     species.sales.net_revenue = species.sales.gross_revenue - species.sales.packaging_cost - overheadCost;
@@ -197,7 +199,7 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
     species.delivered_profit_per_hour = species.total_labor_hours === 0 ? Infinity : species.delivered_profit / species.total_labor_hours;
   }
 
-  const results = speciesWithRevenue.map(entry => entry.profitability);
+  const results = speciesWithRevenue.map(speciesRow => speciesRow.profitability);
   results.sort((a, b) => b.delivered_profit_per_hour - a.delivered_profit_per_hour);
   return results;
 }

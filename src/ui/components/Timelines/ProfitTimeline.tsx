@@ -8,7 +8,8 @@
 import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
 import type { SpeciesProfitability, CostLineItem } from '@core/types/Expenditure';
-import { computeProfitability, computeAreaFractions } from '@core/calculators/Profitability';
+import { computeProfitability } from '@core/calculators/Profitability';
+import { extractHarvestLbs, extractLaborHours, extractAreaFractions } from '@core/calculators/extractSimulationData';
 import { EXPENDITURES_2026, MARKET_PRICES_2026, SALES_CONFIG, PICKUP_OPERATION } from '@core/data/expenditures-2026';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
 import type { GardenState } from '@core/types/GardenState';
@@ -38,53 +39,16 @@ function formatProfitPerHour(value: number): string {
   return `$${Math.round(value)}/hr`;
 }
 
-// ── Extract simulation data ─────────────────────────────────────────────────
-
-function extractHarvestLbs(snapshots: DaySnapshot[]): Map<string, number> {
-  const lbs = new Map<string, number>();
-  for (const snap of snapshots) {
-    for (const event of snap.events) {
-      if (event.type !== 'harvest_ready') continue;
-      const plant = snap.plants.find(p => p.plant_id === event.plant_id);
-      if (!plant) continue;
-      lbs.set(plant.species_id, (lbs.get(plant.species_id) ?? 0) + event.accumulated_lbs);
-    }
-  }
-  return lbs;
-}
-
-function extractLaborHours(snapshots: DaySnapshot[]): Map<string, number> {
-  const hours = new Map<string, number>();
-  for (const snap of snapshots) {
-    for (const task of snap.tasks ?? []) {
-      const speciesId = task.parameters?.species_id as string | undefined;
-      if (!speciesId) continue;
-      const min = task.estimated_duration_minutes ?? 0;
-      hours.set(speciesId, (hours.get(speciesId) ?? 0) + min / 60);
-    }
-  }
-  return hours;
-}
-
-function extractAreaFractions(gardenState: GardenState | null): Map<string, number> {
-  if (!gardenState) return new Map();
-  const subcellCounts = new Map<string, number>();
-  for (const plant of gardenState.plants) {
-    const count = plant.occupied_subcells.length;
-    subcellCounts.set(plant.species_id, (subcellCounts.get(plant.species_id) ?? 0) + count);
-  }
-  return computeAreaFractions(subcellCounts);
-}
 
 // ── Cost Detail Modal ───────────────────────────────────────────────────────
 
 function CostDetailModal({ row, onClose }: { row: SpeciesProfitability; onClose: () => void }) {
   const groupedCosts = useMemo(() => {
     const groups = new Map<string, CostLineItem[]>();
-    for (const item of row.cost_breakdown) {
-      const items = groups.get(item.category) ?? [];
-      items.push(item);
-      groups.set(item.category, items);
+    for (const costLine of row.cost_breakdown) {
+      const categoryLines = groups.get(costLine.category) ?? [];
+      categoryLines.push(costLine);
+      groups.set(costLine.category, categoryLines);
     }
     return groups;
   }, [row.cost_breakdown]);

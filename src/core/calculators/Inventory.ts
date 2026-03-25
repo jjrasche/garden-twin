@@ -52,23 +52,23 @@ export function getAvailableHarvest(
   const bySpecies = new Map<string, { lbs: number; harvestable: number; total: number }>();
 
   for (const plant of snap.plants) {
-    const entry = bySpecies.get(plant.species_id) ?? { lbs: 0, harvestable: 0, total: 0 };
-    entry.total++;
+    const harvestAccum = bySpecies.get(plant.species_id) ?? { lbs: 0, harvestable: 0, total: 0 };
+    harvestAccum.total++;
     if (plant.is_harvestable) {
-      entry.harvestable++;
-      entry.lbs += plant.accumulated_lbs;
+      harvestAccum.harvestable++;
+      harvestAccum.lbs += plant.accumulated_lbs;
     }
-    bySpecies.set(plant.species_id, entry);
+    bySpecies.set(plant.species_id, harvestAccum);
   }
 
   const results: AvailableSpecies[] = [];
-  for (const [speciesId, data] of bySpecies) {
-    if (data.harvestable === 0) continue;
+  for (const [speciesId, harvestAccum] of bySpecies) {
+    if (harvestAccum.harvestable === 0) continue;
     results.push({
       species_id: speciesId,
-      available_lbs: data.lbs,
-      harvestable_plant_count: data.harvestable,
-      total_plant_count: data.total,
+      available_lbs: harvestAccum.lbs,
+      harvestable_plant_count: harvestAccum.harvestable,
+      total_plant_count: harvestAccum.total,
     });
   }
 

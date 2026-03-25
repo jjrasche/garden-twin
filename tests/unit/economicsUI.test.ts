@@ -6,7 +6,8 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { computeProfitability, computeAreaFractions } from '../../src/core/calculators/Profitability';
+import { computeProfitability } from '../../src/core/calculators/Profitability';
+import { extractHarvestLbs, extractLaborHours, extractAreaFractions } from '../../src/core/calculators/extractSimulationData';
 import { EXPENDITURES_2026, MARKET_PRICES_2026, SALES_CONFIG, PICKUP_OPERATION } from '../../src/core/data/expenditures-2026';
 import { GARDEN_SPECIES_MAP } from '../../src/core/data/species';
 import { createGardenStateFromPlan } from '../../src/core/data/sampleGarden';
@@ -28,43 +29,15 @@ describe('Economics tab data pipeline', () => {
       rules: DEFAULT_RULES,
     });
 
-    // Extract harvest lbs (same as ProfitTimeline)
-    const harvestLbs = new Map<string, number>();
-    for (const snap of snapshots) {
-      for (const event of snap.events) {
-        if (event.type !== 'harvest_ready') continue;
-        const plant = snap.plants.find(p => p.plant_id === event.plant_id);
-        if (!plant) continue;
-        harvestLbs.set(plant.species_id, (harvestLbs.get(plant.species_id) ?? 0) + event.accumulated_lbs);
-      }
-    }
-
-    // Extract labor hours (same as ProfitTimeline)
-    const laborHours = new Map<string, number>();
-    for (const snap of snapshots) {
-      for (const task of snap.tasks ?? []) {
-        const speciesId = task.parameters?.species_id as string | undefined;
-        if (!speciesId) continue;
-        const min = task.estimated_duration_minutes ?? 0;
-        laborHours.set(speciesId, (laborHours.get(speciesId) ?? 0) + min / 60);
-      }
-    }
-
-    // Extract area fractions (same as ProfitTimeline)
-    const subcellCounts = new Map<string, number>();
-    for (const plant of gardenState.plants) {
-      subcellCounts.set(
-        plant.species_id,
-        (subcellCounts.get(plant.species_id) ?? 0) + plant.occupied_subcells.length,
-      );
-    }
+    const harvestLbs = extractHarvestLbs(snapshots);
+    const laborHours = extractLaborHours(snapshots);
 
     const results = computeProfitability({
       expenditures: EXPENDITURES_2026,
       marketPrices: MARKET_PRICES_2026,
       harvestLbs,
       laborHours,
-      areaFractions: computeAreaFractions(subcellCounts),
+      areaFractions: extractAreaFractions(gardenState),
       salesConfigs: SALES_CONFIG,
       pickupOperation: PICKUP_OPERATION,
     });

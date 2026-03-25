@@ -79,11 +79,15 @@ function isAlreadyCompleted(
   );
 }
 
-/** Most advanced plant in the group — earliest planting date, highest cut count. */
+/** Most advanced plant in the group — earliest planting date or highest cut count. */
 function findRepresentative(plants: PlantState[]): PlantState {
-  return plants.reduce((best, p) =>
-    p.planted_date < best.planted_date || p.cut_number > best.cut_number ? p : best,
-  );
+  let mostAdvanced = plants[0]!;
+  for (const plant of plants) {
+    const plantedEarlier = plant.planted_date < mostAdvanced.planted_date;
+    const moreCuts = plant.cut_number > mostAdvanced.cut_number;
+    if (plantedEarlier || moreCuts) mostAdvanced = plant;
+  }
+  return mostAdvanced;
 }
 
 /** Check if a recurring activity has passed its end condition. */
