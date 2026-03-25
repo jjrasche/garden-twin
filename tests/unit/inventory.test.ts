@@ -88,18 +88,27 @@ describe('getAvailableHarvest', () => {
     expect(kale!.harvestable_plant_count).toBe(2);
   });
 
-  test('returns empty array when no plants are harvestable', () => {
+  test('returns empty array when no snapshot exists before date', () => {
     const available = getAvailableHarvest(SNAPSHOTS, new Date('2026-06-01'));
-    // No snapshot for this date — should find nearest or return empty
     expect(available.length).toBe(0);
   });
 
   test('finds nearest snapshot when exact date not available', () => {
     const available = getAvailableHarvest(SNAPSHOTS, new Date('2026-07-14'));
-    // Should use July 1 snapshot (nearest before July 14). Kale: 0.5 + 0.3 = 0.8 lbs
+    // Uses July 1 snapshot. Only kale is harvestable (k1 + k2): 0.5 + 0.3 = 0.8 lbs
     const kale = available.find(a => a.species_id === 'kale_red_russian');
     expect(kale).toBeDefined();
     expect(kale!.available_lbs).toBeCloseTo(0.8);
+    // Potato and tomato are not harvestable on July 1
+    expect(available.find(a => a.species_id === 'potato_kennebec')).toBeUndefined();
+  });
+
+  test('includes quality score in results', () => {
+    const available = getAvailableHarvest(SNAPSHOTS, new Date('2026-08-01'));
+    const kale = available.find(a => a.species_id === 'kale_red_russian');
+    expect(kale).toBeDefined();
+    expect(kale!.avg_quality_score).toBeGreaterThanOrEqual(0);
+    expect(kale!.min_quality_score).toBeGreaterThanOrEqual(0);
   });
 });
 

@@ -15,6 +15,8 @@ export interface AvailableSpecies {
   available_lbs: number;
   harvestable_plant_count: number;
   total_plant_count: number;
+  avg_quality_score: number;
+  min_quality_score: number;
 }
 
 export interface WeekForecast {
@@ -39,9 +41,9 @@ function findNearestSnapshot(snapshots: DaySnapshot[], target: Date): DaySnapsho
 /**
  * Get available harvest on a specific date.
  *
- * Uses accumulated_lbs > 0 on alive plants (not is_harvestable) because
- * the simulation auto-harvests and resets is_harvestable before snapshots
- * are captured. Biomass represents what would come off the plant now.
+ * With quality-decline harvest, biomass sits on plants as inventory.
+ * Plants with is_harvestable = true have enough biomass to pick.
+ * Quality score indicates produce value.
  */
 export function getAvailableHarvest(
   snapshots: DaySnapshot[],
@@ -50,29 +52,43 @@ export function getAvailableHarvest(
   const snap = findNearestSnapshot(snapshots, date);
   if (!snap) return [];
 
-  const bySpecies = new Map<string, { lbs: number; withBiomass: number; total: number }>();
+  const bySpecies = new Map<string, {
+    lbs: number;
+    harvestable: number;
+    total: number;
+    qualitySum: number;
+    qualityMin: number;
+  }>();
 
   for (const plant of snap.plants) {
     const isAlive = plant.lifecycle === 'growing' || plant.lifecycle === 'stressed';
     if (!isAlive) continue;
 
-    const harvestAccum = bySpecies.get(plant.species_id) ?? { lbs: 0, withBiomass: 0, total: 0 };
-    harvestAccum.total++;
-    if (plant.accumulated_lbs > 0.01) {
-      harvestAccum.withBiomass++;
-      harvestAccum.lbs += plant.accumulated_lbs;
+    const accum = bySpecies.get(plant.species_id) ?? {
+      lbs: 0, harvestable: 0, total: 0, qualitySum: 0, qualityMin: 1.0,
+    };
+    accum.total++;
+
+    if (plant.is_harvestable && plant.accumulated_lbs > 0.01) {
+      accum.harvestable++;
+      accum.lbs += plant.accumulated_lbs;
+      const quality = plant.quality_score ?? 0;
+      accum.qualitySum += quality;
+      accum.qualityMin = Math.min(accum.qualityMin, quality);
     }
-    bySpecies.set(plant.species_id, harvestAccum);
+    bySpecies.set(plant.species_id, accum);
   }
 
   const results: AvailableSpecies[] = [];
-  for (const [speciesId, harvestAccum] of bySpecies) {
-    if (harvestAccum.lbs < 0.01) continue;
+  for (const [speciesId, accum] of bySpecies) {
+    if (accum.harvestable === 0) continue;
     results.push({
       species_id: speciesId,
-      available_lbs: harvestAccum.lbs,
-      harvestable_plant_count: harvestAccum.withBiomass,
-      total_plant_count: harvestAccum.total,
+      available_lbs: accum.lbs,
+      harvestable_plant_count: accum.harvestable,
+      total_plant_count: accum.total,
+      avg_quality_score: accum.harvestable > 0 ? accum.qualitySum / accum.harvestable : 0,
+      min_quality_score: accum.qualityMin,
     });
   }
 

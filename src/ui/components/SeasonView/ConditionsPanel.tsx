@@ -260,6 +260,14 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
                       </div>
                       <div className="flex justify-between text-[10px] text-gray-400 mt-0.5 pl-3.5">
                         <span>{species.available_lbs.toFixed(1)} lbs ({species.harvestable_plant_count} plants)</span>
+                        {species.avg_quality_score > 0 && (
+                          <span
+                            className="font-mono"
+                            style={{ color: species.avg_quality_score >= 0.7 ? '#22c55e' : species.avg_quality_score >= 0.4 ? '#f59e0b' : '#ef4444' }}
+                          >
+                            Q:{Math.round(species.avg_quality_score * 100)}%
+                          </span>
+                        )}
                       </div>
                       {sellableLbs > 0 && (
                         <div className="flex justify-between text-[10px] pl-3.5 mt-0.5">
