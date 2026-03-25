@@ -108,14 +108,14 @@ describe('simulateWithTasks end-to-end', () => {
       .filter(t => t.type === 'harvest');
 
     // Lettuce lifecycle fires harvest tasks, but they stay pending (not auto-resolved).
-    // Quality-decline forces actual harvest when freshness drops below must_harvest_floor.
+    // Quality-decline forces harvest when overmaturity drops below must_harvest_floor.
     expect(harvestTasks.length).toBeGreaterThan(0);
     for (const task of harvestTasks) {
       expect(task.status).toBe('pending');
     }
 
-    // Quality-decline harvest should fire — lettuce has a steep freshness curve
-    // (0→1.0, 3→0.8, 5→0.4, 7→0.1) and must_harvest_floor=0.3.
+    // Quality-decline harvest should fire — lettuce overmaturity triggers forced harvest
+    // when biomass ratio exceeds ~2.5× optimal (maturity drops below must_harvest_floor=0.3).
     // Plants should accumulate biomass, become harvestable, then get force-harvested.
     const harvestEvents = snapshots.flatMap(s => s.events).filter(e => e.type === 'harvested');
     expect(harvestEvents.length).toBeGreaterThan(0);

@@ -91,8 +91,9 @@ export const POTATO_KENNEBEC: PlantSpecies = {
 
   data_confidence: 'high',
   quality: {
-    min_harvest_lbs: 1.0,
-    freshness_curve: { 0: 1.0, 14: 1.0, 30: 0.9, 45: 0.5 },
+    min_harvest_lbs: 1.0,        // small new potatoes
+    optimal_harvest_lbs: 1.5,    // full-size tubers (baseline per plant)
+    maturity_curve: { 0.7: 0.8, 1.0: 1.0, 1.5: 0.9, 2.0: 0.7 },
     must_harvest_floor: 0.15,
   },
 

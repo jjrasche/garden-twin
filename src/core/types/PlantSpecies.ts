@@ -284,10 +284,11 @@ export const PlantSpeciesSchema = z.object({
   // Duration-based stress tolerances (optional)
   stress_tolerances: StressTolerancesSchema.optional(),
 
-  // Quality model — species-specific harvest timing and freshness decay
+  // Quality model — maturity-based (biomass ratio drives pre-harvest quality)
   quality: z.object({
     min_harvest_lbs: z.number().min(0),                          // minimum biomass to be inventory
-    freshness_curve: z.record(z.string(), z.number()).optional(), // days_since_harvestable → freshness 0-1
+    optimal_harvest_lbs: z.number().min(0),                      // peak quality biomass per plant
+    maturity_curve: z.record(z.string(), z.number()),            // biomass_ratio → maturity factor 0-1
     must_harvest_floor: z.number().min(0).max(1),                // quality below this = forced harvest
   }).optional(),
 

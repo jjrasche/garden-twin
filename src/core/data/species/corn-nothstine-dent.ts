@@ -83,8 +83,9 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
 
   data_confidence: 'high',
   quality: {
-    min_harvest_lbs: 0.2,
-    freshness_curve: { 0: 1.0, 14: 1.0, 21: 0.8, 30: 0.5 },
+    min_harvest_lbs: 0.2,        // immature ear
+    optimal_harvest_lbs: 0.24,   // dried dent ear (baseline per plant)
+    maturity_curve: { 0.8: 0.9, 1.0: 1.0, 1.5: 0.8, 2.0: 0.5 },
     must_harvest_floor: 0.2,
   },
 

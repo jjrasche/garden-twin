@@ -1,14 +1,14 @@
 /**
  * Quality model tests.
  *
- * Quality = f(flavor, biomass_readiness, freshness).
- * All three must be good for high quality.
+ * Quality = flavor × maturity (biomass ratio curve).
+ * Maturity peaks at optimal_harvest_lbs, declining as plant overgrows.
  */
 
 import { describe, test, expect } from 'vitest';
 import {
-  computeBiomassReadiness,
-  computeFreshnessFactor,
+  computeBiomassRatio,
+  computeMaturityFactor,
   isHarvestable,
   computeQuality,
 } from '../../src/core/calculators/qualityModel';
@@ -16,58 +16,49 @@ import { LETTUCE_BSS } from '../../src/core/data/species/lettuce-bss';
 import { POTATO_KENNEBEC } from '../../src/core/data/species/potato-kennebec';
 import { KALE_RED_RUSSIAN } from '../../src/core/data/species/kale-red-russian';
 
-// ── Biomass Readiness ───────────────────────────────────────────────────────
+// ── Biomass Ratio ───────────────────────────────────────────────────────────
 
-describe('computeBiomassReadiness', () => {
+describe('computeBiomassRatio', () => {
   test('returns 0 when no biomass', () => {
-    expect(computeBiomassReadiness(0, 0.05)).toBe(0);
+    expect(computeBiomassRatio(0, 0.25)).toBe(0);
   });
 
-  test('returns 1.0 when at minimum harvest threshold', () => {
-    expect(computeBiomassReadiness(0.05, 0.05)).toBeCloseTo(1.0);
+  test('returns 1.0 at optimal harvest point', () => {
+    expect(computeBiomassRatio(0.25, 0.25)).toBeCloseTo(1.0);
   });
 
-  test('returns > 1.0 when overgrown past threshold', () => {
-    expect(computeBiomassReadiness(0.10, 0.05)).toBeCloseTo(2.0);
+  test('returns > 1.0 when overgrown past optimal', () => {
+    expect(computeBiomassRatio(0.50, 0.25)).toBeCloseTo(2.0);
   });
 
-  test('returns 0.5 when halfway to threshold', () => {
-    expect(computeBiomassReadiness(0.025, 0.05)).toBeCloseTo(0.5);
+  test('returns 0.5 when halfway to optimal', () => {
+    expect(computeBiomassRatio(0.125, 0.25)).toBeCloseTo(0.5);
   });
 });
 
-// ── Freshness Factor ────────────────────────────────────────────────────────
+// ── Maturity Factor ────────────────────────────────────────────────────────
 
-describe('computeFreshnessFactor', () => {
-  const lettuceCurve = { 0: 1.0, 3: 0.8, 5: 0.4, 7: 0.1 };
+describe('computeMaturityFactor', () => {
+  // Kale maturity: { 0.3: 0.8, 1.0: 1.0, 2.0: 0.6, 3.0: 0.2 }
+  const kaleCurve = { 0.3: 0.8, 1.0: 1.0, 2.0: 0.6, 3.0: 0.2 };
 
-  test('returns 1.0 at day 0 (just became harvestable)', () => {
-    expect(computeFreshnessFactor(0, lettuceCurve)).toBeCloseTo(1.0);
+  test('returns peak maturity at ratio 1.0 (optimal size)', () => {
+    expect(computeMaturityFactor(1.0, kaleCurve)).toBeCloseTo(1.0);
   });
 
-  test('decays according to species curve', () => {
-    expect(computeFreshnessFactor(3, lettuceCurve)).toBeCloseTo(0.8);
-    expect(computeFreshnessFactor(5, lettuceCurve)).toBeCloseTo(0.4);
+  test('returns good maturity for baby harvest (ratio ~0.3)', () => {
+    expect(computeMaturityFactor(0.3, kaleCurve)).toBeCloseTo(0.8);
+  });
+
+  test('declines as plant overgrows past optimal', () => {
+    expect(computeMaturityFactor(2.0, kaleCurve)).toBeCloseTo(0.6);
+    expect(computeMaturityFactor(3.0, kaleCurve)).toBeCloseTo(0.2);
   });
 
   test('interpolates between curve points', () => {
-    const freshness = computeFreshnessFactor(4, lettuceCurve);
-    expect(freshness).toBeGreaterThan(0.4);
-    expect(freshness).toBeLessThan(0.8);
-  });
-
-  test('returns low value past end of curve', () => {
-    expect(computeFreshnessFactor(10, lettuceCurve)).toBeLessThanOrEqual(0.1);
-  });
-
-  test('potato has slow decay (30+ days stable)', () => {
-    const potatoCurve = { 0: 1.0, 14: 1.0, 30: 0.9, 45: 0.5 };
-    expect(computeFreshnessFactor(14, potatoCurve)).toBeCloseTo(1.0);
-    expect(computeFreshnessFactor(30, potatoCurve)).toBeCloseTo(0.9);
-  });
-
-  test('returns 1.0 when days is 0 regardless of curve', () => {
-    expect(computeFreshnessFactor(0, { 0: 1.0, 1: 0.0 })).toBeCloseTo(1.0);
+    const maturity = computeMaturityFactor(1.5, kaleCurve);
+    expect(maturity).toBeGreaterThan(0.6);
+    expect(maturity).toBeLessThan(1.0);
   });
 });
 
@@ -90,54 +81,59 @@ describe('isHarvestable', () => {
 // ── Compute Quality (integration) ───────────────────────────────────────────
 
 describe('computeQuality', () => {
-  // Warm conditions for lettuce (good flavor ~0.65)
   const warmConditions = { temperature_f: 65, soil_temp_f: 60, photoperiod_h: 14, sun_hours: 8 };
-  // Hot conditions for lettuce (bad flavor — bitter)
   const hotConditions = { temperature_f: 85, soil_temp_f: 75, photoperiod_h: 15, sun_hours: 10 };
 
   test('quality is 0 when biomass below minimum, but flavor still computed', () => {
-    const result = computeQuality(LETTUCE_BSS, warmConditions, 0.01, 0.05, 0);
+    const result = computeQuality(LETTUCE_BSS, warmConditions, 0.01);
     expect(result.quality_score).toBe(0);
-    expect(result.flavor_score).toBeGreaterThan(0);  // Flavor computable even without enough biomass
-    expect(result.biomass_readiness).toBeLessThan(1.0);
+    expect(result.flavor_score).toBeGreaterThan(0);
   });
 
-  test('quality is high when biomass ready + good flavor + fresh', () => {
-    const result = computeQuality(LETTUCE_BSS, warmConditions, 0.06, 0.05, 0);
+  test('quality peaks at optimal biomass with good flavor', () => {
+    // Lettuce optimal = 0.15 lbs
+    const result = computeQuality(LETTUCE_BSS, warmConditions, 0.15);
     expect(result.quality_score).toBeGreaterThan(0.5);
-    expect(result.flavor_score).toBeGreaterThan(0.5);
-    expect(result.freshness).toBeCloseTo(1.0);
+    expect(result.maturity).toBeCloseTo(1.0);
+    expect(result.biomass_ratio).toBeCloseTo(1.0);
   });
 
-  test('quality degrades with days since harvestable', () => {
-    const fresh = computeQuality(LETTUCE_BSS, warmConditions, 0.06, 0.05, 0);
-    const aged = computeQuality(LETTUCE_BSS, warmConditions, 0.06, 0.05, 5);
-    expect(aged.quality_score).toBeLessThan(fresh.quality_score);
-    expect(aged.freshness).toBeLessThan(fresh.freshness);
+  test('quality declines as plant overgrows past optimal', () => {
+    const atOptimal = computeQuality(LETTUCE_BSS, warmConditions, 0.15);
+    const overgrown = computeQuality(LETTUCE_BSS, warmConditions, 0.30);
+    expect(overgrown.quality_score).toBeLessThan(atOptimal.quality_score);
+    expect(overgrown.maturity).toBeLessThan(atOptimal.maturity);
+    expect(overgrown.biomass_ratio).toBeCloseTo(2.0);
   });
 
   test('quality degrades with bad conditions (hot lettuce = bitter)', () => {
-    const good = computeQuality(LETTUCE_BSS, warmConditions, 0.06, 0.05, 0);
-    const bad = computeQuality(LETTUCE_BSS, hotConditions, 0.06, 0.05, 0);
+    const good = computeQuality(LETTUCE_BSS, warmConditions, 0.15);
+    const bad = computeQuality(LETTUCE_BSS, hotConditions, 0.15);
     expect(bad.quality_score).toBeLessThan(good.quality_score);
     expect(bad.flavor_score).toBeLessThan(good.flavor_score);
   });
 
-  test('potato quality stays high for weeks after maturity', () => {
+  test('potato quality stays high across wide biomass range', () => {
     const conditions = { temperature_f: 70, soil_temp_f: 60, photoperiod_h: 14, sun_hours: 8 };
-    const day0 = computeQuality(POTATO_KENNEBEC, conditions, 1.5, 1.0, 0);
-    const day14 = computeQuality(POTATO_KENNEBEC, conditions, 1.5, 1.0, 14);
-    const day30 = computeQuality(POTATO_KENNEBEC, conditions, 1.5, 1.0, 30);
+    // Potato optimal = 1.5 lbs, min = 1.0, maturity_curve: { 0.7: 0.8, 1.0: 1.0, 1.5: 0.9, 2.0: 0.7 }
+    const atMin = computeQuality(POTATO_KENNEBEC, conditions, 1.0);
+    const atOptimal = computeQuality(POTATO_KENNEBEC, conditions, 1.5);
+    const overgrown = computeQuality(POTATO_KENNEBEC, conditions, 3.0);
 
-    expect(day0.quality_score).toBeGreaterThan(0.7);
-    expect(day14.quality_score).toBeGreaterThan(0.7);  // Still high at 2 weeks
-    expect(day30.quality_score).toBeGreaterThan(0.5);   // Starting to decline at 1 month
+    expect(atMin.quality_score).toBeGreaterThan(0.5);
+    expect(atOptimal.quality_score).toBeGreaterThan(0.7);
+    expect(overgrown.quality_score).toBeLessThan(atOptimal.quality_score);
   });
 
-  test('species without flavor curves gets quality from freshness alone', () => {
-    // Companion plants or species with no flavor_response default to flavor 1.0
-    const result = computeQuality(KALE_RED_RUSSIAN, warmConditions, 0.10, 0.08, 0);
-    expect(result.quality_score).toBeGreaterThan(0);
-    expect(result.flavor_score).toBeGreaterThan(0);
+  test('kale quality at baby vs optimal vs overgrown', () => {
+    const conditions = { temperature_f: 65, soil_temp_f: 60, photoperiod_h: 14, sun_hours: 8 };
+    // Kale: min 0.08, optimal 0.25
+    const baby = computeQuality(KALE_RED_RUSSIAN, conditions, 0.08);
+    const optimal = computeQuality(KALE_RED_RUSSIAN, conditions, 0.25);
+    const overgrown = computeQuality(KALE_RED_RUSSIAN, conditions, 0.75);
+
+    expect(baby.quality_score).toBeGreaterThan(0);
+    expect(optimal.quality_score).toBeGreaterThan(baby.quality_score);
+    expect(overgrown.quality_score).toBeLessThan(optimal.quality_score);
   });
 });

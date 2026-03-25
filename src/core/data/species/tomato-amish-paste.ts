@@ -78,8 +78,9 @@ export const TOMATO_AMISH_PASTE: PlantSpecies = {
 
   data_confidence: 'high',
   quality: {
-    min_harvest_lbs: 0.2,
-    freshness_curve: { 0: 1.0, 5: 0.9, 7: 0.6, 10: 0.2 },
+    min_harvest_lbs: 0.2,        // a couple green fruits
+    optimal_harvest_lbs: 0.8,    // ripe paste tomatoes ready for canning
+    maturity_curve: { 0.3: 0.7, 1.0: 1.0, 2.0: 0.6, 3.0: 0.3 },
     must_harvest_floor: 0.25,
   },
 

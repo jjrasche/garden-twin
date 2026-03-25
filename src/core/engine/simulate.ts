@@ -136,7 +136,7 @@ function harvestDecliningPlants(
         type: 'harvested', plant_id: plant.plant_id, date,
         harvested_lbs: plant.accumulated_lbs, quality_score: plant.quality_score,
       });
-      return { ...harvestPlant(plant, catalog), days_since_harvestable: 0 };
+      return harvestPlant(plant, catalog);
     }
     return plant;
   });

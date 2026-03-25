@@ -33,7 +33,6 @@ export function harvestPlant(
     cut_number: next_cut,
     is_harvestable: false,
     quality_score: undefined,
-    days_since_harvestable: 0,
   };
 
   if (is_exhausted) {
