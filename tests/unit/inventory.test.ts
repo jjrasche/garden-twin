@@ -63,10 +63,11 @@ const SNAPSHOTS: DaySnapshot[] = [
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 describe('getAvailableHarvest', () => {
-  test('returns harvestable species with estimated lbs on a specific date', () => {
+  test('returns species with biomass on alive plants', () => {
     const available = getAvailableHarvest(SNAPSHOTS, new Date('2026-07-15'));
 
-    expect(available.length).toBe(3); // potato, kale k1, and sun gold (kale k2 not harvestable)
+    // All 3 species have biomass > 0: potato 1.8, kale 0.4+0.1, sun gold 0.8
+    expect(available.length).toBe(3);
 
     const potato = available.find(a => a.species_id === 'potato_kennebec');
     expect(potato).toBeDefined();
@@ -95,10 +96,10 @@ describe('getAvailableHarvest', () => {
 
   test('finds nearest snapshot when exact date not available', () => {
     const available = getAvailableHarvest(SNAPSHOTS, new Date('2026-07-14'));
-    // Should use July 1 snapshot (nearest before July 14)
+    // Should use July 1 snapshot (nearest before July 14). Kale: 0.5 + 0.3 = 0.8 lbs
     const kale = available.find(a => a.species_id === 'kale_red_russian');
     expect(kale).toBeDefined();
-    expect(kale!.available_lbs).toBeCloseTo(0.8); // 0.5 + 0.3
+    expect(kale!.available_lbs).toBeCloseTo(0.8);
   });
 });
 

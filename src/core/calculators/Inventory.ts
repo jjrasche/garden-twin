@@ -39,8 +39,9 @@ function findNearestSnapshot(snapshots: DaySnapshot[], target: Date): DaySnapsho
 /**
  * Get available harvest on a specific date.
  *
- * Returns one entry per species with harvestable plants, aggregating
- * accumulated_lbs across all harvestable plants of that species.
+ * Uses accumulated_lbs > 0 on alive plants (not is_harvestable) because
+ * the simulation auto-harvests and resets is_harvestable before snapshots
+ * are captured. Biomass represents what would come off the plant now.
  */
 export function getAvailableHarvest(
   snapshots: DaySnapshot[],
@@ -49,13 +50,16 @@ export function getAvailableHarvest(
   const snap = findNearestSnapshot(snapshots, date);
   if (!snap) return [];
 
-  const bySpecies = new Map<string, { lbs: number; harvestable: number; total: number }>();
+  const bySpecies = new Map<string, { lbs: number; withBiomass: number; total: number }>();
 
   for (const plant of snap.plants) {
-    const harvestAccum = bySpecies.get(plant.species_id) ?? { lbs: 0, harvestable: 0, total: 0 };
+    const isAlive = plant.lifecycle === 'growing' || plant.lifecycle === 'stressed';
+    if (!isAlive) continue;
+
+    const harvestAccum = bySpecies.get(plant.species_id) ?? { lbs: 0, withBiomass: 0, total: 0 };
     harvestAccum.total++;
-    if (plant.is_harvestable) {
-      harvestAccum.harvestable++;
+    if (plant.accumulated_lbs > 0.01) {
+      harvestAccum.withBiomass++;
       harvestAccum.lbs += plant.accumulated_lbs;
     }
     bySpecies.set(plant.species_id, harvestAccum);
@@ -63,11 +67,11 @@ export function getAvailableHarvest(
 
   const results: AvailableSpecies[] = [];
   for (const [speciesId, harvestAccum] of bySpecies) {
-    if (harvestAccum.harvestable === 0) continue;
+    if (harvestAccum.lbs < 0.01) continue;
     results.push({
       species_id: speciesId,
       available_lbs: harvestAccum.lbs,
-      harvestable_plant_count: harvestAccum.harvestable,
+      harvestable_plant_count: harvestAccum.withBiomass,
       total_plant_count: harvestAccum.total,
     });
   }
