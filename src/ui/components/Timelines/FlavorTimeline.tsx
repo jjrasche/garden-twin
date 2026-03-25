@@ -114,7 +114,7 @@ export function FlavorTimeline({ env: envProp }: { env?: import('@core/environme
               tick={{ fontSize: 10 }}
               domain={[0, 1]}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-              label={{ value: 'flavor', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af', offset: 10 }}
+              label={{ value: 'quality', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af', offset: 10 }}
             />
             <Tooltip content={<FlavorTooltip />} />
             <Legend

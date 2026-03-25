@@ -28,13 +28,21 @@ export function harvestPlant(
   const is_exhausted = strategy?.type === 'bulk'
     || (max_cuts !== undefined && next_cut >= max_cuts);
 
+  const resetFields = {
+    accumulated_lbs: 0,
+    cut_number: next_cut,
+    is_harvestable: false,
+    quality_score: undefined,
+    days_since_harvestable: 0,
+  };
+
   if (is_exhausted) {
     if (strategy?.type === 'cut_and_come_again') {
       // CAC exhaustion = spent/bolted, not dead. Plant occupies space until pulled.
-      return { ...plant, accumulated_lbs: 0, cut_number: next_cut, is_harvestable: false, lifecycle: 'senescent' as const };
+      return { ...plant, ...resetFields, lifecycle: 'senescent' as const };
     }
     // Bulk harvest = plant is done (potato vine die-back, corn dry-down)
-    return { ...plant, accumulated_lbs: 0, cut_number: next_cut, is_harvestable: false, lifecycle: 'dead' as const };
+    return { ...plant, ...resetFields, lifecycle: 'dead' as const };
   }
 
   const next_vigor = cut_yield_curve
@@ -43,9 +51,7 @@ export function harvestPlant(
 
   return {
     ...plant,
-    accumulated_lbs: 0,
-    cut_number: next_cut,
+    ...resetFields,
     vigor: next_vigor,
-    is_harvestable: false,
   };
 }

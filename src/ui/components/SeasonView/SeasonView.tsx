@@ -234,7 +234,7 @@ export function SeasonView() {
           {([
             ['production', 'Weekly Production'],
             ['growth', 'Growth Modifiers'],
-            ['flavor', 'Flavor Quality'],
+            ['flavor', 'Quality'],
             ['tasks', 'Task Calendar'],
             ['economics', 'Economics'],
           ] as const).map(([id, label]) => (

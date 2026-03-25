@@ -106,28 +106,32 @@ describe('simulateWithTasks end-to-end', () => {
       .flatMap(s => s.tasks ?? [])
       .filter(t => t.type === 'harvest');
 
-    // Lettuce lifecycle fires harvest at day 28, then every 14 days, max 4 cuts.
-    // Should see harvest tasks appear in the simulation.
+    // Lettuce lifecycle fires harvest tasks, but they stay pending (not auto-resolved).
+    // Quality-decline forces actual harvest when freshness drops below must_harvest_floor.
     expect(harvestTasks.length).toBeGreaterThan(0);
-
-    // All harvest tasks should be auto-resolved (completed)
     for (const task of harvestTasks) {
-      expect(task.status).toBe('completed');
+      expect(task.status).toBe('pending');
     }
 
-    // By the end, lettuce plants should be pulled (senescent → pulled in same day)
+    // Quality-decline harvest should fire — lettuce has a steep freshness curve
+    // (0→1.0, 3→0.8, 5→0.4, 7→0.1) and must_harvest_floor=0.3.
+    // Plants should accumulate biomass, become harvestable, then get force-harvested.
+    const harvestEvents = snapshots.flatMap(s => s.events).filter(e => e.type === 'harvested');
+    expect(harvestEvents.length).toBeGreaterThan(0);
+
     const finalSnapshot = snapshots[snapshots.length - 1]!;
     const lettuce1 = finalSnapshot.plants.find(p => p.plant_id === 'lettuce_1');
     const lettuce2 = finalSnapshot.plants.find(p => p.plant_id === 'lettuce_2');
 
-    // Plants should exist in final snapshot (may be pulled or dead)
     expect(lettuce1).toBeDefined();
     expect(lettuce2).toBeDefined();
 
-    // After 4 harvests, CAC plants should be pulled (senescent → auto-pull same day)
-    if (lettuce1!.cut_number >= 4) {
-      expect(lettuce1!.lifecycle).toBe('pulled');
-    }
+    // At least one plant should survive and get harvested by quality-decline.
+    // Stochastic survival in initPlantStates may kill some plants early.
+    const survivors = [lettuce1!, lettuce2!].filter(p => p.lifecycle !== 'dead' || p.cut_number > 0);
+    expect(survivors.length).toBeGreaterThan(0);
+    const harvested = survivors.filter(p => p.cut_number > 0);
+    expect(harvested.length).toBeGreaterThan(0);
   });
 
   test('task generation includes season tasks when provided', () => {
