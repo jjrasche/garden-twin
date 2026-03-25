@@ -64,6 +64,29 @@ export interface DaySnapshot {
 // Re-export harvestPlant for backward compatibility (was defined here, now in harvestPlant.ts)
 export { harvestPlant } from './harvestPlant';
 
+/** Harvest plants whose quality has dropped below the species must-harvest floor. */
+function harvestDecliningPlants(
+  plants: PlantState[],
+  catalog: Map<string, PlantSpecies>,
+  date: Date,
+): { plants: PlantState[]; events: GrowthEvent[] } {
+  const events: GrowthEvent[] = [];
+  const updatedPlants = plants.map(plant => {
+    if (!plant.is_harvestable || plant.lifecycle === 'dead' || plant.lifecycle === 'pulled') return plant;
+    const species = catalog.get(plant.species_id);
+    const mustHarvestFloor = species?.quality?.must_harvest_floor ?? 0.3;
+    if (plant.quality_score !== undefined && plant.quality_score < mustHarvestFloor) {
+      events.push({
+        type: 'harvested', plant_id: plant.plant_id, date,
+        harvested_lbs: plant.accumulated_lbs, quality_score: plant.quality_score,
+      });
+      return { ...harvestPlant(plant, catalog), days_since_harvestable: 0 };
+    }
+    return plant;
+  });
+  return { plants: updatedPlants, events };
+}
+
 // ── Legacy simulateGrowth (used by older code paths) ────────────────────────
 
 /** Run the growth engine from start to end date. */
@@ -205,21 +228,9 @@ export function collectSnapshots(
     plants = result.plants;
 
     // 2. Quality-decline harvest (harvest only when quality demands it)
-    const harvestEvents: GrowthEvent[] = [];
-    plants = plants.map(p => {
-      if (!p.is_harvestable || p.lifecycle === 'dead' || p.lifecycle === 'pulled') return p;
-      const species = ctx.catalog.get(p.species_id);
-      const mustHarvestFloor = species?.quality?.must_harvest_floor ?? 0.3;
-      if (p.quality_score !== undefined && p.quality_score < mustHarvestFloor) {
-        const harvestedLbs = p.accumulated_lbs;
-        harvestEvents.push({
-          type: 'harvested', plant_id: p.plant_id, date: currentDate,
-          harvested_lbs: harvestedLbs, quality_score: p.quality_score,
-        });
-        return { ...harvestPlant(p, ctx.catalog), days_since_harvestable: 0 };
-      }
-      return p;
-    });
+    const harvestResult = harvestDecliningPlants(plants, ctx.catalog, currentDate);
+    plants = harvestResult.plants;
+    const harvestEvents = harvestResult.events;
 
     // 3. Auto-pull senescent plants (gardener clears them same day they notice)
     plants = plants.map(p => {
@@ -367,20 +378,9 @@ export function simulateWithTasks(
     });
 
     // 5. Quality-decline forced harvest (plants not caught by task-driven harvest)
-    const harvestEvents: GrowthEvent[] = [];
-    plants = plants.map(p => {
-      if (!p.is_harvestable || p.lifecycle === 'dead' || p.lifecycle === 'pulled') return p;
-      const species = ctx.catalog.get(p.species_id);
-      const mustHarvestFloor = species?.quality?.must_harvest_floor ?? 0.3;
-      if (p.quality_score !== undefined && p.quality_score < mustHarvestFloor) {
-        harvestEvents.push({
-          type: 'harvested', plant_id: p.plant_id, date: currentDate,
-          harvested_lbs: p.accumulated_lbs, quality_score: p.quality_score,
-        });
-        return { ...harvestPlant(p, ctx.catalog), days_since_harvestable: 0 };
-      }
-      return p;
-    });
+    const qualityHarvest = harvestDecliningPlants(plants, ctx.catalog, currentDate);
+    plants = qualityHarvest.plants;
+    const harvestEvents = qualityHarvest.events;
 
     // 6. Auto-pull senescent plants (gardener clears them same day)
     plants = plants.map(p =>
