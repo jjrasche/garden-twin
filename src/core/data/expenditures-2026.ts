@@ -10,7 +10,7 @@
  *   - Multiple allocations → explicit percentage split
  */
 
-import type { Expenditure, MarketPrice } from '../types/Expenditure';
+import type { Expenditure, MarketPrice, DistributionChannel, SpeciesChannelAssignment } from '../types/Expenditure';
 
 // =============================================================================
 // Seeds
@@ -389,4 +389,118 @@ export const MARKET_PRICES_2026: MarketPrice[] = [
   { species_id: 'tomato_sun_gold',      price_per_lb: 6.00, unit: 'lb', source: 'FM pint avg $4.88 ÷ 0.75 lb/pint', year: 2026 },
   { species_id: 'potato_kennebec',      price_per_lb: 1.50, unit: 'lb', source: 'MI potato growers + FM markup', year: 2026 },
   { species_id: 'corn_nothstine_dent',  price_per_lb: 2.50, unit: 'lb', source: 'Specialty dried cornmeal/grits', year: 2026 },
+];
+
+// =============================================================================
+// Distribution Channels
+// =============================================================================
+
+/**
+ * Available sales channels. Each has different cost/labor/price profiles.
+ *
+ * 'family' is a special channel: no revenue, no costs. It represents
+ * harvest consumed at home. Including it ensures fractions sum to 1.0.
+ */
+export const DISTRIBUTION_CHANNELS: DistributionChannel[] = [
+  {
+    id: 'family',
+    name: 'Family consumption',
+    packaging_minutes_per_lb: 0,
+    packaging_cost_per_lb: 0,
+    fixed_cost_per_event: 0,
+    staffing_hours_per_event: 0,
+    events_per_season: 0,
+    price_modifier: 0,  // No revenue — consumed at home
+  },
+  {
+    id: 'farm_stand',
+    name: 'Farm stand / pickup orders',
+    packaging_minutes_per_lb: 2,       // Weigh, bag, label
+    packaging_cost_per_lb: 0.10,       // Paper bags, labels, twist ties
+    fixed_cost_per_event: 0,           // No booth fee — your own property
+    staffing_hours_per_event: 0.5,     // 30 min per pickup window
+    events_per_season: 20,             // Weekly pickups Jun-Oct
+    price_modifier: 1.0,              // Base market price
+  },
+  {
+    id: 'farmers_market',
+    name: 'Fulton Street Farmers Market',
+    packaging_minutes_per_lb: 2,       // Same packaging labor
+    packaging_cost_per_lb: 0.15,       // Better presentation — pint containers for cherry tomatoes
+    fixed_cost_per_event: 30,          // Booth fee + gas
+    staffing_hours_per_event: 4,       // Setup, sell, teardown
+    events_per_season: 16,             // Biweekly Jun-Oct (Saturdays)
+    price_modifier: 1.1,              // Slight premium for direct sales
+  },
+  {
+    id: 'u_pick',
+    name: 'U-pick (customer harvests)',
+    packaging_minutes_per_lb: 0,       // Customer does the work
+    packaging_cost_per_lb: 0.05,       // Bags provided
+    fixed_cost_per_event: 0,
+    staffing_hours_per_event: 1,       // Supervision per session
+    events_per_season: 10,             // Weekend sessions Jul-Sep
+    price_modifier: 0.67,             // Discount for self-service
+  },
+  {
+    id: 'neighbors',
+    name: 'Neighborhood distribution',
+    packaging_minutes_per_lb: 1.5,     // Casual packaging
+    packaging_cost_per_lb: 0.05,       // Reusable bags
+    fixed_cost_per_event: 0,
+    staffing_hours_per_event: 0.25,    // Quick doorstep drop
+    events_per_season: 20,             // Weekly during peak harvest
+    price_modifier: 0.8,              // Friendly discount
+  },
+];
+
+// =============================================================================
+// Species Channel Assignments — default scenario
+// =============================================================================
+
+/**
+ * Default distribution split per species.
+ *
+ * Fractions sum to 1.0 per species. Adjust these to model different
+ * business strategies:
+ *   - "maximize family food" → increase family fractions
+ *   - "kids' farm stand" → shift sellable crops to farm_stand
+ *   - "farmers market focus" → shift premium crops to farmers_market
+ */
+export const CHANNEL_ASSIGNMENTS_DEFAULT: SpeciesChannelAssignment[] = [
+  // Greens: family eats most, sell surplus at stand
+  { species_id: 'lettuce_bss',         channel_id: 'family',      fraction: 0.60 },
+  { species_id: 'lettuce_bss',         channel_id: 'farm_stand',  fraction: 0.30 },
+  { species_id: 'lettuce_bss',         channel_id: 'neighbors',   fraction: 0.10 },
+
+  { species_id: 'spinach_bloomsdale',  channel_id: 'family',      fraction: 0.60 },
+  { species_id: 'spinach_bloomsdale',  channel_id: 'farm_stand',  fraction: 0.30 },
+  { species_id: 'spinach_bloomsdale',  channel_id: 'neighbors',   fraction: 0.10 },
+
+  { species_id: 'kale_red_russian',    channel_id: 'family',      fraction: 0.70 },
+  { species_id: 'kale_red_russian',    channel_id: 'farm_stand',  fraction: 0.20 },
+  { species_id: 'kale_red_russian',    channel_id: 'neighbors',   fraction: 0.10 },
+
+  // Cherry tomatoes: premium product, farm stand focus
+  { species_id: 'tomato_sun_gold',     channel_id: 'family',         fraction: 0.40 },
+  { species_id: 'tomato_sun_gold',     channel_id: 'farm_stand',     fraction: 0.40 },
+  { species_id: 'tomato_sun_gold',     channel_id: 'farmers_market', fraction: 0.20 },
+
+  // Paste tomatoes: family consumption + canning, minimal sales
+  { species_id: 'tomato_amish_paste',  channel_id: 'family',      fraction: 0.80 },
+  { species_id: 'tomato_amish_paste',  channel_id: 'neighbors',   fraction: 0.20 },
+
+  // Potatoes: good for pickup orders
+  { species_id: 'potato_kennebec',     channel_id: 'family',      fraction: 0.50 },
+  { species_id: 'potato_kennebec',     channel_id: 'farm_stand',  fraction: 0.40 },
+  { species_id: 'potato_kennebec',     channel_id: 'neighbors',   fraction: 0.10 },
+
+  // Corn: family + specialty sales (dried dent is niche)
+  { species_id: 'corn_nothstine_dent', channel_id: 'family',         fraction: 0.60 },
+  { species_id: 'corn_nothstine_dent', channel_id: 'farmers_market', fraction: 0.40 },
+
+  // Companions: no harvest, 100% garden benefit
+  { species_id: 'marigold_french',       channel_id: 'family', fraction: 1.0 },
+  { species_id: 'nasturtium_trailing',   channel_id: 'family', fraction: 1.0 },
+  { species_id: 'calendula_alpha',       channel_id: 'family', fraction: 1.0 },
 ];

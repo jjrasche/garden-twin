@@ -6,8 +6,8 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { computeProfitability, computeAreaFractions } from '../../src/core/calculators/Profitability';
-import { EXPENDITURES_2026, MARKET_PRICES_2026 } from '../../src/core/data/expenditures-2026';
+import { computeProfitability, computeAreaFractions, computeAllDeliveredProfitability } from '../../src/core/calculators/Profitability';
+import { EXPENDITURES_2026, MARKET_PRICES_2026, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT } from '../../src/core/data/expenditures-2026';
 import { GARDEN_SPECIES_MAP } from '../../src/core/data/species';
 import { createGardenStateFromPlan } from '../../src/core/data/sampleGarden';
 import { PRODUCTION_PLAN, SEASON_RANGE } from '../../src/core/calculators/ProductionTimeline';
@@ -89,13 +89,33 @@ describe('Economics tab data pipeline', () => {
     expect(totalRevenue).toBeGreaterThan(1500);
     expect(totalRevenue).toBeLessThan(3500);
 
-    // Log for debugging
-    console.log('\n=== Economics Tab Verified ===');
-    for (const r of results) {
-      const name = GARDEN_SPECIES_MAP.get(r.species_id)?.name ?? r.species_id;
-      const phr = isFinite(r.profit_per_hour) ? `$${Math.round(r.profit_per_hour)}/hr` : '--';
-      console.log(`  ${name.padEnd(25)} ${Math.round(r.harvest_lbs)}lbs  $${Math.round(r.profit)} profit  ${phr}`);
+    // Layer distribution economics — batch for shared channel cost allocation
+    const delivered = computeAllDeliveredProfitability(
+      results, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT,
+    );
+
+    // Delivered profit should be less than farm-gate (distribution adds costs)
+    for (const d of delivered) {
+      if (d.harvest_lbs > 0 && d.distribution.total_net_revenue > 0) {
+        expect(d.total_labor_hours).toBeGreaterThanOrEqual(d.labor_hours);
+        expect(d.delivered_profit_per_hour).not.toBeNaN();
+      }
     }
-    console.log(`  Total revenue: $${Math.round(totalRevenue)}`);
+
+    // Potato with 50% family, 40% farm stand should have lower delivered $/hr
+    const potatoD = delivered.find(r => r.species_id === 'potato_kennebec');
+    expect(potatoD).toBeDefined();
+    expect(potatoD!.distribution.channels.length).toBeGreaterThan(0);
+    expect(potatoD!.delivered_profit_per_hour).toBeLessThan(potatoD!.profit_per_hour);
+
+    // Log for debugging
+    console.log('\n=== Economics Tab Verified (with distribution) ===');
+    for (const r of delivered) {
+      const name = GARDEN_SPECIES_MAP.get(r.species_id)?.name ?? r.species_id;
+      const fg = isFinite(r.profit_per_hour) ? `$${Math.round(r.profit_per_hour)}/hr` : '--';
+      const del = isFinite(r.delivered_profit_per_hour) ? `$${Math.round(r.delivered_profit_per_hour)}/hr` : '--';
+      const chans = r.distribution.channels.filter(c => c.channel_id !== 'family').map(c => `${c.channel_name} ${Math.round(c.fraction*100)}%`).join(', ');
+      console.log(`  ${name.padEnd(25)} farm:${fg.padStart(7)}  delivered:${del.padStart(7)}  ${chans}`);
+    }
   });
 });

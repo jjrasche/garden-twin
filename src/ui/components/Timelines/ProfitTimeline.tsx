@@ -7,9 +7,9 @@
 
 import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
-import type { SpeciesProfitability, CostLineItem } from '@core/types/Expenditure';
-import { computeProfitability, computeAreaFractions } from '@core/calculators/Profitability';
-import { EXPENDITURES_2026, MARKET_PRICES_2026 } from '@core/data/expenditures-2026';
+import type { SpeciesProfitability, CostLineItem, ChannelEconomics } from '@core/types/Expenditure';
+import { computeProfitability, computeAreaFractions, computeAllDeliveredProfitability } from '@core/calculators/Profitability';
+import { EXPENDITURES_2026, MARKET_PRICES_2026, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT } from '@core/data/expenditures-2026';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
 import type { GardenState } from '@core/types/GardenState';
 
@@ -155,23 +155,60 @@ function CostDetailModal({ row, onClose }: { row: SpeciesProfitability; onClose:
             </div>
           </div>
 
+          {/* Distribution channels */}
+          {row.distribution.channels.length > 0 && (
+            <div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Distribution</div>
+              <div className="space-y-1">
+                {row.distribution.channels.map(ch => (
+                  <div key={ch.channel_id} className="bg-gray-800/50 rounded px-3 py-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-300">{ch.channel_name}</span>
+                      <span className="text-gray-400 font-mono">{Math.round(ch.fraction * 100)}%</span>
+                    </div>
+                    {ch.harvest_lbs > 0 && (
+                      <div className="flex justify-between text-[10px] text-gray-500 mt-0.5">
+                        <span>
+                          {Math.round(ch.harvest_lbs)} lbs
+                          {ch.effective_price_per_lb > 0 ? ` × ${formatDollars(ch.effective_price_per_lb)}/lb` : ''}
+                        </span>
+                        <span className="font-mono">
+                          {ch.gross_revenue > 0 ? formatDollars(ch.gross_revenue) : 'consumed'}
+                          {ch.packaging_cost > 0 ? ` - ${formatDollars(ch.packaging_cost)} pkg` : ''}
+                        </span>
+                      </div>
+                    )}
+                    {ch.packaging_labor_hours > 0 && (
+                      <div className="text-[10px] text-gray-600">
+                        +{ch.packaging_labor_hours.toFixed(1)} hrs packaging
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Summary */}
           <div className="border-t border-gray-700 pt-3">
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-gray-800/50 rounded px-3 py-2 text-center">
-                <div className="text-[10px] text-gray-500">Profit</div>
-                <div className={`text-sm font-mono ${row.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {formatDollars(row.profit)}
+                <div className="text-[10px] text-gray-500">Farm-gate $/hr</div>
+                <div className={`text-sm font-mono ${row.profit_per_hour >= 0 ? 'text-gray-400' : 'text-red-400'}`}>
+                  {formatProfitPerHour(row.profit_per_hour)}
                 </div>
               </div>
               <div className="bg-gray-800/50 rounded px-3 py-2 text-center">
-                <div className="text-[10px] text-gray-500">Labor</div>
-                <div className="text-sm font-mono text-gray-200">{row.labor_hours.toFixed(1)} hrs</div>
+                <div className="text-[10px] text-gray-500">Total labor</div>
+                <div className="text-sm font-mono text-gray-200">{row.total_labor_hours.toFixed(1)} hrs</div>
               </div>
               <div className="bg-gray-800/50 rounded px-3 py-2 text-center col-span-2">
-                <div className="text-[10px] text-gray-500">Profit per Hour</div>
-                <div className={`text-lg font-mono font-bold ${row.profit_per_hour >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {formatProfitPerHour(row.profit_per_hour)}
+                <div className="text-[10px] text-gray-500">Delivered Profit/hr</div>
+                <div className={`text-lg font-mono font-bold ${row.delivered_profit_per_hour >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {formatProfitPerHour(row.delivered_profit_per_hour)}
+                </div>
+                <div className="text-[10px] text-gray-500 mt-0.5">
+                  {formatDollars(row.delivered_profit)} profit on {Math.round(row.total_labor_hours)} hrs
                 </div>
               </div>
             </div>
@@ -194,13 +231,20 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
 
   const profitability = useMemo(() => {
     if (snapshots.length === 0 || !gardenState) return [];
-    return computeProfitability({
+    const farmGate = computeProfitability({
       expenditures: EXPENDITURES_2026,
       marketPrices: MARKET_PRICES_2026,
       harvestLbs: extractHarvestLbs(snapshots),
       laborHours: extractLaborHours(snapshots),
       areaFractions: extractAreaFractions(gardenState),
     });
+    // Layer distribution economics — batch to share channel staffing costs
+    const delivered = computeAllDeliveredProfitability(
+      farmGate, DISTRIBUTION_CHANNELS, CHANNEL_ASSIGNMENTS_DEFAULT,
+    );
+    // Re-sort by delivered profit/hr
+    delivered.sort((a, b) => b.delivered_profit_per_hour - a.delivered_profit_per_hour);
+    return delivered;
   }, [snapshots, gardenState]);
 
   if (profitability.length === 0) {
@@ -211,15 +255,15 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
     );
   }
 
-  const totalRevenue = profitability.reduce((s, r) => s + r.revenue, 0);
+  const totalDeliveredRevenue = profitability.reduce((s, r) => s + r.distribution.total_net_revenue, 0);
   const totalCost = profitability.reduce((s, r) => s + r.costs.total, 0);
-  const totalProfit = totalRevenue - totalCost;
-  const totalHours = profitability.reduce((s, r) => s + r.labor_hours, 0);
-  const overallProfitPerHour = totalHours > 0 ? totalProfit / totalHours : 0;
+  const totalDeliveredProfit = profitability.reduce((s, r) => s + r.delivered_profit, 0);
+  const totalHours = profitability.reduce((s, r) => s + r.total_labor_hours, 0);
+  const overallProfitPerHour = totalHours > 0 ? totalDeliveredProfit / totalHours : 0;
 
   // Max profit/hr for bar width scaling (exclude Infinity)
   const maxProfitHr = Math.max(
-    ...profitability.filter(r => isFinite(r.profit_per_hour)).map(r => r.profit_per_hour),
+    ...profitability.filter(r => isFinite(r.delivered_profit_per_hour)).map(r => r.delivered_profit_per_hour),
     1,
   );
 
@@ -227,18 +271,18 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
     <div className="bg-gray-900 p-4 h-full flex flex-col">
       {/* Summary header */}
       <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3 text-xs text-gray-400">
-        <span>Revenue: <strong className="text-emerald-400">{formatDollars(totalRevenue)}</strong></span>
+        <span>Sold: <strong className="text-emerald-400">{formatDollars(totalDeliveredRevenue)}</strong></span>
         <span>Costs: <strong className="text-red-400">{formatDollars(totalCost)}</strong></span>
-        <span>Profit: <strong className={totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatDollars(totalProfit)}</strong></span>
-        <span>Labor: <strong className="text-white">{Math.round(totalHours)} hrs</strong></span>
-        <span>Avg: <strong className={overallProfitPerHour >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatProfitPerHour(overallProfitPerHour)}</strong></span>
+        <span>Profit: <strong className={totalDeliveredProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatDollars(totalDeliveredProfit)}</strong></span>
+        <span>All labor: <strong className="text-white">{Math.round(totalHours)} hrs</strong></span>
+        <span>Delivered: <strong className={overallProfitPerHour >= 0 ? 'text-emerald-400' : 'text-red-400'}>{formatProfitPerHour(overallProfitPerHour)}</strong></span>
       </div>
 
       {/* Species list */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
         {profitability.map(row => {
-          const barWidth = isFinite(row.profit_per_hour) && maxProfitHr > 0
-            ? Math.max(0, Math.min(100, (row.profit_per_hour / maxProfitHr) * 100))
+          const barWidth = isFinite(row.delivered_profit_per_hour) && maxProfitHr > 0
+            ? Math.max(0, Math.min(100, (row.delivered_profit_per_hour / maxProfitHr) * 100))
             : 0;
 
           return (
@@ -258,11 +302,11 @@ export function ProfitTimeline({ snapshots, gardenState }: ProfitTimelineProps) 
                 </div>
               </div>
               <span className="text-xs text-gray-400 font-mono text-right">{Math.round(row.harvest_lbs)} lbs</span>
-              <span className={`text-xs font-mono text-right ${row.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {formatDollars(row.profit)}
+              <span className={`text-xs font-mono text-right ${row.delivered_profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {formatDollars(row.delivered_profit)}
               </span>
-              <span className={`text-xs font-mono font-bold text-right ${row.profit_per_hour >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {formatProfitPerHour(row.profit_per_hour)}
+              <span className={`text-xs font-mono font-bold text-right ${row.delivered_profit_per_hour >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {formatProfitPerHour(row.delivered_profit_per_hour)}
               </span>
               <span className="text-gray-600 text-xs">&rsaquo;</span>
             </button>
