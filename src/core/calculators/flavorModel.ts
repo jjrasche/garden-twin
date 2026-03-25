@@ -18,7 +18,7 @@ export interface FlavorProfile {
 }
 
 /** Positive compounds — higher = better flavor. */
-const POSITIVE_COMPOUNDS = new Set(['sugar', 'brix', 'sweetness']);
+const POSITIVE_COMPOUNDS = new Set(['sugar', 'brix', 'sweetness', 'peppery_bite']);
 
 /** Negative compounds — higher = worse flavor. */
 const NEGATIVE_COMPOUNDS = new Set(['lactucin', 'lactucopicrin', 'bitterness', 'glucosinolate']);

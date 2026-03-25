@@ -79,7 +79,7 @@ function makeGardenState(plants: PlantInstance[]): GardenState {
 // ── Integration Test ────────────────────────────────────────────────────────
 
 describe('simulateWithTasks end-to-end', () => {
-  test('lettuce lifecycle: grow → harvest × 4 → senescent → pulled', () => {
+  test('demand-driven harvest: no harvest tasks in projection, quality-decline as safety net', () => {
     const gardenState = makeGardenState([
       makeLettucePlant('lettuce_1'),
       makeLettucePlant('lettuce_2'),
@@ -91,42 +91,30 @@ describe('simulateWithTasks end-to-end', () => {
       env: WARM_ENV,
       dateRange: {
         start: new Date('2026-05-15'),
-        end: new Date('2026-08-15'),  // ~90 days
+        end: new Date('2026-08-15'),
       },
       lifecycles: LIFECYCLES,
       rules: DEFAULT_RULES,
     };
 
     const snapshots = simulateWithTasks(gardenState, ctx);
-
-    // Should have snapshots (may stop early if all plants pulled)
     expect(snapshots.length).toBeGreaterThan(0);
 
-    // Collect all harvest tasks across the simulation
+    // No harvest tasks in projection — harvest is demand-driven via orders
     const harvestTasks = snapshots
       .flatMap(s => s.tasks ?? [])
       .filter(t => t.type === 'harvest');
+    expect(harvestTasks.length).toBe(0);
 
-    // Lettuce lifecycle fires harvest tasks, but they stay pending (not auto-resolved).
-    // Quality-decline forces harvest when overmaturity drops below must_harvest_floor.
-    expect(harvestTasks.length).toBeGreaterThan(0);
-    for (const task of harvestTasks) {
-      expect(task.status).toBe('pending');
-    }
-
-    // Quality-decline harvest should fire — lettuce overmaturity triggers forced harvest
-    // when biomass ratio exceeds ~2.5× optimal (maturity drops below must_harvest_floor=0.3).
-    // Plants should accumulate biomass, become harvestable, then get force-harvested.
+    // Quality-decline forced harvest still fires as safety net
     const harvestEvents = snapshots.flatMap(s => s.events).filter(e => e.type === 'harvested');
     expect(harvestEvents.length).toBeGreaterThan(0);
 
-    const finalSnapshot = snapshots[snapshots.length - 1]!;
-    // At least one plant should survive and get harvested by quality-decline.
-    // Three plants buffer against stochastic survival killing some early.
-    const allLettuce = finalSnapshot.plants.filter(p => p.species_id === 'lettuce_bss');
-    expect(allLettuce.length).toBe(3);
-    const harvested = allLettuce.filter(p => p.cut_number > 0);
-    expect(harvested.length).toBeGreaterThan(0);
+    // Plants accumulate biomass as projected inventory before quality-decline triggers
+    const midSeason = snapshots[Math.floor(snapshots.length / 3)]!;
+    const harvestable = midSeason.plants.filter(p => p.is_harvestable);
+    expect(harvestable.length).toBeGreaterThan(0);
+    expect(harvestable.some(p => p.accumulated_lbs > 0)).toBe(true);
   });
 
   test('task generation includes season tasks when provided', () => {
@@ -165,6 +153,46 @@ describe('simulateWithTasks end-to-end', () => {
     const fenceTask = may20!.tasks!.find(t => t.task_id === 'season_fence_check');
     expect(fenceTask).toBeDefined();
     expect(fenceTask!.status).toBe('completed');
+  });
+
+  test('maintenance tasks (water, thin) still appear in projection', () => {
+    const gardenState = makeGardenState([
+      makeLettucePlant('lettuce_1'),
+    ]);
+
+    const dryEnv: ConditionsResolver = {
+      ...WARM_ENV,
+      getConditions: () => ({
+        avg_high_f: 72,
+        avg_low_f: 52,
+        soil_temp_f: 60,
+        photoperiod_h: 14,
+        soil_moisture_pct_fc: 30,  // triggers water rule
+        sunshine_hours: 8,
+      }),
+    };
+
+    const ctx: SimulationContext & { lifecycles: Map<string, LifecycleSpec> } = {
+      catalog: CATALOG,
+      env: dryEnv,
+      dateRange: {
+        start: new Date('2026-05-15'),
+        end: new Date('2026-05-25'),
+      },
+      lifecycles: LIFECYCLES,
+      rules: DEFAULT_RULES,
+    };
+
+    const snapshots = simulateWithTasks(gardenState, ctx);
+    const allTasks = snapshots.flatMap(s => s.tasks ?? []);
+
+    // Water tasks should fire from rules (soil_moisture < 40%)
+    const waterTasks = allTasks.filter(t => t.type === 'water');
+    expect(waterTasks.length).toBeGreaterThan(0);
+
+    // No harvest tasks in maintenance-only projection
+    const harvestTasks = allTasks.filter(t => t.type === 'harvest');
+    expect(harvestTasks.length).toBe(0);
   });
 
   test('rule-generated tasks appear when conditions met', () => {

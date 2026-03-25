@@ -40,13 +40,25 @@ export interface WeeklyLabor {
 
 /** Compute total duration for an activity given a plant count. */
 function computeDuration(activity: LifecycleActivity, plant_count: number): number {
+  // Step-based duration (preferred)
+  if (activity.steps && activity.steps.length > 0) {
+    let total = 0;
+    for (const step of activity.steps) {
+      const count = step.scale === 'plant' ? plant_count
+        : step.scale === 'row' ? Math.ceil(plant_count / 10)
+        : 1;
+      total += step.minutes * count;
+    }
+    return total;
+  }
+  // Legacy flat duration
+  const perPlant = activity.duration_minutes_per_plant ?? 0;
+  const fixed = activity.duration_minutes_fixed ?? 0;
   if (activity.batch_size) {
     const batches = Math.ceil(plant_count / activity.batch_size);
-    return (activity.duration_minutes_per_plant * plant_count) +
-           (activity.duration_minutes_fixed * batches);
+    return (perPlant * plant_count) + (fixed * batches);
   }
-  return (activity.duration_minutes_per_plant * plant_count) +
-         activity.duration_minutes_fixed;
+  return (perPlant * plant_count) + fixed;
 }
 
 /** Expand a single activity into concrete dated ScheduledTasks. */

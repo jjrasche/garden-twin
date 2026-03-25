@@ -160,7 +160,8 @@ describe('HarvestStrategy', () => {
   });
 
   test('cut_and_come_again strategies have required fields', () => {
-    expect(HARVEST_KALE_CUT.max_cuts).toBe(8);
+    // Kale: no max_cuts (biennial, produces indefinitely until frost/bolt)
+    expect(HARVEST_KALE_CUT.max_cuts).toBeUndefined();
     expect(HARVEST_KALE_CUT.regrowth_days).toBe(14);
     expect(HARVEST_KALE_CUT.cut_yield_curve).toBeDefined();
   });

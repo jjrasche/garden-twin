@@ -55,20 +55,40 @@ function formatWeekLabel(date: Date): string {
   return `${months[date.getMonth()]} ${date.getDate()}`;
 }
 
+/** Minutes per lb to harvest + rinse + store. Greens take longer than roots/fruit. */
+const HARVEST_MINUTES_PER_LB: Record<string, number> = {
+  lettuce_bss: 4,
+  spinach_bloomsdale: 4,
+  kale_red_russian: 3,
+  tomato_sun_gold: 2,
+  tomato_amish_paste: 1.5,
+  potato_kennebec: 1,
+  corn_nothstine_dent: 1,
+};
+const DEFAULT_HARVEST_MIN_PER_LB = 2;
+
+/** Estimate weekly harvest labor from harvestable inventory on a single snapshot. */
+function estimateHarvestMinutes(snap: DaySnapshot): number {
+  let totalMinutes = 0;
+  for (const plant of snap.plants) {
+    if (!plant.is_harvestable || plant.accumulated_lbs <= 0.01) continue;
+    if (plant.lifecycle === 'dead' || plant.lifecycle === 'pulled') continue;
+    const rate = HARVEST_MINUTES_PER_LB[plant.species_id] ?? DEFAULT_HARVEST_MIN_PER_LB;
+    totalMinutes += plant.accumulated_lbs * rate;
+  }
+  return totalMinutes;
+}
+
 function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
   if (snapshots.length === 0) return [];
 
   const weekMap = new Map<string, WeekRow>();
 
-  for (const snap of snapshots) {
-    const tasks = snap.tasks ?? [];
-    if (tasks.length === 0) continue;
-
-    // Get Monday of this week
-    const d = new Date(snap.date);
-    const dayOfWeek = d.getDay();
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - ((dayOfWeek + 6) % 7));
+  // Helper: ensure a week row exists
+  function ensureWeek(date: Date): WeekRow {
+    const dayOfWeek = date.getDay();
+    const monday = new Date(date);
+    monday.setDate(date.getDate() - ((dayOfWeek + 6) % 7));
     const weekKey = monday.toISOString().slice(0, 10);
 
     if (!weekMap.has(weekKey)) {
@@ -85,8 +105,19 @@ function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
         minutesByType,
       });
     }
+    return weekMap.get(weekKey)!;
+  }
 
-    const row = weekMap.get(weekKey)!;
+  // Track which weeks already got harvest estimate (sample once per week)
+  const harvestEstimateWeeks = new Set<string>();
+
+  for (const snap of snapshots) {
+    const d = new Date(snap.date);
+    const row = ensureWeek(d);
+    const weekKey = row.weekStart.toISOString().slice(0, 10);
+
+    // Add real tasks from simulation
+    const tasks = snap.tasks ?? [];
     for (const task of tasks) {
       const minutes = task.estimated_duration_minutes ?? 0;
       row.totalMinutes += minutes;
@@ -94,6 +125,21 @@ function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
       row.tasks.push(task);
       row.minutesByType[task.type] = (row.minutesByType[task.type] ?? 0) + minutes;
     }
+
+    // Sample projected harvest labor once per week (mid-week snapshot)
+    if (d.getDay() === 3 && !harvestEstimateWeeks.has(weekKey)) {
+      harvestEstimateWeeks.add(weekKey);
+      const harvestMinutes = estimateHarvestMinutes(snap);
+      if (harvestMinutes > 0) {
+        row.totalMinutes += harvestMinutes;
+        row.minutesByType['harvest'] = (row.minutesByType['harvest'] ?? 0) + harvestMinutes;
+      }
+    }
+  }
+
+  // Remove empty weeks (no tasks and no harvest estimate)
+  for (const [key, row] of weekMap) {
+    if (row.totalMinutes === 0 && row.taskCount === 0) weekMap.delete(key);
   }
 
   return Array.from(weekMap.values()).sort(

@@ -104,7 +104,7 @@ describe('simulateFromState', () => {
       gardenState,
       GARDEN_SPECIES_MAP,
       GR_HISTORICAL,
-      { start: new Date('2025-04-14'), end: new Date('2025-11-24') },
+      { start: new Date('2026-04-14'), end: new Date('2026-11-24') },
     );
 
     const all_events = snapshots.flatMap(s => s.events);
@@ -118,7 +118,7 @@ describe('simulateFromState', () => {
       gardenState,
       GARDEN_SPECIES_MAP,
       GR_HISTORICAL,
-      { start: new Date('2025-06-01'), end: new Date('2025-06-14') },
+      { start: new Date('2026-06-01'), end: new Date('2026-06-14') },
     );
 
     for (const snap of snapshots) {
@@ -138,7 +138,7 @@ describe('bucketHarvests', () => {
       gardenState,
       GARDEN_SPECIES_MAP,
       GR_HISTORICAL,
-      { start: new Date('2025-04-14'), end: new Date('2025-11-24') },
+      { start: new Date('2026-04-14'), end: new Date('2026-11-24') },
     );
 
     const weeks = bucketHarvests(snapshots, GARDEN_SPECIES_MAP);
@@ -161,7 +161,7 @@ describe('bucketHarvests', () => {
       gardenState,
       GARDEN_SPECIES_MAP,
       GR_HISTORICAL,
-      { start: new Date('2025-04-14'), end: new Date('2025-11-24') },
+      { start: new Date('2026-04-14'), end: new Date('2026-11-24') },
     );
 
     const weeks = bucketHarvests(snapshots, GARDEN_SPECIES_MAP);
@@ -182,10 +182,10 @@ describe('bucketHarvests', () => {
 // =============================================================================
 
 describe('end-to-end regression', () => {
-  test('simulateSeason new path total ~ old path total (pinned to 700 lbs)', () => {
+  test('simulateSeason total is stable', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~700 lbs after layout solver migration (biointensive beds).
-    expect(total).toBeCloseTo(700, -1);
+    // ~471 lbs: demand-driven harvest (harvest_ready + quality-decline events).
+    expect(total).toBeCloseTo(471, -1);
   });
 });

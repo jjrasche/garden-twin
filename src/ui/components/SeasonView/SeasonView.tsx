@@ -15,7 +15,9 @@ import { GrowthModTimeline } from '../Timelines/GrowthModTimeline';
 import { FlavorTimeline } from '../Timelines/FlavorTimeline';
 import { TaskTimeline } from '../Timelines/TaskTimeline';
 import { ProfitTimeline } from '../Timelines/ProfitTimeline';
+import { OrdersView } from '../OrdersView/OrdersView';
 
+type AppView = 'garden' | 'orders';
 type BottomChart = 'none' | 'production' | 'growth' | 'flavor' | 'tasks' | 'economics';
 import { useYearSimulation, SELECTABLE_YEARS, type YearSelection } from '../../hooks/useYearSimulation';
 import { useGardenStore } from '../../store/gardenStore';
@@ -79,6 +81,7 @@ export function SeasonView() {
   const gardenState = useGardenStore(s => s.gardenState);
   const setGardenState = useGardenStore(s => s.setGardenState);
   const viewport = useGardenStore(s => s.viewport);
+  const [appView, setAppView] = useState<AppView>('garden');
   const [bottomChart, setBottomChart] = useState<BottomChart>('none');
 
   // Ensure gardenState is initialized
@@ -157,6 +160,23 @@ export function SeasonView() {
       {/* Header: title + year selector */}
       <div className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 border-b border-gray-700 shrink-0">
         <span className="text-sm font-semibold text-gray-300 mr-3">Garden Twin</span>
+
+        {/* View switcher */}
+        {(['garden', 'orders'] as const).map(view => (
+          <button
+            key={view}
+            onClick={() => setAppView(view)}
+            className={`px-2 py-0.5 text-xs rounded transition-colors ${
+              appView === view
+                ? 'text-white bg-gray-700'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            {view === 'garden' ? 'Garden' : 'Orders'}
+          </button>
+        ))}
+
+        <span className="w-px h-4 bg-gray-700 mx-1" />
         <span className="text-xs text-gray-500 mr-1">Year:</span>
         {SELECTABLE_YEARS.map(year => {
           const isSelected = sim.selectedYear === year;
@@ -184,39 +204,48 @@ export function SeasonView() {
         )}
       </div>
 
-      {/* Main content: map + side panel */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Garden map with hover detection */}
-        <div
-          ref={mapRef}
-          className="flex-1 min-w-0 relative"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-        >
-          <CanvasGarden stageColorRef={stageColorRef} />
+      {/* Main content */}
+      {appView === 'garden' ? (
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Garden map with hover detection */}
+          <div
+            ref={mapRef}
+            className="flex-1 min-w-0 relative"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
+            <CanvasGarden stageColorRef={stageColorRef} />
 
-          {/* Hover tooltip */}
-          {hoverPlant && (
-            <PlantTooltip
-              plant={hoverPlant.plant}
-              species={GARDEN_SPECIES_MAP.get(hoverPlant.plant.species_id)}
-              x={hoverPlant.x}
-              y={hoverPlant.y}
+            {/* Hover tooltip */}
+            {hoverPlant && (
+              <PlantTooltip
+                plant={hoverPlant.plant}
+                species={GARDEN_SPECIES_MAP.get(hoverPlant.plant.species_id)}
+                x={hoverPlant.x}
+                y={hoverPlant.y}
+              />
+            )}
+          </div>
+
+          {/* Right side panel */}
+          <div className="w-56 shrink-0">
+            <ConditionsPanel
+              snapshot={currentSnapshot}
+              snapshots={sim.snapshots}
+              dayIndex={dayIndex}
+              env={sim.env}
+              catalog={GARDEN_SPECIES_MAP}
             />
-          )}
+          </div>
         </div>
-
-        {/* Right side panel */}
-        <div className="w-56 shrink-0">
-          <ConditionsPanel
-            snapshot={currentSnapshot}
+      ) : (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <OrdersView
             snapshots={sim.snapshots}
-            dayIndex={dayIndex}
-            env={sim.env}
-            catalog={GARDEN_SPECIES_MAP}
+            selectedDate={currentSnapshot?.date ?? null}
           />
         </div>
-      </div>
+      )}
 
       {/* Timeline scrubber */}
       <div className="shrink-0">

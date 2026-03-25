@@ -19,7 +19,6 @@ import { initPlantStates } from './initPlantStates';
 import { planDay } from './operationalPlanner';
 import { resolveTask, type ConditionOverride } from './resolveTask';
 import { harvestPlant } from './harvestPlant';
-import { resolveHarvestStrategy } from '../calculators/strategyResolver';
 import { type ActiveSuccession, evaluateSuccessionTrigger, materializeSuccessor } from './evaluateSuccession';
 import type { SuccessorSpec } from '../calculators/ProductionTimeline';
 import type { SunZone } from '../calculators/growthMath';
@@ -43,61 +42,6 @@ export interface SimulationContext {
   lifecycles?: Map<string, LifecycleSpec>;
   seasonTasks?: Task[];  // Pre-expanded via adaptSeasonTasks(); indexed at simulation start
   rules?: TaskRule[];
-}
-
-// ── Leaf Functions ──────────────────────────────────────────────────────────
-
-/** Resolve strategy type for a species. Returns null if species unknown. */
-function resolveStrategyType(
-  speciesId: string,
-  catalog: Map<string, PlantSpecies>,
-  strategyOverride?: string,
-): string | null {
-  const species = catalog.get(speciesId);
-  if (!species) return null;
-  return resolveHarvestStrategy(strategyOverride, species)?.type ?? null;
-}
-
-/** Check if a harvest task targets a bulk-harvest species (potato, corn). */
-function isBulkHarvest(
-  task: Task,
-  plants: PlantState[],
-  catalog: Map<string, PlantSpecies>,
-): boolean {
-  const speciesId = task.parameters?.species_id as string | undefined;
-  if (speciesId) {
-    return resolveStrategyType(speciesId, catalog) === 'bulk';
-  }
-  // Single-plant target — look up species from plant
-  const plantId = task.target.target_type === 'plant'
-    ? (task.target as { plant_id: string }).plant_id
-    : undefined;
-  if (!plantId) return false;
-  const plant = plants.find(p => p.plant_id === plantId);
-  if (!plant) return false;
-  return resolveStrategyType(plant.species_id, catalog, plant.harvest_strategy_id) === 'bulk';
-}
-
-/** Emit 'harvested' events for plants that were harvested by task auto-resolution. */
-function emitBulkHarvestEvents(
-  before: PlantState[],
-  after: PlantState[],
-  date: Date,
-  events: GrowthEvent[],
-): void {
-  for (let i = 0; i < before.length; i++) {
-    const pre = before[i]!;
-    const post = after[i]!;
-    if (pre.is_harvestable && pre.accumulated_lbs > 0 && post.accumulated_lbs === 0) {
-      events.push({
-        type: 'harvested',
-        plant_id: pre.plant_id,
-        date,
-        harvested_lbs: pre.accumulated_lbs,
-        quality_score: pre.quality_score ?? 1.0,
-      });
-    }
-  }
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -382,7 +326,14 @@ function applyConditionOverrides(
 
 // ── Task-Aware Simulation ─────────────────────────────────────────────────
 
-/** Simulate with operational planner: tick + succession + task generation + resolution. */
+/** Simulate with operational planner: tick + succession + task generation + resolution.
+ *
+ * Harvest model: demand-driven. Plants accumulate biomass as projected inventory.
+ * Harvest happens only when:
+ *   1. An order generates harvest tasks (real-time, not projected)
+ *   2. Quality drops below must_harvest_floor (safety net, fires in projection)
+ * The task calendar shows maintenance labor (thin, hill, water, etc.) — not harvest.
+ */
 export function simulateWithTasks(
   gardenState: GardenState,
   ctx: SimulationContext & { lifecycles: Map<string, LifecycleSpec> },
@@ -409,7 +360,7 @@ export function simulateWithTasks(
     // 2. Succession evaluation
     plants = evaluateAndMaterializeSuccessions(activeSuccessions, plants, currentDate, ctx);
 
-    // 3. Task generation (all three sources)
+    // 3. Task generation — maintenance tasks only (harvest is demand-driven via orders)
     const planResult = planDay({
       plants,
       date: currentDate,
@@ -421,34 +372,19 @@ export function simulateWithTasks(
       rules: ctx.rules,
     });
 
-    // 4. Auto-resolve tasks in simulation.
-    // Bulk harvest (potato, corn) auto-resolves — one-time pick, plant is done.
-    // Continuous/CAC harvest stays pending — biomass accumulates as inventory.
-    // Quality-decline (step 5) forces harvest when produce degrades past threshold.
-    const taskHarvestEvents: GrowthEvent[] = [];
-    const resolvedTasks = planResult.newTasks.map(task => {
-      if (task.type === 'harvest' && !isBulkHarvest(task, plants, ctx.catalog)) {
-        return { ...task, status: 'pending' as const };
-      }
-      // Capture pre-resolve state for harvest event emission
-      const preResolvePlants = task.type === 'harvest' ? plants : undefined;
+    const maintenanceTasks = planResult.newTasks.filter(t => t.type !== 'harvest');
+
+    // 4. Resolve maintenance tasks (water, thin, hill, etc.)
+    const resolvedTasks = maintenanceTasks.map(task => {
       const resolution = resolveTask(task, plants, ctx.catalog, currentDate);
-      if (resolution.plants) {
-        if (preResolvePlants) {
-          emitBulkHarvestEvents(preResolvePlants, resolution.plants, currentDate, taskHarvestEvents);
-        }
-        plants = resolution.plants;
-      }
-      if (resolution.overrides) {
-        activeOverrides.push(...resolution.overrides);
-      }
+      if (resolution.plants) plants = resolution.plants;
+      if (resolution.overrides) activeOverrides.push(...resolution.overrides);
       return { ...task, status: 'completed' as const, completed_at: dateIso };
     });
 
-    // 5. Quality-decline forced harvest (plants not caught by task-driven harvest)
+    // 5. Quality-decline forced harvest (safety net — overgrown produce must be picked)
     const qualityHarvest = harvestDecliningPlants(plants, ctx.catalog, currentDate);
     plants = qualityHarvest.plants;
-    const harvestEvents = [...taskHarvestEvents, ...qualityHarvest.events];
 
     // 6. Auto-pull senescent plants (gardener clears them same day)
     plants = plants.map(p =>
@@ -460,7 +396,7 @@ export function simulateWithTasks(
     snapshots.push({
       date: currentDate,
       plants: [...plants],
-      events: [...result.events, ...harvestEvents],
+      events: [...result.events, ...qualityHarvest.events],
       tasks: resolvedTasks.length > 0 ? resolvedTasks : undefined,
     });
 

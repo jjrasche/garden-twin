@@ -297,7 +297,11 @@ export function bucketHarvests(
     }
 
     for (const event of snap.events) {
-      if (event.type !== 'harvest_ready') continue;
+      // Count both harvest_ready (initial threshold) and harvested (quality-decline pick)
+      const lbs = event.type === 'harvest_ready' ? event.accumulated_lbs
+        : event.type === 'harvested' ? event.harvested_lbs
+        : undefined;
+      if (lbs === undefined) continue;
 
       // Resolve display group: plant_id → species_id → display group
       let group = plant_group.get(event.plant_id);
@@ -308,7 +312,7 @@ export function bucketHarvests(
       }
       if (!group) continue;
 
-      lbs_by_group[group] = (lbs_by_group[group] ?? 0) + event.accumulated_lbs;
+      lbs_by_group[group] = (lbs_by_group[group] ?? 0) + lbs;
     }
   }
 

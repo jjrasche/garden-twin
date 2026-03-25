@@ -82,10 +82,13 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   seed_cost_per_plant: 0.10,
 
   data_confidence: 'high',
+  // Dent corn is a dry grain — ears hold quality on the stalk for weeks after
+  // black layer. Risks are raccoons, ear rot from rain, and stalk lodging,
+  // but the grain itself is stable. Frost (kill_temp_f: 32) ends the season.
   quality: {
     min_harvest_lbs: 0.2,        // immature ear
     optimal_harvest_lbs: 0.24,   // dried dent ear (baseline per plant)
-    maturity_curve: { 0.8: 0.9, 1.0: 1.0, 1.5: 0.8, 2.0: 0.5 },
+    maturity_curve: { 0.8: 0.9, 1.0: 1.0, 1.5: 0.95, 2.0: 0.88, 3.0: 0.75 },
     must_harvest_floor: 0.2,
   },
 

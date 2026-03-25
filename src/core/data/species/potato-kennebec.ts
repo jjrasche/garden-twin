@@ -90,10 +90,15 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   seed_cost_per_plant: 0.50,
 
   data_confidence: 'high',
+  // Potato is a storage crop — quality holds in ground after vine die-back.
+  // Skin cures 2-3 weeks, then stable 6-8 weeks if soil is dry and cool.
+  // Real risks are binary (rot event, frost) not gradual biomass ratio.
+  // Frost kills plant → inventory disappears from projection (dead plants excluded).
+  // kill_temp_f: 28 handles the hard deadline.
   quality: {
     min_harvest_lbs: 1.0,        // small new potatoes
     optimal_harvest_lbs: 1.5,    // full-size tubers (baseline per plant)
-    maturity_curve: { 0.7: 0.8, 1.0: 1.0, 1.5: 0.9, 2.0: 0.7 },
+    maturity_curve: { 0.7: 0.85, 1.0: 1.0, 1.5: 0.98, 2.0: 0.92, 3.0: 0.8 },
     must_harvest_floor: 0.15,
   },
 

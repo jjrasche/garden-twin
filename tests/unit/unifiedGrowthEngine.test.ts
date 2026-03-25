@@ -75,7 +75,8 @@ function createPlant(species: PlantSpecies, overrides: Partial<PlantState> = {})
     daily_potential: overrides.daily_potential ?? 0.01,
     stress: overrides.stress ?? createStressCounters(),
     is_harvestable: overrides.is_harvestable ?? false,
-    is_dead: overrides.is_dead ?? false,
+    lifecycle: overrides.lifecycle ?? 'growing',
+    bolt_resistance: overrides.bolt_resistance ?? 0.5,
   };
 }
 
@@ -91,8 +92,8 @@ describe('simulateSeason regression', () => {
   test('simulateSeason total is stable (~673 lbs)', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~673 lbs after kale germination_rate fix (1.00 for transplants, was 0.95).
-    expect(total).toBeCloseTo(673, -1);
+    // ~471 lbs: demand-driven harvest model. harvest_ready + quality-decline harvested events.
+    expect(total).toBeCloseTo(471, -1);
   });
 
   test('all expected display groups produce yield', () => {
@@ -181,7 +182,7 @@ describe('tickPlant — stage transitions', () => {
   test('dead plant does not advance', () => {
     const env = createConstantEnv();
     const catalog = speciesCatalog(CORN_NOTHSTINE_DENT);
-    const plant = createPlant(CORN_NOTHSTINE_DENT, { is_dead: true, stage: 'done' });
+    const plant = createPlant(CORN_NOTHSTINE_DENT, { lifecycle: 'dead', stage: 'done' });
 
     const result = tickPlant(plant, new Date('2025-06-15'), env, catalog);
     expect(result.plant.accumulated_dev).toBe(0);
@@ -210,27 +211,27 @@ describe('tickPlant — frost kill', () => {
     });
 
     const result = tickPlant(plant, new Date('2025-10-15'), env, catalog);
-    expect(result.plant.is_dead).toBe(true);
-    expect(result.plant.stage).toBe('done');
+    expect(result.plant.lifecycle).toBe('dead');
     expect(result.events.some(e => e.type === 'plant_died' && e.cause === 'frost')).toBe(true);
   });
 });
 
 describe('tickPlant — leafy bolt detection', () => {
-  test('spinach dies from extreme photoperiod via population_survival', () => {
+  test('spinach senesces from extreme photoperiod via population_survival', () => {
     // Spinach population_survival: { 15: 0.1, 16: 0.0 }. At 16h, survival = 0.
+    // bolt_resistance 0.5 > survival 0.0 → plant bolts to senescent.
     const env = createConstantEnv({ avg_high_f: 72, avg_low_f: 55, photoperiod_h: 16 });
     const catalog = speciesCatalog(SPINACH_BLOOMSDALE);
     const plant = createPlant(SPINACH_BLOOMSDALE, {
       planted_date: '2025-04-01',
       stage: 'vegetative',
       accumulated_dev: 100,
+      bolt_resistance: 0.5,
     });
 
     const result = tickPlant(plant, new Date('2025-06-15'), env, catalog);
-    expect(result.plant.stage).toBe('done');
-    expect(result.plant.is_dead).toBe(true);
-    expect(result.events.some(e => e.type === 'plant_died' && e.cause === 'population_collapse')).toBe(true);
+    expect(result.plant.lifecycle).toBe('senescent');
+    expect(result.events.some(e => e.type === 'plant_senescent')).toBe(true);
   });
 });
 
@@ -241,8 +242,9 @@ describe('tickPlant — development_rate modifier', () => {
     const shortDayEnv = createConstantEnv({ avg_high_f: 65, avg_low_f: 45, photoperiod_h: 11 });
     const longDayEnv = createConstantEnv({ avg_high_f: 65, avg_low_f: 45, photoperiod_h: 15 });
 
-    let short = createPlant(SPINACH_BLOOMSDALE, { planted_date: '2025-04-01', plant_id: 'short' });
-    let long_ = createPlant(SPINACH_BLOOMSDALE, { planted_date: '2025-04-01', plant_id: 'long' });
+    // bolt_resistance: 0 so neither plant senesces during the test
+    let short = createPlant(SPINACH_BLOOMSDALE, { planted_date: '2025-04-01', plant_id: 'short', bolt_resistance: 0 });
+    let long_ = createPlant(SPINACH_BLOOMSDALE, { planted_date: '2025-04-01', plant_id: 'long', bolt_resistance: 0 });
 
     for (let d = 0; d < 10; d++) {
       const date = new Date('2025-04-01');

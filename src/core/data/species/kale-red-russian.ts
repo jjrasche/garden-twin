@@ -83,12 +83,15 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
 
   seed_cost_per_plant: 0.05,
 
-  // Flavor: sugar increases with cold (starch→sugar conversion for frost hardening).
-  // Starts in single-digit C (34-40°F), peaks sub-freezing. Glucosinolates also increase
-  // with cold — positive for kale (peppery bite). High temps = bland.
+  // Flavor: two cold-driven compounds.
+  // Sugar: starch→sugar conversion for frost hardening. Peaks sub-freezing.
+  // Peppery bite: glucosinolate-derived, desirable in kale (unlike bitterness in lettuce).
+  //   Moderate at 55°F, strong at 35°F. Gives fall/winter kale its signature flavor.
+  // Summer: both compounds low → bland. Fall/frost: both peak → premium quality.
   // Sources: University of Oldenburg (uol.de), SciTechDaily, PubMed 25529650
   flavor_response: [
     { factor: 'temperature_f', curve: { 15: 1.0, 25: 0.95, 35: 0.8, 45: 0.5, 55: 0.3, 65: 0.2, 80: 0.15 }, compound: 'sugar' },
+    { factor: 'temperature_f', curve: { 15: 0.9, 25: 0.85, 35: 0.7, 45: 0.45, 55: 0.25, 65: 0.15, 80: 0.1 }, compound: 'peppery_bite' },
   ],
 
   data_confidence: 'high',

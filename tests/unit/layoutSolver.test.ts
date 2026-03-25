@@ -113,8 +113,8 @@ describe('plant counts', () => {
 
   test('trellis tomatoes placed at full count', () => {
     const layout = solveLayout(GARDEN, makeRequests(), GARDEN_SPECIES_MAP);
-    expect(layout.capacity['tomato_sun_gold']?.placed).toBe(8);
-    expect(layout.capacity['tomato_amish_paste']?.placed).toBe(11);
+    expect(layout.capacity['tomato_sun_gold']?.placed).toBe(14);
+    expect(layout.capacity['tomato_amish_paste']?.placed).toBe(14);
   });
 });
 
@@ -159,11 +159,11 @@ describe('GardenState integration', () => {
 
   test('plants have position and density fields', () => {
     const state = createGardenStateFromPlan(PRODUCTION_PLAN);
-    const corn = state.plants.find(p => p.species_id === 'corn_nothstine_dent');
-    expect(corn).toBeDefined();
-    expect(corn!.position).toBeDefined();
-    expect(corn!.position!.x).toBeGreaterThan(0);
-    expect(corn!.density_plants_per_sqft).toBeGreaterThan(0);
+    const kale = state.plants.find(p => p.species_id === 'kale_red_russian');
+    expect(kale).toBeDefined();
+    expect(kale!.position).toBeDefined();
+    expect(kale!.position!.x).toBeGreaterThan(0);
+    expect(kale!.density_plants_per_sqft).toBeGreaterThan(0);
   });
 });
 
