@@ -245,8 +245,6 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
                   const speciesData = catalog.get(species.species_id);
                   const speciesName = speciesData?.name ?? species.species_id.replace(/_/g, ' ');
                   const salesConfig = salesMap.get(species.species_id);
-                  const familyFraction = salesConfig?.family_fraction ?? 1.0;
-                  const sellableLbs = species.available_lbs * (1 - familyFraction);
                   const price = priceMap.get(species.species_id);
                   const effectivePrice = (price?.price_per_lb ?? 0) * (salesConfig?.price_premium ?? 1.0);
                   const group = SPECIES_DISPLAY_GROUP[species.species_id];
@@ -269,12 +267,11 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
                           </span>
                         )}
                       </div>
-                      {sellableLbs > 0 && (
+                      {effectivePrice > 0 && (
                         <div className="flex justify-between text-[10px] pl-3.5 mt-0.5">
-                          <span className="text-emerald-500">Sellable: {sellableLbs.toFixed(1)} lbs</span>
-                          {effectivePrice > 0 && (
-                            <span className="text-emerald-500 font-mono">${(sellableLbs * effectivePrice).toFixed(0)}</span>
-                          )}
+                          <span className="text-emerald-500 font-mono">
+                            ${(species.available_lbs * effectivePrice).toFixed(0)}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -292,14 +289,13 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
                   </span>
                 </div>
                 <div className="flex justify-between text-xs mt-0.5">
-                  <span className="text-gray-400">Sellable value</span>
+                  <span className="text-gray-400">Total value</span>
                   <span className="text-emerald-400 font-mono">
                     ${availableHarvest.reduce((sum, sp) => {
                       const salesConfig = salesMap.get(sp.species_id);
-                      const sellable = sp.available_lbs * (1 - (salesConfig?.family_fraction ?? 1.0));
                       const price = priceMap.get(sp.species_id);
                       const effective = (price?.price_per_lb ?? 0) * (salesConfig?.price_premium ?? 1.0);
-                      return sum + sellable * effective;
+                      return sum + sp.available_lbs * effective;
                     }, 0).toFixed(0)}
                   </span>
                 </div>

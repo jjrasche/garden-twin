@@ -8,11 +8,11 @@ import { describe, test, expect } from 'vitest';
 import { computeProfitability, allocateCosts, computeAreaFractions } from '../../src/core/calculators/Profitability';
 import type { Expenditure, MarketPrice, SpeciesSalesConfig, PickupOperation } from '../../src/core/types/Expenditure';
 
-// Default sales config: 100% family (no sales) — preserves existing test expectations
+// Minimal sales config: no premium, no packaging costs
 const NO_SALES: SpeciesSalesConfig[] = [
-  { species_id: 'tomato_paste', family_fraction: 1.0, price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
-  { species_id: 'kale', family_fraction: 1.0, price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
-  { species_id: 'potato', family_fraction: 1.0, price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'tomato_paste', price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'kale', price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'potato', price_premium: 1.0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
 ];
 
 const NO_PICKUP: PickupOperation = { weekly_window_minutes: 0, weeks_per_season: 0, supplies_per_season: 0 };

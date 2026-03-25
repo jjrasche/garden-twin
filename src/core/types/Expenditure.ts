@@ -63,13 +63,12 @@ export type MarketPrice = z.infer<typeof MarketPriceSchema>;
 // =============================================================================
 
 /**
- * Simple sales model: family eats a fraction, rest is sold via pickup orders.
- * Packaging time and cost are species-specific (potatoes ≠ greens).
+ * Sales config per species: pricing, packaging costs.
+ * All inventory is available to all buyers (family orders through the system too).
  * Price premium reflects the "harvested 1 hour ago" story.
  */
 export const SpeciesSalesConfigSchema = z.object({
   species_id: z.string(),
-  family_fraction: z.number().min(0).max(1),  // consumed at home, no revenue
   price_premium: z.number().min(0),            // multiplier on base market price (1.2 = 20% premium)
   packaging_minutes_per_lb: z.number().min(0), // species-specific packaging time
   packaging_cost_per_lb: z.number().min(0),    // bags, containers, labels
@@ -115,7 +114,6 @@ export interface SpeciesProfitability {
 
   // Sales economics (post farm-gate)
   sales: {
-    family_lbs: number;
     sold_lbs: number;
     effective_price_per_lb: number;   // base × premium
     gross_revenue: number;            // sold_lbs × effective_price

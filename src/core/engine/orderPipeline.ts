@@ -27,30 +27,25 @@ export interface ValidationResult {
 
 // ── Line Validation (concept) ───────────────────────────────────────────────
 
-/** Compute sellable lbs for a species: available × (1 - family_fraction). */
+/** Get sellable lbs for a species (all inventory is available). */
 function computeSellableLbs(
   speciesId: string,
   availableMap: Map<string, AvailableSpecies>,
-  salesMap: Map<string, SpeciesSalesConfig>,
 ): number {
-  const available = availableMap.get(speciesId);
-  if (!available) return 0;
-  const familyFraction = salesMap.get(speciesId)?.family_fraction ?? 1.0;
-  return available.available_lbs * (1 - familyFraction);
+  return availableMap.get(speciesId)?.available_lbs ?? 0;
 }
 
 /** Validate one order line against sellable inventory. Returns issue or null. */
 function validateOrderLine(
   line: OrderLine,
   availableMap: Map<string, AvailableSpecies>,
-  salesMap: Map<string, SpeciesSalesConfig>,
 ): ValidationIssue | null {
   const available = availableMap.get(line.species_id);
   if (!available) {
     return { species_id: line.species_id, reason: 'not_available', requested_lbs: line.requested_lbs, sellable_lbs: 0 };
   }
 
-  const sellableLbs = computeSellableLbs(line.species_id, availableMap, salesMap);
+  const sellableLbs = computeSellableLbs(line.species_id, availableMap);
   if (line.requested_lbs > sellableLbs) {
     return { species_id: line.species_id, reason: 'exceeds_sellable', requested_lbs: line.requested_lbs, sellable_lbs: sellableLbs };
   }
@@ -74,7 +69,7 @@ function computeLinePrice(
 /**
  * Validate an order against current inventory and sales config.
  *
- * Sellable inventory = available_lbs × (1 - family_fraction).
+ * All inventory is available — family orders through the system.
  * Market prices are required for accurate total estimation.
  */
 export function validateOrder(
@@ -91,7 +86,7 @@ export function validateOrder(
   let estimatedTotal = 0;
 
   for (const line of order.lines) {
-    const issue = validateOrderLine(line, availableMap, salesMap);
+    const issue = validateOrderLine(line, availableMap);
     if (issue) {
       issues.push(issue);
       continue;

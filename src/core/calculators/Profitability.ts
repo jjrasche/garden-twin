@@ -140,10 +140,8 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
     const profit = revenue - totalCost;
     const profitPerHour = hours === 0 ? Infinity : profit / hours;
 
-    // Sales split
-    const familyFraction = sales?.family_fraction ?? 1.0;
-    const familyLbs = harvest * familyFraction;
-    const soldLbs = harvest * (1 - familyFraction);
+    // Sales: all harvest is sellable (family orders through the system)
+    const soldLbs = harvest;
     const effectivePrice = basePrice * (sales?.price_premium ?? 1.0);
     const grossRevenue = soldLbs * effectivePrice;
     const packagingCost = soldLbs * (sales?.packaging_cost_per_lb ?? 0);
@@ -161,7 +159,6 @@ export function computeProfitability(input: ProfitabilityInput): SpeciesProfitab
         labor_hours: hours,
         profit_per_hour: profitPerHour,
         sales: {
-          family_lbs: familyLbs,
           sold_lbs: soldLbs,
           effective_price_per_lb: effectivePrice,
           gross_revenue: grossRevenue,

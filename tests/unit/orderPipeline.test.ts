@@ -26,9 +26,9 @@ const PRICES: MarketPrice[] = [
 ];
 
 const SALES: SpeciesSalesConfig[] = [
-  { species_id: 'potato_kennebec', family_fraction: 0.5, price_premium: 1.2, packaging_minutes_per_lb: 0.2, packaging_cost_per_lb: 0.05 },
-  { species_id: 'kale_red_russian', family_fraction: 0.7, price_premium: 1.25, packaging_minutes_per_lb: 2.0, packaging_cost_per_lb: 0.10 },
-  { species_id: 'tomato_sun_gold', family_fraction: 0.4, price_premium: 1.25, packaging_minutes_per_lb: 1.3, packaging_cost_per_lb: 0.20 },
+  { species_id: 'potato_kennebec', price_premium: 1.2, packaging_minutes_per_lb: 0.2, packaging_cost_per_lb: 0.05 },
+  { species_id: 'kale_red_russian', price_premium: 1.25, packaging_minutes_per_lb: 2.0, packaging_cost_per_lb: 0.10 },
+  { species_id: 'tomato_sun_gold', price_premium: 1.25, packaging_minutes_per_lb: 1.3, packaging_cost_per_lb: 0.20 },
 ];
 
 function makeOrder(lines: { species_id: string; requested_lbs: number }[]): Order {
@@ -49,7 +49,7 @@ describe('validateOrder', () => {
   test('valid order passes when all lines are within available inventory', () => {
     const order = makeOrder([
       { species_id: 'potato_kennebec', requested_lbs: 5 },
-      { species_id: 'kale_red_russian', requested_lbs: 0.5 },  // 3 avail × 0.3 sellable = 0.9 lbs
+      { species_id: 'kale_red_russian', requested_lbs: 0.5 },
     ]);
 
     const result = validateOrder(order, AVAILABLE, SALES, PRICES);
@@ -57,16 +57,16 @@ describe('validateOrder', () => {
     expect(result.issues.length).toBe(0);
   });
 
-  test('rejects order when requested exceeds sellable inventory', () => {
+  test('rejects order when requested exceeds available inventory', () => {
     const order = makeOrder([
-      { species_id: 'potato_kennebec', requested_lbs: 8 },  // 10 available but 50% family = 5 sellable
+      { species_id: 'potato_kennebec', requested_lbs: 12 },  // 10 available, requesting 12
     ]);
 
     const result = validateOrder(order, AVAILABLE, SALES, PRICES);
     expect(result.valid).toBe(false);
     expect(result.issues.length).toBe(1);
     expect(result.issues[0].species_id).toBe('potato_kennebec');
-    expect(result.issues[0].sellable_lbs).toBeCloseTo(5);
+    expect(result.issues[0].sellable_lbs).toBeCloseTo(10);
   });
 
   test('rejects species not in current inventory', () => {

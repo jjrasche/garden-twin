@@ -402,13 +402,13 @@ export const PICKUP_OPERATION: PickupOperation = {
 };
 
 // =============================================================================
-// Species Sales Config — family/pickup split + packaging rates
+// Species Sales Config — pricing + packaging rates
 // =============================================================================
 
 /**
  * Per-species sales configuration.
  *
- * - family_fraction: consumed at home (no revenue)
+ * All inventory is available to all buyers — family orders through the system.
  * - price_premium: multiplier on base market price (1.25 = 25% premium for
  *   "harvested 1 hour ago, kid-run, local, zero transport")
  * - packaging_minutes_per_lb: species-specific. Potatoes are fast (brush, bag).
@@ -416,25 +416,11 @@ export const PICKUP_OPERATION: PickupOperation = {
  * - packaging_cost_per_lb: bags, containers, labels
  */
 export const SALES_CONFIG: SpeciesSalesConfig[] = [
-  // Greens: family eats most, sell surplus. Washing is the bottleneck.
-  { species_id: 'lettuce_bss',         family_fraction: 0.60, price_premium: 1.25, packaging_minutes_per_lb: 3.0, packaging_cost_per_lb: 0.10 },
-  { species_id: 'spinach_bloomsdale',  family_fraction: 0.60, price_premium: 1.25, packaging_minutes_per_lb: 3.0, packaging_cost_per_lb: 0.10 },
-  { species_id: 'kale_red_russian',    family_fraction: 0.70, price_premium: 1.25, packaging_minutes_per_lb: 2.0, packaging_cost_per_lb: 0.10 },
-
-  // Cherry tomatoes: premium product, pint containers
-  { species_id: 'tomato_sun_gold',     family_fraction: 0.40, price_premium: 1.25, packaging_minutes_per_lb: 1.3, packaging_cost_per_lb: 0.20 },
-
-  // Paste tomatoes: mostly family (canning), small surplus
-  { species_id: 'tomato_amish_paste',  family_fraction: 0.80, price_premium: 1.10, packaging_minutes_per_lb: 0.5, packaging_cost_per_lb: 0.05 },
-
-  // Potatoes: fast to package — brush, bag 5 lbs, label
-  { species_id: 'potato_kennebec',     family_fraction: 0.50, price_premium: 1.20, packaging_minutes_per_lb: 0.2, packaging_cost_per_lb: 0.05 },
-
-  // Corn: dried dent is niche, mostly family
-  { species_id: 'corn_nothstine_dent', family_fraction: 0.60, price_premium: 1.30, packaging_minutes_per_lb: 0.3, packaging_cost_per_lb: 0.05 },
-
-  // Companions: no harvest
-  { species_id: 'marigold_french',       family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
-  { species_id: 'nasturtium',             family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
-  { species_id: 'calendula',             family_fraction: 1.0, price_premium: 0, packaging_minutes_per_lb: 0, packaging_cost_per_lb: 0 },
+  { species_id: 'lettuce_bss',         price_premium: 1.25, packaging_minutes_per_lb: 3.0, packaging_cost_per_lb: 0.10 },
+  { species_id: 'spinach_bloomsdale',  price_premium: 1.25, packaging_minutes_per_lb: 3.0, packaging_cost_per_lb: 0.10 },
+  { species_id: 'kale_red_russian',    price_premium: 1.25, packaging_minutes_per_lb: 2.0, packaging_cost_per_lb: 0.10 },
+  { species_id: 'tomato_sun_gold',     price_premium: 1.25, packaging_minutes_per_lb: 1.3, packaging_cost_per_lb: 0.20 },
+  { species_id: 'tomato_amish_paste',  price_premium: 1.10, packaging_minutes_per_lb: 0.5, packaging_cost_per_lb: 0.05 },
+  { species_id: 'potato_kennebec',     price_premium: 1.20, packaging_minutes_per_lb: 0.2, packaging_cost_per_lb: 0.05 },
+  { species_id: 'corn_nothstine_dent', price_premium: 1.30, packaging_minutes_per_lb: 0.3, packaging_cost_per_lb: 0.05 },
 ];

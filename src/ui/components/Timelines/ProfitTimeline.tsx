@@ -126,13 +126,7 @@ function CostDetailModal({ row, onClose }: { row: SpeciesProfitability; onClose:
               <div className="space-y-1">
                 <div className="bg-gray-800/50 rounded px-3 py-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-300">Family</span>
-                    <span className="text-gray-400 font-mono">{Math.round(row.sales.family_lbs)} lbs consumed</span>
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 rounded px-3 py-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-300">Sold (pickup orders)</span>
+                    <span className="text-gray-300">Available</span>
                     <span className="text-emerald-400 font-mono">{Math.round(row.sales.sold_lbs)} lbs × {formatDollars(row.sales.effective_price_per_lb)}/lb</span>
                   </div>
                   <div className="flex justify-between text-[10px] text-gray-500 mt-0.5">
