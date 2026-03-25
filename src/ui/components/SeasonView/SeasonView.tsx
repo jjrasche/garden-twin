@@ -14,8 +14,9 @@ import { HarvestTimeline } from '../Timelines/HarvestTimeline';
 import { GrowthModTimeline } from '../Timelines/GrowthModTimeline';
 import { FlavorTimeline } from '../Timelines/FlavorTimeline';
 import { TaskTimeline } from '../Timelines/TaskTimeline';
+import { ProfitTimeline } from '../Timelines/ProfitTimeline';
 
-type BottomChart = 'none' | 'production' | 'growth' | 'flavor' | 'tasks';
+type BottomChart = 'none' | 'production' | 'growth' | 'flavor' | 'tasks' | 'economics';
 import { useYearSimulation, SELECTABLE_YEARS, type YearSelection } from '../../hooks/useYearSimulation';
 import { useGardenStore } from '../../store/gardenStore';
 import { GARDEN_SPECIES_MAP } from '@core/data/species';
@@ -235,6 +236,7 @@ export function SeasonView() {
             ['growth', 'Growth Modifiers'],
             ['flavor', 'Flavor Quality'],
             ['tasks', 'Task Calendar'],
+            ['economics', 'Economics'],
           ] as const).map(([id, label]) => (
             <button
               key={id}
@@ -267,6 +269,11 @@ export function SeasonView() {
         {bottomChart === 'tasks' && (
           <div className="h-64">
             <TaskTimeline snapshots={sim.snapshots} />
+          </div>
+        )}
+        {bottomChart === 'economics' && (
+          <div className="h-64">
+            <ProfitTimeline snapshots={sim.snapshots} gardenState={gardenState} />
           </div>
         )}
       </div>
