@@ -14,7 +14,7 @@ export const AMISH_PASTE_LIFECYCLE: LifecycleSpec = {
       activity_id: 'start_seeds',
       name: 'Start seeds in soil blocks',
       task_type: 'plant',
-      trigger: { type: 'days_after_planting', days: -42 },  // 6 weeks in 2" soil block
+      trigger: { type: 'days_after_planting', days: -44 },  // ~6 weeks in 2" soil block (Apr 1 → May 15)
       steps: [
         FILL_BLOCKS,
         { ...DROP_SEED, instructions: 'Place 1 tomato seed per block, 1/4" deep. Cover with vermiculite. Keep at 75-80F.' },

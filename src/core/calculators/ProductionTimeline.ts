@@ -90,28 +90,28 @@ export const PRODUCTION_PLAN: CropPlanting[] = [
   // ── Spring/Fall greens ──────────────────────────────────────────────────
   // Consumption-derived: 7 lbs/week family + 7 distribution = 14 lbs/week greens.
 
-  // Spring lettuce — greens zone (250 sq ft). Bolts gradually from heat stress.
-  { species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210, planting_date: '2025-04-15', zone: 'shade', stagger_days: 14, zone_area_sqft: 250 },
+  // Spring lettuce — direct sow, frost-tolerant. Greens zone (250 sq ft).
+  { species: LETTUCE_BSS, display_group: 'Lettuce', plant_count: 210, planting_date: '2026-04-15', zone: 'shade', stagger_days: 14, zone_area_sqft: 250 },
 
-  // Fall spinach — same greens zone, optimal 6"×6" spacing (4.0/sq ft).
+  // Fall spinach — same greens zone, succession after lettuce bolts.
   // 800 plants in 250 sq ft = 3.2/sq ft (near optimal 4.0). 1000 seeds, 90% germ = 900 margin.
-  { species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 800, planting_date: '2025-08-01', zone: 'shade', stagger_days: 10, zone_area_sqft: 250 },
+  { species: SPINACH_BLOOMSDALE, display_group: 'Spinach', plant_count: 800, planting_date: '2026-08-01', zone: 'shade', stagger_days: 10, zone_area_sqft: 250 },
 
-  // Kale — 120 plants in 500 sq ft zone. 18"×18" = 0.44/sq ft optimal.
-  { species: KALE_RED_RUSSIAN, display_group: 'Kale', plant_count: 120, planting_date: '2025-05-08', zone: 'boundary', stagger_days: 21, zone_area_sqft: 500 },
+  // Kale — transplant May 1 (frost-hardy). Seed blocks April 8 (3 weeks in 2" block).
+  { species: KALE_RED_RUSSIAN, display_group: 'Kale', plant_count: 120, planting_date: '2026-05-01', zone: 'boundary', stagger_days: 21, zone_area_sqft: 500 },
 
   // ── Warm season ─────────────────────────────────────────────────────────
 
-  // Paste — 11 plants (family only, 142 lbs → 44 quarts sauce). Continuous harvest, no stagger needed.
+  // Tomatoes — transplant May 15 (after last frost). Seed blocks April 1 (6 weeks in 2" block).
   // Trellis tomatoes — linear along channel, ~80 linear ft ≈ 53 sq ft (18" wide footprint)
-  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 11, planting_date: '2025-05-25', zone: 'full_sun', zone_area_sqft: 53 },
-  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2025-05-25', zone: 'full_sun', zone_area_sqft: 53 },
+  { species: TOMATO_AMISH_PASTE, display_group: 'Paste', plant_count: 11, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 53 },
+  { species: TOMATO_SUN_GOLD, display_group: 'Cherry', plant_count: 8, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 53 },
 
-  // Potato — 250 sq ft zone. Plant after last frost (May 15).
-  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2025-05-15', zone: 'full_sun', zone_area_sqft: 250 },
+  // Potato — plant after last frost (May 15), soil temp 60°F+.
+  { species: POTATO_KENNEBEC, display_group: 'Potato', plant_count: 88, planting_date: '2026-05-15', zone: 'full_sun', zone_area_sqft: 250 },
 
-  // Corn — 595 sq ft zone.
-  { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2025-05-25', zone: 'full_sun', zone_area_sqft: 595 },
+  // Corn — needs warm soil 60°F+. Plant 10 days after frost.
+  { species: CORN_NOTHSTINE_DENT, display_group: 'Corn', plant_count: 234, planting_date: '2026-05-25', zone: 'full_sun', zone_area_sqft: 595 },
 ];
 
 // ── Weekly Consumption Targets (lbs/week) ───────────────────────────────────
@@ -194,11 +194,11 @@ function computeSeasonRange(plan: CropPlanting[]): { start: Date; end: Date } {
   const dates = plan.map(p => new Date(p.planting_date).getTime());
   const earliest = new Date(Math.min(...dates));
   const start = new Date(earliest);
-  start.setDate(start.getDate() - 1);
-  // Safety bound: 18 months from start. Never reached — all plants die from frost/bolt
-  // well before this. The early termination check (plants.every(p => lifecycle === 'dead' || 'pulled')) is
-  // the real stop condition.
-  const end = new Date(start);
+  // Start 60 days before earliest planting to capture all pre-planting tasks
+  // (seed starting, bed prep). Tomatoes need -44 days; 60 gives margin.
+  start.setDate(start.getDate() - 60);
+  // Safety bound: 18 months from earliest planting.
+  const end = new Date(earliest);
   end.setMonth(end.getMonth() + 18);
   return { start, end };
 }

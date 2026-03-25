@@ -55,8 +55,9 @@ function shouldFireActivity(
   // if already completed for this species, don't fire again.
   // plant_flag triggers (harvest) are self-gating — the flag resets on resolution,
   // so they naturally stop firing until the condition re-triggers.
-  if (!activity.recurrence
-    && activity.trigger.type === 'growth_stage') {
+  // Non-recurring activities are one-shot: fire once, never again.
+  // plant_flag triggers (harvest) are self-gating — the flag resets on resolution.
+  if (!activity.recurrence && activity.trigger.type !== 'plant_flag') {
     if (isAlreadyCompleted(activity.activity_id, species.id, completedTasks)) return false;
   }
 

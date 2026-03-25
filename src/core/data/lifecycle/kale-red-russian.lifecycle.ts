@@ -12,7 +12,7 @@ export const KALE_RED_RUSSIAN_LIFECYCLE: LifecycleSpec = {
       activity_id: 'start_seeds',
       name: 'Start seeds in soil blocks',
       task_type: 'plant',
-      trigger: { type: 'days_after_planting', days: -21 },  // 3 weeks in 2" soil block
+      trigger: { type: 'days_after_planting', days: -23 },  // ~3 weeks in 2" soil block (Apr 8 → May 1)
       steps: [
         FILL_BLOCKS,
         { ...DROP_SEED, instructions: 'Place 1 kale seed per block indent, 1/4" deep. Cover lightly.' },
