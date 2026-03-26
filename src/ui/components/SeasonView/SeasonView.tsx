@@ -94,6 +94,7 @@ export function SeasonView() {
 
   const sim = useYearSimulation(gardenState);
   const orderTasks = useOrderStore(s => s.orderTasks);
+  const observations = useOrderStore(s => s.observations);
   const [dayIndex, setDayIndex] = useState(0);
   const [hoverPlant, setHoverPlant] = useState<{ plant: PlantState; x: number; y: number } | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -237,6 +238,7 @@ export function SeasonView() {
               dayIndex={dayIndex}
               env={sim.env}
               catalog={GARDEN_SPECIES_MAP}
+              observations={observations}
             />
           </div>
         </div>

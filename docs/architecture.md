@@ -6,10 +6,29 @@ patterns in the current codebase.
 
 ---
 
-## Core Principle
+## Core Principles
 
 **GardenState is physical reality. Conditions are time-varying input.
 Calculators consume both.**
+
+**The twin is the decision-maker. Workers are sensors and actuators.**
+
+The digital twin owns all planning and scheduling decisions — what to harvest,
+when to water, which tasks to generate. Human workers execute tasks and capture
+observations when reality diverges from the model. The feedback loop is:
+twin generates task → worker executes → worker observes divergence →
+observation updates twin → twin adjusts future tasks.
+
+This means:
+- If a task is wrong, the fix is better modeling or more observations — not
+  giving workers more context to second-guess the system.
+- Worker UI is minimal: task list, mark started/complete, add observation,
+  weigh and confirm. No dashboards, no charts, no "why" explanations.
+- Twin fidelity to reality is the critical quality metric. Every gap between
+  twin state and actual garden state degrades management decisions and
+  inventory accuracy.
+- This architecture makes worker actions automatable — a robot needs the same
+  interface: receive task, execute, report observation.
 
 ```
                      ┌──────────────┐

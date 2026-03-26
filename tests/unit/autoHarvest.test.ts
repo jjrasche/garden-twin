@@ -7,6 +7,9 @@
 
 import { describe, test, expect } from 'vitest';
 import { shouldAutoHarvest } from '../../src/core/engine/simulate';
+import { computeMaturityFactor } from '../../src/core/calculators/qualityModel';
+import { POTATO_KENNEBEC } from '../../src/core/data/species/potato-kennebec';
+import { CORN_NOTHSTINE_DENT } from '../../src/core/data/species/corn-nothstine-dent';
 import type { PlantState } from '../../src/core/types/PlantState';
 
 function makePlant(overrides: Partial<PlantState> = {}): PlantState {
@@ -87,5 +90,42 @@ describe('shouldAutoHarvest', () => {
     // 0.25 >= 0.1 so peak check passes. quality 0.20 < 0.25 * 0.85 = 0.2125
     const plant = makePlant({ peak_quality_score: 0.25, quality_score: 0.20 });
     expect(shouldAutoHarvest(plant, FLOOR, TRIGGER)).toBe(true);
+  });
+});
+
+describe('maturity curve harvest timing', () => {
+  test('potato maturity drops below auto-harvest threshold by 1.5x optimal', () => {
+    // Potato should not accumulate to 2-3x optimal before harvest fires.
+    // With decline_trigger 0.85 and flavor=1.0 (no flavor_response), quality = maturity.
+    // Maturity at 1.5x ratio must be below 0.85 to trigger harvest at reasonable biomass.
+    const curve = POTATO_KENNEBEC.quality!.maturity_curve;
+    const maturityAt1_5x = computeMaturityFactor(1.5, curve);
+    expect(maturityAt1_5x).toBeLessThan(0.85);
+  });
+
+  test('potato maturity is still good at 1.0x optimal', () => {
+    const curve = POTATO_KENNEBEC.quality!.maturity_curve;
+    const maturityAtOptimal = computeMaturityFactor(1.0, curve);
+    expect(maturityAtOptimal).toBe(1.0);
+  });
+
+  test('potato maturity stays reasonable at 1.2x optimal', () => {
+    // Slightly oversized tubers are still fine — quality >= 0.85
+    const curve = POTATO_KENNEBEC.quality!.maturity_curve;
+    const maturityAt1_2x = computeMaturityFactor(1.2, curve);
+    expect(maturityAt1_2x).toBeGreaterThanOrEqual(0.85);
+  });
+
+  test('corn maturity drops below auto-harvest threshold by 1.5x optimal', () => {
+    // Dried dent corn holds on stalk but shouldn't over-accumulate
+    const curve = CORN_NOTHSTINE_DENT.quality!.maturity_curve;
+    const maturityAt1_5x = computeMaturityFactor(1.5, curve);
+    expect(maturityAt1_5x).toBeLessThan(0.85);
+  });
+
+  test('corn maturity is still good at 1.0x optimal', () => {
+    const curve = CORN_NOTHSTINE_DENT.quality!.maturity_curve;
+    const maturityAtOptimal = computeMaturityFactor(1.0, curve);
+    expect(maturityAtOptimal).toBe(1.0);
   });
 });

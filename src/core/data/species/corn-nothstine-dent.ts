@@ -87,7 +87,10 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   // but the grain itself is stable. Frost (kill_temp_f: 32) ends the season.
   quality: {
     optimal_harvest_lbs: 0.24,   // dried dent ear (baseline per plant)
-    maturity_curve: { 0: 0, 0.3: 0.3, 0.6: 0.7, 0.9: 0.95, 1.0: 1.0, 1.5: 0.95, 2.0: 0.88, 3.0: 0.75 },
+    // Ears fill to a fixed size at black layer — continued "growth" past optimal
+    // represents simulation artifact, not real biology. Steep decline ensures
+    // harvest fires before unrealistic accumulation.
+    maturity_curve: { 0: 0, 0.3: 0.3, 0.6: 0.7, 0.9: 0.95, 1.0: 1.0, 1.3: 0.88, 1.6: 0.7, 2.0: 0.45 },
     must_harvest_floor: 0.2,
     decline_trigger: 0.85,
   },

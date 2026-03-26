@@ -97,7 +97,10 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   // kill_temp_f: 28 handles the hard deadline.
   quality: {
     optimal_harvest_lbs: 1.5,    // full-size tubers (baseline per plant)
-    maturity_curve: { 0: 0, 0.3: 0.3, 0.6: 0.7, 0.8: 0.9, 1.0: 1.0, 1.5: 0.98, 2.0: 0.92, 3.0: 0.8 },
+    // Oversized tubers: hollow heart, knobby growth, reduced starch density.
+    // Steeper decline than storage-crop intuition suggests — tuber quality
+    // degrades faster than vine appearance. Sources: Cornell, CIP.
+    maturity_curve: { 0: 0, 0.3: 0.3, 0.6: 0.7, 0.8: 0.9, 1.0: 1.0, 1.3: 0.9, 1.6: 0.75, 2.0: 0.5 },
     must_harvest_floor: 0.15,
     decline_trigger: 0.85,
   },

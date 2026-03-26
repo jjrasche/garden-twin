@@ -90,11 +90,11 @@ function speciesCatalog(...species: PlantSpecies[]): Map<string, PlantSpecies> {
 // =============================================================================
 
 describe('simulateSeason regression', () => {
-  test('simulateSeason total is stable (~673 lbs)', () => {
+  test('simulateSeason total is stable (~602 lbs)', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~778 lbs: quality-emergent harvest (peak-decline auto-harvest).
-    expect(total).toBeCloseTo(778, -1);
+    // ~602 lbs: steeper maturity curves on potato/corn trigger earlier harvest.
+    expect(total).toBeCloseTo(602, -1);
   });
 
   test('all expected display groups produce yield', () => {

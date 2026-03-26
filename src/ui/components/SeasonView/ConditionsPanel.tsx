@@ -10,10 +10,12 @@ import React, { useMemo, useState } from 'react';
 import type { DaySnapshot } from '@core/engine/simulate';
 import type { ConditionsResolver } from '@core/environment/types';
 import type { PlantSpecies } from '@core/types/PlantSpecies';
+import type { Observation } from '@core/types/Observation';
 import { getAvailableHarvest } from '@core/calculators/Inventory';
+import { computeCalibrationFactor } from '@core/engine/calibration';
 import { SALES_CONFIG, MARKET_PRICES_2026 } from '@core/data/expenditures-2026';
 
-type PanelTab = 'conditions' | 'accumulation' | 'inventory';
+type PanelTab = 'conditions' | 'accumulation' | 'inventory' | 'calibration';
 
 interface ConditionsPanelProps {
   snapshot: DaySnapshot | null;
@@ -21,6 +23,7 @@ interface ConditionsPanelProps {
   dayIndex: number;
   env: ConditionsResolver | null;
   catalog: Map<string, PlantSpecies>;
+  observations?: Observation[];
 }
 
 const DISPLAY_GROUP_ORDER = ['Lettuce', 'Spinach', 'Kale', 'Paste', 'Cherry', 'Potato', 'Corn'] as const;
@@ -64,6 +67,43 @@ function computeAccumulation(
   return totals;
 }
 
+/** Sum projected harvest per species from all harvested events across the full season. */
+function computeProjectedHarvestBySpecies(
+  snapshots: DaySnapshot[],
+): Map<string, number> {
+  const totals = new Map<string, number>();
+  // Build plant_id → species_id index once from the first snapshot that has plants
+  const speciesIndex = new Map<string, string>();
+  for (const snap of snapshots) {
+    if (snap.plants.length > 0) {
+      for (const p of snap.plants) speciesIndex.set(p.plant_id, p.species_id);
+      break;
+    }
+  }
+  for (const snap of snapshots) {
+    // Pick up any plants added mid-season (succession)
+    for (const p of snap.plants) {
+      if (!speciesIndex.has(p.plant_id)) speciesIndex.set(p.plant_id, p.species_id);
+    }
+    for (const event of snap.events) {
+      if (event.type !== 'harvested') continue;
+      const speciesId = speciesIndex.get(event.plant_id);
+      if (!speciesId) continue;
+      totals.set(speciesId, (totals.get(speciesId) ?? 0) + event.harvested_lbs);
+    }
+  }
+  // Also add accumulated_lbs from plants still harvestable at end of season
+  const lastSnap = snapshots[snapshots.length - 1];
+  if (lastSnap) {
+    for (const plant of lastSnap.plants) {
+      if (plant.is_harvestable && plant.accumulated_lbs > 0) {
+        totals.set(plant.species_id, (totals.get(plant.species_id) ?? 0) + plant.accumulated_lbs);
+      }
+    }
+  }
+  return totals;
+}
+
 /** Count plants by stage in the current snapshot. */
 function countByStage(snapshot: DaySnapshot): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -83,7 +123,7 @@ function ConditionRow({ label, value, unit }: { label: string; value: string | n
   );
 }
 
-export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }: ConditionsPanelProps) {
+export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog, observations = [] }: ConditionsPanelProps) {
   const [activeTab, setActiveTab] = useState<PanelTab>('conditions');
 
   const conditions = useMemo(() => {
@@ -100,6 +140,24 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
     () => snapshot ? countByStage(snapshot) : {},
     [snapshot],
   );
+
+  const projectedBySpecies = useMemo(
+    () => computeProjectedHarvestBySpecies(snapshots),
+    [snapshots],
+  );
+
+  const calibrationRows = useMemo(() => {
+    return DISPLAY_GROUP_ORDER.map(group => {
+      const speciesId = Object.entries(SPECIES_DISPLAY_GROUP).find(([, g]) => g === group)?.[0];
+      if (!speciesId) return null;
+      const projectedLbs = projectedBySpecies.get(speciesId) ?? 0;
+      const factor = computeCalibrationFactor(speciesId, observations, projectedLbs);
+      const actualLbs = observations
+        .filter(o => o.species_id === speciesId && o.harvest_weight_lbs != null)
+        .reduce((sum, o) => sum + o.harvest_weight_lbs!, 0);
+      return { group, speciesId, projectedLbs, actualLbs, factor };
+    }).filter(Boolean) as Array<{ group: string; speciesId: string; projectedLbs: number; actualLbs: number; factor: number | null }>;
+  }, [projectedBySpecies, observations]);
 
   const salesMap = useMemo(() => new Map(SALES_CONFIG.map(s => [s.species_id, s])), []);
   const priceMap = useMemo(() => new Map(MARKET_PRICES_2026.map(p => [p.species_id, p])), []);
@@ -139,8 +197,11 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
 
       {/* Tab buttons */}
       <div className="flex border-b border-gray-700">
-        {(['conditions', 'accumulation', 'inventory'] as PanelTab[]).map(tab => {
-          const label = tab === 'conditions' ? 'Conditions' : tab === 'accumulation' ? 'Harvest' : 'Inventory';
+        {(['conditions', 'accumulation', 'inventory', 'calibration'] as PanelTab[]).map(tab => {
+          const label = tab === 'conditions' ? 'Conditions'
+            : tab === 'accumulation' ? 'Harvest'
+            : tab === 'inventory' ? 'Inventory'
+            : 'Cal';
           return (
             <button
               key={tab}
@@ -227,6 +288,45 @@ export function ConditionsPanel({ snapshot, snapshots, dayIndex, env, catalog }:
               )}
               {snapshot.events.length > 10 && (
                 <div className="text-[10px] text-gray-600">+{snapshot.events.length - 10} more</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'calibration' && (
+          <div className="space-y-3">
+            <div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                Model vs Actual (per species)
+              </div>
+              {calibrationRows.map(row => (
+                <div key={row.speciesId} className="bg-gray-900/50 rounded px-2 py-1.5 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: GROUP_COLORS[row.group] }} />
+                    <span className="text-xs text-gray-200">{row.group}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-2 text-[10px] mt-0.5 pl-3.5">
+                    <span className="text-gray-500">Projected</span>
+                    <span className="text-gray-300 font-mono text-right">{row.projectedLbs.toFixed(1)} lbs</span>
+                    <span className="text-gray-500">Actual</span>
+                    <span className="text-gray-300 font-mono text-right">
+                      {row.actualLbs > 0 ? `${row.actualLbs.toFixed(1)} lbs` : '—'}
+                    </span>
+                    <span className="text-gray-500">Factor</span>
+                    <span className={`font-mono text-right ${
+                      row.factor === null ? 'text-gray-600'
+                        : row.factor >= 0.9 && row.factor <= 1.1 ? 'text-emerald-400'
+                        : 'text-amber-400'
+                    }`}>
+                      {row.factor !== null ? `${row.factor.toFixed(2)}×` : '—'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {observations.length === 0 && (
+                <div className="text-[10px] text-gray-600 mt-2">
+                  No harvest observations yet. Fulfill orders to capture actuals.
+                </div>
               )}
             </div>
           </div>
