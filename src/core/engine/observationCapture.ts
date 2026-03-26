@@ -30,6 +30,8 @@ export function buildHarvestObservations(
     .map(f => ({
       observation_id: createObservationId(undefined, undefined),
       timestamp: now,
+      species_id: f.species_id,
+      harvest_weight_lbs: f.fulfilled_lbs,
       source: { source_type: 'manual' as const, user_id: 'garden_owner' },
       method: 'manual_entry' as const,
       confidence: 1.0,

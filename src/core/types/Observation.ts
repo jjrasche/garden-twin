@@ -71,6 +71,10 @@ export const ObservationSchema = z.object({
   plant_id: z.string().optional(),
   subcell_id: z.string().optional(),
 
+  // Harvest observation (structured weight for calibration)
+  species_id: z.string().optional(),
+  harvest_weight_lbs: z.number().min(0).optional(),
+
   // Plant observations (sparse - only include what was measured)
   height_cm: z.number().min(0).optional(),
   growth_stage: GrowthStageSchema.optional(),

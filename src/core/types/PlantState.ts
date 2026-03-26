@@ -90,10 +90,11 @@ export const PlantStateSchema = z.object({
 
   // Quality (computed each tick from flavor × maturity)
   quality_score: z.number().min(0).max(1).optional(),
+  peak_quality_score: z.number().min(0).max(1),
 
   // Lifecycle status (set by engine)
   lifecycle: z.enum(['growing', 'stressed', 'senescent', 'pulled', 'dead']),
-  is_harvestable: z.boolean(),  // Derived: accumulated_lbs >= min_harvest_lbs (kept for backward compat)
+  is_harvestable: z.boolean(),  // Derived: productive stage + accumulated_lbs > 0
 });
 
 export type PlantState = z.infer<typeof PlantStateSchema>;

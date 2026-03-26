@@ -96,10 +96,10 @@ export const POTATO_KENNEBEC: PlantSpecies = {
   // Frost kills plant → inventory disappears from projection (dead plants excluded).
   // kill_temp_f: 28 handles the hard deadline.
   quality: {
-    min_harvest_lbs: 1.0,        // small new potatoes
     optimal_harvest_lbs: 1.5,    // full-size tubers (baseline per plant)
-    maturity_curve: { 0.7: 0.85, 1.0: 1.0, 1.5: 0.98, 2.0: 0.92, 3.0: 0.8 },
+    maturity_curve: { 0: 0, 0.3: 0.3, 0.6: 0.7, 0.8: 0.9, 1.0: 1.0, 1.5: 0.98, 2.0: 0.92, 3.0: 0.8 },
     must_harvest_floor: 0.15,
+    decline_trigger: 0.85,
   },
 
   sources: [

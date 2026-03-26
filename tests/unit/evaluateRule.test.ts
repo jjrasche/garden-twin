@@ -30,6 +30,7 @@ function makePlant(overrides: Partial<PlantState> = {}): PlantState {
     bolt_resistance: 0.6,
     lifecycle: 'growing',
     is_harvestable: false,
+    peak_quality_score: 0,
     ...overrides,
   };
 }

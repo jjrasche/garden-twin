@@ -75,6 +75,7 @@ function createPlant(species: PlantSpecies, overrides: Partial<PlantState> = {})
     daily_potential: overrides.daily_potential ?? 0.01,
     stress: overrides.stress ?? createStressCounters(),
     is_harvestable: overrides.is_harvestable ?? false,
+    peak_quality_score: overrides.peak_quality_score ?? 0,
     lifecycle: overrides.lifecycle ?? 'growing',
     bolt_resistance: overrides.bolt_resistance ?? 0.5,
   };
@@ -92,8 +93,8 @@ describe('simulateSeason regression', () => {
   test('simulateSeason total is stable (~673 lbs)', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~471 lbs: demand-driven harvest model. harvest_ready + quality-decline harvested events.
-    expect(total).toBeCloseTo(471, -1);
+    // ~778 lbs: quality-emergent harvest (peak-decline auto-harvest).
+    expect(total).toBeCloseTo(778, -1);
   });
 
   test('all expected display groups produce yield', () => {

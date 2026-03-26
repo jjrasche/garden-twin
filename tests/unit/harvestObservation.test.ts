@@ -8,7 +8,9 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { useOrderStore } from '../../src/ui/store/orderStore';
 import { buildHarvestObservations } from '../../src/core/engine/observationCapture';
+import { computeCalibrationFactor } from '../../src/core/engine/calibration';
 import type { Order } from '../../src/core/types/Order';
+import type { Observation } from '../../src/core/types/Observation';
 
 function makeHarvestingOrder(id: string, lines: { species_id: string; requested_lbs: number }[]): Order {
   const now = new Date().toISOString();
@@ -40,6 +42,18 @@ describe('buildHarvestObservations', () => {
     expect(observations[0]!.confidence).toBe(1.0);
   });
 
+  test('populates structured harvest_weight_lbs and species_id', () => {
+    const observations = buildHarvestObservations('ord_struct', [
+      { species_id: 'potato_kennebec', fulfilled_lbs: 4.5 },
+      { species_id: 'kale_red_russian', fulfilled_lbs: 0.8 },
+    ]);
+
+    expect(observations[0]!.harvest_weight_lbs).toBe(4.5);
+    expect(observations[0]!.species_id).toBe('potato_kennebec');
+    expect(observations[1]!.harvest_weight_lbs).toBe(0.8);
+    expect(observations[1]!.species_id).toBe('kale_red_russian');
+  });
+
   test('observation notes include order_id and species', () => {
     const observations = buildHarvestObservations('ord_notes', [
       { species_id: 'potato_kennebec', fulfilled_lbs: 3.0 },
@@ -56,7 +70,62 @@ describe('buildHarvestObservations', () => {
     ]);
 
     expect(observations.length).toBe(1);
-    expect(observations[0]!.notes).toContain('potato_kennebec');
+    expect(observations[0]!.species_id).toBe('potato_kennebec');
+  });
+});
+
+// ── Calibration tests ────────────────────────────────────────────────────────
+
+describe('computeCalibrationFactor', () => {
+  function makeObservation(speciesId: string, weightLbs: number): Observation {
+    const now = new Date().toISOString();
+    return {
+      observation_id: `obs_test_${Math.random()}`,
+      timestamp: now,
+      species_id: speciesId,
+      harvest_weight_lbs: weightLbs,
+      source: { source_type: 'manual', user_id: 'test' },
+      method: 'manual_entry',
+      confidence: 1.0,
+      applied_to_state: false,
+      created_at: now,
+    };
+  }
+
+  test('returns 1.0 when actual matches projected', () => {
+    const observations = [makeObservation('potato_kennebec', 5.0)];
+    const factor = computeCalibrationFactor('potato_kennebec', observations, 5.0);
+    expect(factor).toBe(1.0);
+  });
+
+  test('returns ratio of actual to projected', () => {
+    const observations = [
+      makeObservation('potato_kennebec', 2.5),
+      makeObservation('potato_kennebec', 2.3),
+    ];
+    const factor = computeCalibrationFactor('potato_kennebec', observations, 5.0);
+    expect(factor).toBeCloseTo(0.96, 2); // (2.5+2.3)/5.0
+  });
+
+  test('returns null when no observations for species', () => {
+    const observations = [makeObservation('kale_red_russian', 1.0)];
+    const factor = computeCalibrationFactor('potato_kennebec', observations, 5.0);
+    expect(factor).toBeNull();
+  });
+
+  test('returns null when projected is zero', () => {
+    const observations = [makeObservation('potato_kennebec', 2.0)];
+    const factor = computeCalibrationFactor('potato_kennebec', observations, 0);
+    expect(factor).toBeNull();
+  });
+
+  test('ignores observations for other species', () => {
+    const observations = [
+      makeObservation('potato_kennebec', 4.0),
+      makeObservation('kale_red_russian', 1.0),
+    ];
+    const factor = computeCalibrationFactor('potato_kennebec', observations, 5.0);
+    expect(factor).toBeCloseTo(0.8, 2);
   });
 });
 

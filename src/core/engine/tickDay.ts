@@ -11,7 +11,7 @@
  *   4. accumulateDev      — GDD × development_rate modifiers → stage transitions
  *   5. accumulateBiomass  — growth in productive stages only
  *   6. computeQuality     — flavor × maturity (biomass ratio)
- *   7. checkHarvestReady  — biomass >= min_harvest_lbs? (backward compat)
+ *   7. harvestReady       — productive stage + biomass > 0, track peak quality
  */
 
 import type { PlantSpecies } from '../types/PlantSpecies';
@@ -19,10 +19,9 @@ import type { PlantState, GrowthEvent, StressCounters } from '../types/PlantStat
 import type { GrowthStage } from '../types/GardenState';
 import type { ConditionsResolver } from '../environment/types';
 import { computeDailyGdd, determineStage } from '../calculators/gddEngine';
-import { computeQuality, isHarvestable as checkMinBiomass } from '../calculators/qualityModel';
+import { computeQuality } from '../calculators/qualityModel';
 import { computeDevelopmentModifier, computeGrowthModifier, computeSurvivalModifier } from '../calculators/yieldModel';
 import { interpolate } from '../calculators/interpolate';
-import { resolveHarvestStrategy } from '../calculators/strategyResolver';
 
 // ── Leaf Functions (one concern each) ────────────────────────────────────────
 
@@ -275,7 +274,6 @@ export function tickPlant(
   }
 
   // 5. Biomass accumulation (only in productive stages)
-  const strategy = resolveHarvestStrategy(plant.harvest_strategy_id, species);
   let new_accumulated_lbs = plant.accumulated_lbs;
   if (isProductiveStage(clamped_stage, species)) {
     const effective_vigor = plant.vigor * stress_result.vigor_penalty;
@@ -283,16 +281,12 @@ export function tickPlant(
   }
 
   // 6. Quality computation (flavor × maturity from biomass ratio)
-  const minHarvestLbs = species.quality?.min_harvest_lbs ?? 0;
-  const currentlyHarvestable = minHarvestLbs > 0
-    ? checkMinBiomass(new_accumulated_lbs, minHarvestLbs)
-    : checkHarvestReady(clamped_stage, new_accumulated_lbs, plant, species, strategy);
-
   const qualityResult = species.quality
     ? computeQuality(species, conditions, new_accumulated_lbs)
     : undefined;
 
-  const is_harvestable = currentlyHarvestable;
+  // 7. Harvest readiness: produce exists = productive stage + biomass > 0
+  const is_harvestable = isProductiveStage(clamped_stage, species) && new_accumulated_lbs > 0;
 
   if (is_harvestable && !plant.is_harvestable) {
     events.push({
@@ -302,6 +296,10 @@ export function tickPlant(
       accumulated_lbs: new_accumulated_lbs,
     });
   }
+
+  // 8. Track peak quality for auto-harvest decline detection
+  const currentQuality = qualityResult?.quality_score ?? 0;
+  const new_peak_quality = Math.max(plant.peak_quality_score, currentQuality);
 
   return {
     plant: {
@@ -313,32 +311,13 @@ export function tickPlant(
       accumulated_lbs: new_accumulated_lbs,
       stress: stress_result.stress,
       quality_score: qualityResult?.quality_score,
+      peak_quality_score: new_peak_quality,
       is_harvestable,
     },
     events,
   };
 }
 
-/** Whether a plant is ready for harvest, given its strategy type.
- *  For cut-and-come-again: regrowth_days defines the threshold in "optimal-day
- *  equivalents." Actual regrowth time depends on conditions — cold weather
- *  (growth_mod < 1.0) means slower biomass accumulation and longer intervals. */
-function checkHarvestReady(
-  stage: GrowthStage, accumulated_lbs: number,
-  plant: PlantState, species: PlantSpecies,
-  strategy: { type: string; regrowth_days?: number } | null,
-): boolean {
-  if (!strategy || accumulated_lbs <= 0) return false;
-  if (!isProductiveStage(stage, species)) return false;
-
-  if (strategy.type === 'bulk') return stage === 'harvest';
-  if (strategy.type === 'continuous') return true;
-
-  // CAC: accumulate to threshold before each cut
-  const window_days = strategy.regrowth_days ?? 14;
-  const threshold = plant.daily_potential * plant.vigor * window_days * 0.9;
-  return accumulated_lbs >= threshold;
-}
 
 // ── Batch Orchestrator ───────────────────────────────────────────────────────
 

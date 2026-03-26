@@ -112,10 +112,10 @@ export const SPINACH_BLOOMSDALE: PlantSpecies = {
 
   data_confidence: 'high',
   quality: {
-    min_harvest_lbs: 0.03,       // baby spinach
     optimal_harvest_lbs: 0.10,   // full rosette, peak tenderness
-    maturity_curve: { 0.3: 0.8, 1.0: 1.0, 1.5: 0.5, 2.0: 0.2 },
-    must_harvest_floor: 0.1,     // low floor — bolting/heat drops flavor, but still harvestable
+    maturity_curve: { 0: 0, 0.15: 0.3, 0.4: 0.7, 0.7: 0.9, 1.0: 1.0, 1.3: 0.6, 1.5: 0.35, 2.0: 0.15 },
+    must_harvest_floor: 0.1,
+    decline_trigger: 0.85,
   },
 
   sources: [

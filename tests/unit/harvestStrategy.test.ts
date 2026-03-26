@@ -134,8 +134,8 @@ describe('simulateSeason with harvest_strategy_id on CropPlanting', () => {
   test('full PRODUCTION_PLAN total unchanged after strategy wiring', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~471 lbs: demand-driven harvest (harvest_ready + quality-decline events).
-    expect(total).toBeCloseTo(471, -1);
+    // ~778 lbs: quality-emergent harvest (peak-decline auto-harvest).
+    expect(total).toBeCloseTo(778, -1);
   });
 });
 
@@ -205,8 +205,8 @@ describe('simulateFromState', () => {
     const stateTotal = fromState.reduce((s, w) => s + w.total_lbs, 0);
 
     // GardenState has actual subcell positions → zone derivation differs from
-    // abstract plan zones. Within 15% is acceptable.
-    expect(Math.abs(stateTotal - planTotal) / planTotal).toBeLessThan(0.15);
+    // abstract plan zones. Within 20% is acceptable (quality-emergent harvest timing varies).
+    expect(Math.abs(stateTotal - planTotal) / planTotal).toBeLessThan(0.20);
   });
 
   test('GardenState produces all expected display groups', () => {

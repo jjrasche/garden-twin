@@ -47,44 +47,26 @@ export function computeMaturityFactor(
   return interpolate(maturityCurve, biomassRatio);
 }
 
-/** Whether biomass meets minimum harvest threshold. */
-export function isHarvestable(
-  accumulatedLbs: number,
-  minHarvestLbs: number,
-): boolean {
-  return accumulatedLbs >= minHarvestLbs;
-}
-
 // ── Concept Function ────────────────────────────────────────────────────────
 
 /**
  * Compute unified quality score for a plant.
  *
- * Returns 0 if biomass is below minimum (not harvestable = no quality to assess).
- * Otherwise: quality = flavor × maturity(biomass_ratio).
- * Maturity peaks at ratio 1.0 (optimal size) and declines as the plant overgrows.
+ * quality = flavor × maturity(biomass_ratio).
+ * Maturity starts at 0 (no biomass), peaks at ratio 1.0 (optimal size),
+ * and declines as the plant overgrows. Quality is always computable at
+ * any biomass level — it's a grading signal, not a harvest gate.
  */
 export function computeQuality(
   species: PlantSpecies,
   conditions: Record<string, number>,
   accumulatedLbs: number,
 ): QualityResult {
-  const minHarvestLbs = species.quality?.min_harvest_lbs ?? 0;
-  const optimalLbs = species.quality?.optimal_harvest_lbs ?? minHarvestLbs;
+  const optimalLbs = species.quality?.optimal_harvest_lbs ?? 0;
   const maturityCurve = species.quality?.maturity_curve;
 
   const flavorScore = computeFlavorScore(species, conditions);
   const biomassRatio = computeBiomassRatio(accumulatedLbs, optimalLbs);
-
-  // Not enough biomass to harvest — quality is 0 but flavor is still computable
-  if (accumulatedLbs < minHarvestLbs) {
-    return {
-      quality_score: 0,
-      flavor_score: flavorScore,
-      maturity: 0,
-      biomass_ratio: biomassRatio,
-    };
-  }
 
   const maturity = maturityCurve
     ? computeMaturityFactor(biomassRatio, maturityCurve)

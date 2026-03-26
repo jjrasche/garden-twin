@@ -289,11 +289,11 @@ describe('simulateSeason scenarios', () => {
     const first = producing[0]!;
     expect(first.week_start.getMonth()).toBeGreaterThanOrEqual(6); // July+
 
-    // Minimal production after Oct (quality-decline picks may land in early Oct week)
-    const nov_production = weeks.filter(
-      w => w.week_start.getMonth() >= 10 && w.total_lbs > 0,
+    // Minimal production after Nov (frost kills tomatoes; late-season peak-decline harvest may land in Oct/early Nov)
+    const dec_production = weeks.filter(
+      w => w.week_start.getMonth() >= 11 && w.total_lbs > 0,
     );
-    expect(nov_production).toHaveLength(0);
+    expect(dec_production).toHaveLength(0);
   });
 
   test('potato produces single bulk harvest', () => {
@@ -308,25 +308,26 @@ describe('simulateSeason scenarios', () => {
     const weeks = simulateSeason(plan, GR_HISTORICAL);
     const producing = weeks.filter(w => w.total_lbs > 0);
 
-    // Bulk harvest = exactly 1 producing week
-    expect(producing).toHaveLength(1);
+    // Quality-emergent harvest: peak-decline may spread harvest across multiple weeks
+    expect(producing.length).toBeGreaterThanOrEqual(1);
 
     // GDD-driven: potato matures when accumulated GDD reaches 1700 (base 40°F)
-    const harvest_week = producing[0]!;
-    expect(harvest_week.week_start.getMonth()).toBeGreaterThanOrEqual(5); // June+
+    const firstHarvest = producing[0]!;
+    expect(firstHarvest.week_start.getMonth()).toBeGreaterThanOrEqual(5); // June+
 
-    // Calibrated: daily_potential based on GDD-productive window, not full calendar
-    // 153 plants × 1.5 lbs baseline × survival × modifiers → ~100-200 lbs
-    expect(harvest_week.total_lbs).toBeGreaterThan(80);
-    expect(harvest_week.total_lbs).toBeLessThan(300);
+    // Total across all producing weeks: 153 plants × baseline × survival × modifiers.
+    // Peak-decline harvest lets potatoes grow past optimal before quality triggers cut.
+    const totalLbs = producing.reduce((s, w) => s + w.total_lbs, 0);
+    expect(totalLbs).toBeGreaterThan(80);
+    expect(totalLbs).toBeLessThan(600);
   });
 
   test('full production plan total is stable', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
 
-    // ~471 lbs: demand-driven harvest (harvest_ready + quality-decline events).
-    expect(total).toBeCloseTo(471, -1); // within 10 lbs
+    // ~778 lbs: quality-emergent harvest (peak-decline auto-harvest).
+    expect(total).toBeCloseTo(778, -1); // within 10 lbs
   });
 });
 

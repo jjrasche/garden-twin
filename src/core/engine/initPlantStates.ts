@@ -167,6 +167,7 @@ export function initPlantStates(
         density_plants_per_sqft: (instance as any).density_plants_per_sqft,
         lifecycle: survived ? 'growing' : 'dead',
         is_harvestable: false,
+        peak_quality_score: 0,
       });
     }
   }

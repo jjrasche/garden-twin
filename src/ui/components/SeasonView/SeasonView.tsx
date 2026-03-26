@@ -16,6 +16,7 @@ import { FlavorTimeline } from '../Timelines/FlavorTimeline';
 import { TaskTimeline } from '../Timelines/TaskTimeline';
 import { ProfitTimeline } from '../Timelines/ProfitTimeline';
 import { OrdersView } from '../OrdersView/OrdersView';
+import { useOrderStore } from '../../store/orderStore';
 
 type AppView = 'garden' | 'orders';
 type BottomChart = 'none' | 'production' | 'growth' | 'flavor' | 'tasks' | 'economics';
@@ -92,6 +93,7 @@ export function SeasonView() {
   }, [gardenState, setGardenState]);
 
   const sim = useYearSimulation(gardenState);
+  const orderTasks = useOrderStore(s => s.orderTasks);
   const [dayIndex, setDayIndex] = useState(0);
   const [hoverPlant, setHoverPlant] = useState<{ plant: PlantState; x: number; y: number } | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -297,7 +299,7 @@ export function SeasonView() {
         )}
         {bottomChart === 'tasks' && (
           <div className="h-64">
-            <TaskTimeline snapshots={sim.snapshots} />
+            <TaskTimeline snapshots={sim.snapshots} orderTasks={orderTasks} />
           </div>
         )}
         {bottomChart === 'economics' && (

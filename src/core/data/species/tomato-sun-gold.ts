@@ -81,10 +81,10 @@ export const TOMATO_SUN_GOLD: PlantSpecies = {
 
   data_confidence: 'high',
   quality: {
-    min_harvest_lbs: 0.1,        // a few ripe cherries
     optimal_harvest_lbs: 0.3,    // a handful, peak ripeness
-    maturity_curve: { 0.3: 0.7, 1.0: 1.0, 2.0: 0.7, 3.0: 0.4 },
+    maturity_curve: { 0: 0, 0.15: 0.2, 0.4: 0.5, 0.7: 0.8, 1.0: 1.0, 1.5: 0.85, 2.0: 0.7, 3.0: 0.4 },
     must_harvest_floor: 0.25,
+    decline_trigger: 0.85,
   },
 
   sources: [

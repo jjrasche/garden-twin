@@ -185,7 +185,7 @@ describe('end-to-end regression', () => {
   test('simulateSeason total is stable', () => {
     const weeks = simulateSeason(PRODUCTION_PLAN, GR_HISTORICAL);
     const total = weeks.reduce((s, w) => s + w.total_lbs, 0);
-    // ~471 lbs: demand-driven harvest (harvest_ready + quality-decline events).
-    expect(total).toBeCloseTo(471, -1);
+    // ~778 lbs: quality-emergent harvest (peak-decline auto-harvest).
+    expect(total).toBeCloseTo(778, -1);
   });
 });

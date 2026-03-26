@@ -64,7 +64,27 @@ export interface DaySnapshot {
 // Re-export harvestPlant for backward compatibility (was defined here, now in harvestPlant.ts)
 export { harvestPlant } from './harvestPlant';
 
-/** Harvest plants whose quality has dropped below the species must-harvest floor. */
+/**
+ * Check whether a plant's quality has declined enough from its peak to trigger auto-harvest.
+ *
+ * Returns true when:
+ * - Peak quality was meaningful (>= must_harvest_floor)
+ * - Current quality dropped below peak * decline_trigger
+ */
+export function shouldAutoHarvest(
+  plant: PlantState,
+  mustHarvestFloor: number,
+  declineTrigger: number,
+): boolean {
+  if (!plant.is_harvestable) return false;
+  if (plant.lifecycle === 'dead' || plant.lifecycle === 'pulled') return false;
+  if (plant.peak_quality_score < mustHarvestFloor) return false;
+
+  const currentQuality = plant.quality_score ?? 0;
+  return currentQuality < plant.peak_quality_score * declineTrigger;
+}
+
+/** Auto-harvest plants whose quality is declining from peak. */
 function harvestDecliningPlants(
   plants: PlantState[],
   catalog: Map<string, PlantSpecies>,
@@ -72,17 +92,17 @@ function harvestDecliningPlants(
 ): { plants: PlantState[]; events: GrowthEvent[] } {
   const events: GrowthEvent[] = [];
   const updatedPlants = plants.map(plant => {
-    if (!plant.is_harvestable || plant.lifecycle === 'dead' || plant.lifecycle === 'pulled') return plant;
     const species = catalog.get(plant.species_id);
     const mustHarvestFloor = species?.quality?.must_harvest_floor ?? 0.3;
-    if (plant.quality_score !== undefined && plant.quality_score < mustHarvestFloor) {
-      events.push({
-        type: 'harvested', plant_id: plant.plant_id, date,
-        harvested_lbs: plant.accumulated_lbs, quality_score: plant.quality_score,
-      });
-      return harvestPlant(plant, catalog);
-    }
-    return plant;
+    const declineTrigger = species?.quality?.decline_trigger ?? 0.85;
+
+    if (!shouldAutoHarvest(plant, mustHarvestFloor, declineTrigger)) return plant;
+
+    events.push({
+      type: 'harvested', plant_id: plant.plant_id, date,
+      harvested_lbs: plant.accumulated_lbs, quality_score: plant.quality_score ?? 0,
+    });
+    return harvestPlant(plant, catalog);
   });
   return { plants: updatedPlants, events };
 }

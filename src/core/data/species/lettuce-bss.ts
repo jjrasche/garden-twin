@@ -114,10 +114,10 @@ export const LETTUCE_BSS: PlantSpecies = {
   ],
 
   quality: {
-    min_harvest_lbs: 0.05,       // baby leaf, just harvestable
     optimal_harvest_lbs: 0.15,   // loose-leaf head, peak quality
-    maturity_curve: { 0.3: 0.8, 1.0: 1.0, 1.5: 0.6, 2.5: 0.2 },
-    must_harvest_floor: 0.1,     // low floor — summer heat drops flavor, but still harvestable
+    maturity_curve: { 0: 0, 0.15: 0.3, 0.4: 0.7, 0.7: 0.9, 1.0: 1.0, 1.3: 0.7, 1.6: 0.4, 2.0: 0.15 },
+    must_harvest_floor: 0.1,
+    decline_trigger: 0.85,
   },
 
   sources: [

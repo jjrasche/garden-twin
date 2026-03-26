@@ -96,10 +96,10 @@ export const KALE_RED_RUSSIAN: PlantSpecies = {
 
   data_confidence: 'high',
   quality: {
-    min_harvest_lbs: 0.08,       // baby kale, just harvestable (~1.3 oz)
     optimal_harvest_lbs: 0.25,   // full leaf, peak eating quality (~4 oz)
-    maturity_curve: { 0.3: 0.8, 1.0: 1.0, 2.0: 0.6, 3.0: 0.2 },
-    must_harvest_floor: 0.1,     // low floor — summer heat drops flavor, but plant is still edible
+    maturity_curve: { 0: 0, 0.15: 0.3, 0.4: 0.7, 0.7: 0.9, 1.0: 1.0, 1.5: 0.8, 2.0: 0.6, 3.0: 0.2 },
+    must_harvest_floor: 0.1,
+    decline_trigger: 0.85,
   },
 
   sources: [

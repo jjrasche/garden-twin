@@ -79,7 +79,7 @@ function estimateHarvestMinutes(snap: DaySnapshot): number {
   return totalMinutes;
 }
 
-function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
+function buildWeeklyData(snapshots: DaySnapshot[], orderTasks?: Task[]): WeekRow[] {
   if (snapshots.length === 0) return [];
 
   const weekMap = new Map<string, WeekRow>();
@@ -134,6 +134,19 @@ function buildWeeklyData(snapshots: DaySnapshot[]): WeekRow[] {
         row.totalMinutes += harvestMinutes;
         row.minutesByType['harvest'] = (row.minutesByType['harvest'] ?? 0) + harvestMinutes;
       }
+    }
+  }
+
+  // Merge order-driven tasks by due_by date
+  if (orderTasks?.length) {
+    for (const task of orderTasks) {
+      const dueDate = task.due_by ? new Date(task.due_by) : new Date(task.created_at);
+      const row = ensureWeek(dueDate);
+      const minutes = task.estimated_duration_minutes ?? 0;
+      row.totalMinutes += minutes;
+      row.taskCount++;
+      row.tasks.push(task);
+      row.minutesByType[task.type] = (row.minutesByType[task.type] ?? 0) + minutes;
     }
   }
 
@@ -355,10 +368,11 @@ function TaskModal({ row, onClose }: { row: WeekRow; onClose: () => void }) {
 
 interface TaskTimelineProps {
   snapshots: DaySnapshot[];
+  orderTasks?: Task[];
 }
 
-export function TaskTimeline({ snapshots }: TaskTimelineProps) {
-  const weekRows = useMemo(() => buildWeeklyData(snapshots), [snapshots]);
+export function TaskTimeline({ snapshots, orderTasks }: TaskTimelineProps) {
+  const weekRows = useMemo(() => buildWeeklyData(snapshots, orderTasks), [snapshots, orderTasks]);
   // Flatten minutesByType into top-level keys for Recharts dataKey access
   const chartData = useMemo(() => weekRows.map(row => ({
     ...row,

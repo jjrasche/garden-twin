@@ -86,10 +86,10 @@ export const CORN_NOTHSTINE_DENT: PlantSpecies = {
   // black layer. Risks are raccoons, ear rot from rain, and stalk lodging,
   // but the grain itself is stable. Frost (kill_temp_f: 32) ends the season.
   quality: {
-    min_harvest_lbs: 0.2,        // immature ear
     optimal_harvest_lbs: 0.24,   // dried dent ear (baseline per plant)
-    maturity_curve: { 0.8: 0.9, 1.0: 1.0, 1.5: 0.95, 2.0: 0.88, 3.0: 0.75 },
+    maturity_curve: { 0: 0, 0.3: 0.3, 0.6: 0.7, 0.9: 0.95, 1.0: 1.0, 1.5: 0.95, 2.0: 0.88, 3.0: 0.75 },
     must_harvest_floor: 0.2,
+    decline_trigger: 0.85,
   },
 
   sources: [

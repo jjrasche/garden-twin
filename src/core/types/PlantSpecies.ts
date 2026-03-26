@@ -286,10 +286,10 @@ export const PlantSpeciesSchema = z.object({
 
   // Quality model — maturity-based (biomass ratio drives pre-harvest quality)
   quality: z.object({
-    min_harvest_lbs: z.number().min(0),                          // minimum biomass to be inventory
     optimal_harvest_lbs: z.number().min(0),                      // peak quality biomass per plant
-    maturity_curve: z.record(z.string(), z.number()),            // biomass_ratio → maturity factor 0-1
-    must_harvest_floor: z.number().min(0).max(1),                // quality below this = forced harvest
+    maturity_curve: z.record(z.string(), z.number()),            // biomass_ratio → maturity factor 0-1 (must start at { 0: 0 })
+    must_harvest_floor: z.number().min(0).max(1),                // quality floor for auto-harvest peak check
+    decline_trigger: z.number().min(0).max(1).default(0.85),     // auto-harvest when quality < peak * this
   }).optional(),
 
   // Layout optimization profile (optional — not all legacy species have this yet)
